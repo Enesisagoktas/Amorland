@@ -1,0 +1,88 @@
+{
+  "$aciklama": "Amorland urun denge tablosu. Sunucuda yapilandirma olarak yuklenir, koda gomulmez. Tum degerler baslangic noktasidir; dikey dilim testinden sonra ayarlanacak.",
+  "surum": "0.3",
+  "tarih": "2026-08-19",
+
+  "saatlikGetiriKademeleri": {
+    "$aciklama": "altin / saat / karo. Uzun urun daha karli ama azalan artisla - 12 saatlik urun otomatik en iyi secenek olmamali.",
+    "300": 24,
+    "1800": 30,
+    "7200": 36,
+    "21600": 42,
+    "43200": 48
+  },
+
+  "urunler": [
+    { "id": "bugday",    "ad": "Bugday",    "acilis": { "tip": "seviye_odulu", "seviye": 1 },  "buyumeSn": 300,   "tabanFiyat": 2,   "tohumFiyat": 1,   "verim": 1, "xp": 1,  "not": "Ogretici + un zinciri girdisi. Tohum/hasat orani %50 - tabanFiyat 2 altinken tamsayi ile %30 tutturulamiyor. Kasitli istisna, ekonomik agirligi yok." },
+    { "id": "turp",      "ad": "Turp",      "acilis": { "tip": "seviye_odulu", "seviye": 2 },  "buyumeSn": 1800,  "tabanFiyat": 15,  "tohumFiyat": 5,   "verim": 1, "xp": 1 },
+    { "id": "havuc",     "ad": "Havuc",     "acilis": { "tip": "seviye_odulu", "seviye": 3 },  "buyumeSn": 1800,  "tabanFiyat": 16,  "tohumFiyat": 5,   "verim": 1, "xp": 1 },
+    { "id": "misir",     "ad": "Misir",     "acilis": { "tip": "seviye_odulu", "seviye": 4 },  "buyumeSn": 7200,  "tabanFiyat": 72,  "tohumFiyat": 22,  "verim": 1, "xp": 4,  "not": "Ilk gercek karar: hizli mi karli mi" },
+    { "id": "patates",   "ad": "Patates",   "acilis": { "tip": "seviye_odulu", "seviye": 5 },  "buyumeSn": 7200,  "tabanFiyat": 68,  "tohumFiyat": 20,  "verim": 1, "xp": 4 },
+
+    { "id": "domates",   "ad": "Domates",   "acilis": { "tip": "market", "seviye": 6 },  "buyumeSn": 7200,  "tabanFiyat": 75,  "tohumFiyat": 24,  "verim": 1, "xp": 4,  "yenidenVerir": { "adet": 3, "araSn": 7200 } },
+    { "id": "marul",     "ad": "Marul",     "acilis": { "tip": "market", "seviye": 7 },  "buyumeSn": 1800,  "tabanFiyat": 14,  "tohumFiyat": 4,   "verim": 1, "xp": 1 },
+    { "id": "kabak",     "ad": "Kabak",     "acilis": { "tip": "market", "seviye": 8 },  "buyumeSn": 21600, "tabanFiyat": 252, "tohumFiyat": 76,  "verim": 1, "xp": 12 },
+    { "id": "cilek",     "ad": "Cilek",     "acilis": { "tip": "market", "seviye": 10 }, "buyumeSn": 21600, "tabanFiyat": 230, "tohumFiyat": 70,  "verim": 1, "xp": 12, "yenidenVerir": { "adet": 4, "araSn": 10800 } },
+    { "id": "aycicegi",  "ad": "Aycicegi",  "acilis": { "tip": "market", "seviye": 11 }, "buyumeSn": 21600, "tabanFiyat": 245, "tohumFiyat": 74,  "verim": 1, "xp": 12 },
+    { "id": "lahana",    "ad": "Lahana",    "acilis": { "tip": "market", "seviye": 12 }, "buyumeSn": 21600, "tabanFiyat": 260, "tohumFiyat": 78,  "verim": 1, "xp": 12 },
+
+    { "id": "karpuz",    "ad": "Karpuz",    "acilis": { "tip": "market", "seviye": 14 }, "buyumeSn": 43200, "tabanFiyat": 576, "tohumFiyat": 175, "verim": 1, "xp": 24 },
+    { "id": "uzum",      "ad": "Uzum",      "acilis": { "tip": "market", "seviye": 15 }, "buyumeSn": 43200, "tabanFiyat": 540, "tohumFiyat": 165, "verim": 1, "xp": 24, "yenidenVerir": { "adet": 3, "araSn": 21600 } },
+    { "id": "balkabagi", "ad": "Balkabagi", "acilis": { "tip": "market", "seviye": 16 }, "buyumeSn": 43200, "tabanFiyat": 600, "tohumFiyat": 180, "verim": 1, "xp": 24 },
+    { "id": "kavun",     "ad": "Kavun",     "acilis": { "tip": "market", "seviye": 18 }, "buyumeSn": 43200, "tabanFiyat": 590, "tohumFiyat": 178, "verim": 1, "xp": 24, "kisaPencere": true },
+    { "id": "safran",    "ad": "Safran",    "acilis": { "tip": "market", "seviye": 19 }, "buyumeSn": 43200, "tabanFiyat": 900, "tohumFiyat": 300, "verim": 1, "xp": 24, "kisaPencere": true, "not": "Saatlik getiri kademesinin %56 ustunde. KASITLI: kisa pencere tohum arzini sinirliyor, olcekli ekilemiyor - nadirlik primi. Tek istisna." }
+  ],
+
+  "buyumeAsamasi": {
+    "$aciklama": "Her urun 4 gorsel asamada buyur. Asama = floor(gecenSure / buyumeSn * 4), 3'te sinirlanir. Sunucu okuma aninda hesaplar, cron yok.",
+    "asamaSayisi": 4
+  },
+
+  "gubre": {
+    "$aciklama": "Tek tip. Kalite kademesi yok. Sureyi degistirmez - sure degisseydi altin/saat ekonomisi siserdi.",
+    "acilisSeviye": 12,
+    "etki": { "verimEk": 1 },
+    "fiyatOraniTabanFiyata": 0.70,
+    "craftlanabilir": false,
+    "not": "Oran bilincli: otomatik karli degil. Tren fiyati %100 ustundeyken kullanilir."
+  },
+
+  "marketAlisOrani": {
+    "$aciklama": "Marketin oyuncudan alis fiyati. Sabit, dalgalanmaz. Acil nakit muslugu.",
+    "min": 0.50,
+    "max": 0.60
+  },
+
+  "trenFiyat": {
+    "$aciklama": "Ortalamaya donen rastgele yuruyus. Saf rastgele KULLANILMAZ - mini grafikte okunacak egilim olmali.",
+    "bandMin": 0.70,
+    "bandMax": 1.30,
+    "baslangic": 1.00,
+    "ortalamayaDonusKatsayisi": 0.30,
+    "gurultuGenligi": 0.24,
+    "seferAraligiSn": 21600,
+    "epochUtc": "2026-01-01T00:00:00Z",
+    "ileriSarmaPenceresi": 50,
+    "formul": "p[n] = clamp(0.70, 1.30, p[n-1] + (1.0 - p[n-1]) * 0.30 + (hash01(tohum, urunId, n) - 0.5) * 0.24)"
+  },
+
+  "manifesto": {
+    "siparisKartiSayisi": 3,
+    "carpanMin": 1.6,
+    "carpanMax": 2.0,
+    "carpanKus": 1.3,
+    "tamDoldurmaXpBonus": 100,
+    "siparisXp": 60,
+    "tekKisilikKontenjanOrani": 0.70,
+    "kacirmaCezasi": false
+  },
+
+  "trenTohum": {
+    "cesitMin": 2,
+    "cesitMax": 3,
+    "indirimMin": 0.30,
+    "indirimMax": 0.40,
+    "sinirliAdet": true,
+    "not": "Sinirsiz olursa market anlamsizlasir."
+  }
+}
