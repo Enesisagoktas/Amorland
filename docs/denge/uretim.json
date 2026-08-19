@@ -259,12 +259,13 @@
     "not": "Bakir ve gumus YOK. v0.2 Bolum 9'daki 'Kat 3 bakir gumus' ifadesi Bolum 7b ile celisiyordu; 4 cevher korundu."
   },
   "ortakDugum": {
-    "$aciklama": "Acik madde #11. Iki oyuncu ayni dugume vurursa.",
+    "$aciklama": "v0.6 DUZELTME: onceki kural oyuncu basina 2x, toplamda 4x cevher uretiyordu (simulasyonla olculdu).",
     "model": "paylasimli_saglik",
     "getiriBolusulur": false,
     "getiriIcinMinKatkiOrani": 0.25,
     "yenilenmeDegismez": true,
-    "not": "Katkisi %25 ustunde olan HER oyuncu tam getiriyi alir. Birlikte calismak asla tek basina calismaktan kotu olmamali."
+    "not": "Iki oyuncu ayni dugume vurursa dugum sagligi %50 artar. Her ikisi de tam getiriyi alir. Net etki: oyuncu basina 1.33x (2.0x degil). 'Birlikte calismak asla tek basina calismaktan kotu olmamali' kurali korunuyor, ama 4x kaynak patlamasi kapaniyor.",
+    "ortakVurustaSaglikCarpani": 1.5
   },
   "aletler": [
     {
@@ -650,26 +651,87 @@
       }
     ]
   },
-  "hayvanlar": [
-    {
-      "id": "tavuk",
-      "ad": "Tavuk",
-      "yapi": "kumes",
-      "acilisSeviye": 8,
-      "urun": "yumurta",
-      "periyotSn": 86400,
-      "yemGerekli": true,
-      "tabanFiyat": 40
+  "hayvanlar": {
+    "$aciklama": "v0.6: onceden 2 tablo satiri + 1 cumleydi. Tam dongu tanimlandi.",
+    "turler": [
+      {
+        "id": "tavuk",
+        "ad": "Tavuk",
+        "yapi": "kumes",
+        "acilisSeviye": 8,
+        "satinAlmaFiyat": 500,
+        "urun": "yumurta",
+        "urunTabanFiyat": 40,
+        "periyotSn": 86400,
+        "yemPeriyotBasina": 1,
+        "xp": 3
+      },
+      {
+        "id": "inek",
+        "ad": "İnek",
+        "yapi": "ahir",
+        "acilisSeviye": 14,
+        "satinAlmaFiyat": 4000,
+        "urun": "sut",
+        "urunTabanFiyat": 180,
+        "periyotSn": 86400,
+        "yemPeriyotBasina": 2,
+        "xp": 8
+      }
+    ],
+    "kapasite": [
+      {
+        "yapi": "kumes",
+        "acilisSeviye": 8,
+        "adet": 4
+      },
+      {
+        "yapi": "kumes",
+        "acilisSeviye": 12,
+        "adet": 8,
+        "yukseltmeMaliyet": 6000
+      },
+      {
+        "yapi": "ahir",
+        "acilisSeviye": 14,
+        "adet": 2
+      },
+      {
+        "yapi": "ahir",
+        "acilisSeviye": 17,
+        "adet": 4,
+        "yukseltmeMaliyet": 40000
+      }
+    ],
+    "yem": {
+      "kaynaklar": [
+        "orman: yem otu (45 dk yenilenme)",
+        "market: 12 altin/adet"
+      ],
+      "craftlanmaz": true,
+      "not": "Craft siniri 25 dolu. Yem toplanir veya satin alinir."
     },
-    {
-      "id": "inek",
-      "ad": "İnek",
-      "yapi": "ahir",
-      "acilisSeviye": 14,
-      "urun": "sut",
-      "periyotSn": 86400,
-      "yemGerekli": true,
-      "tabanFiyat": 180
-    }
-  ]
+    "besleme": {
+      "yontem": "TEK DOKUNUS ile yapidaki tum hayvanlar beslenir",
+      "gerekce": "Baglam duyarli etkilesim felsefesi. 8 tavugu tek tek beslemek mobilde iskence.",
+      "yemYoksa": {
+        "uretir": false,
+        "olur": false,
+        "saglikDuser": false
+      }
+    },
+    "toplama": {
+      "urunNerede": "Hayvanin yaninda belirir, dokunarak toplanir, CANTAYA girer",
+      "birikmeLimiti": 3,
+      "birikmeNotu": "En fazla 3 periyot (3 gun) birikir, sonra uretim durur. Sinirsiz bekleme yok.",
+      "otomatikDepoyaGitmez": true
+    },
+    "yok": [
+      "mutluluk",
+      "hastalik",
+      "olum",
+      "ureme"
+    ],
+    "yokGerekce": "Kozy oyun. Hayvan olmez, hastalanmaz. Kapsam disi."
+  }
 }

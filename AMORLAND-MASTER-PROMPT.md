@@ -1,7 +1,8 @@
 # AMORLAND — Tam Oyun Spesifikasyonu (Master Prompt)
 
 > Bu dosya oyunun **tek doğruluk kaynağıdır.** Kendi kendine yeter — başka dokümana bakmadan oyun buradan inşa edilebilir.
-> Sürüm 1.1 · 2026-08-19 · v0.2 + v0.3 + v0.4 + v0.5 (ses) birleştirilmiş hali
+> Sürüm 1.2 · 2026-08-20 · v0.2 → v0.6 birleştirilmiş hali
+> Sunucu veri modeli ve protokol ayrı dosyada: `docs/amorland-sunucu-protokol.md`
 > Sayısal tablolar `docs/denge/*.json` ile birebir aynıdır. Çakışma olursa **JSON geçerlidir.**
 
 ---
@@ -164,7 +165,15 @@ Tek kişilik ayrı bir mod değildir: aynı dünya, iki parsel de sende. **Sıf�
 | **Dünya seviyesi** | Hangi bölge/kat açık | İki oyuncunun **yükseği** |
 | **Oyuncu seviyesi** | Kendi parseli, çantası, tohumları | Kişisel XP |
 
-**Yetişme bonusu:** Oyuncu partnerinden 3+ seviye gerideyse XP'si **×1.5**. Fark 2'ye düşünce kapanır.
+**Yetişme bonusu:** Oyuncu partnerinden 3+ seviye gerideyse XP'si **×1.5**. Fark 2'ye düşünce veya **14 gün sonra** kapanır (bilerek geri kalıp biriktirmeyi engeller).
+
+### Tek kişilik: daha yavaş değil, daha yalın
+
+Ölçüm: **solo 15.3 gün · duo 14.1 gün → süre farkı sadece 1.08×.** %70 ölçekleme ilerleme süresine neredeyse etki etmiyor, çünkü XP'nin çoğu kendi parselinden geliyor.
+
+> Fark **bolluk** farkıdır, duvar değil: solo %19 daha az altın, %25 daha az cevher.
+
+Bir çift oyununda tek oyuncuyu süre olarak cezalandırmak yanlış olurdu — partner bulamamak kusur değil. Bolluk farkı hikâyeyi ("tek imzalı manifesto daha az karşılık bulur") koruyor, ilerlemeyi tıkamıyor.
 
 ### Tek kişilik denge — %70
 | | |
@@ -185,7 +194,9 @@ Tek kişilik ayrı bir mod değildir: aynı dünya, iki parsel de sende. **Sıf�
 - Partner davet ederken **hesap bağlama zorunlu** (artık başkasının ilerlemesi sana bağlı).
 
 ### Ortak düğüm çakışması
-İki oyuncu aynı cevher/ağaca vurursa: **paylaşımlı sağlık.** Vuruşlar aynı havuzdan iner, düğüm daha hızlı kırılır. **Katkısı %25 üstünde olan HER oyuncu tam getiriyi alır** (bölünmez). Yenilenme süresi değişmez.
+İki oyuncu aynı cevher/ağaca vurursa: **paylaşımlı sağlık.** Vuruşlar aynı havuzdan iner. **Katkısı %25 üstünde olan HER oyuncu tam getiriyi alır** (bölünmez).
+
+⚠️ **Ortak vurulan düğümün sağlığı ×1.5 olur.** Bu olmadan ölçüm oyuncu başına 2×, toplamda **4× cevher** gösterdi — ekonomi tablosu tek oyuncu varsayımıyla kurulmuştu. ×1.5 ile avantaj oyuncu başına 1.33×'e iner ve kural korunur.
 
 > Birlikte çalışmak asla tek başına çalışmaktan kötü olmamalı.
 
@@ -218,7 +229,7 @@ Katkı tahtası: malzeme kalemleri + iki oyuncunun katkı çubuğu.
 | Özellik | Karar |
 |---|---|
 | Tetikleme | **Sadece manuel.** Bir oyuncu "küstüm" der. |
-| Etki | Manifesto bonusu 1.8× → **1.3×**. Avatar üstünde küçük gösterge. |
+| Etki | **Ekonomik etki YOK.** Sadece avatar üstünde küçük gösterge + barışma ritüeli açılır. |
 | Bitiş | Depoya hediye **veya** "barışalım" → karşı taraf kabul → anında normal |
 | Süre sınırı | 48 saat sonra kendiliğinden düşer |
 
@@ -229,6 +240,8 @@ Katkı tahtası: malzeme kalemleri + iki oyuncunun katkı çubuğu.
 
 > Küslük, çiftin oynadığı bir **rol** olmalı — oyunun çifte uyguladığı bir yaptırım değil.
 
+⚠️ **v0.6 düzeltmesi:** Küslük eskiden manifesto bonusunu 1.8× → 1.3× düşürüyordu. Bu, bir oyuncunun partnerini **ekonomik olarak cezalandırabildiği bir düğmeydi** — bir rolün para cezası olmasına gerek yok, ve para cezası olduğu anda rol olmaktan çıkıp silaha dönüşüyordu. Ekonomik etki tamamen kaldırıldı. Geriye değerli olan kısım kalıyor: "kırıldım" diyebilmek için biçimsel bir kanal ve bir barışma ritüeli.
+
 ### Ayrılık — kalıcı
 - Tek taraflı istek → bildirim → **48 saat** bekleme. Çift taraflı onayda bekleme yok.
 - Ayrılan oyuncu **seviyesini ve çantasını koruyarak** yeni vadi kurar
@@ -236,6 +249,21 @@ Katkı tahtası: malzeme kalemleri + iki oyuncunun katkı çubuğu.
 - **7 gün** yeni eşleşme yok
 - Defter ilerlemesi ikisinde de kalır
 - **Bir oyuncu aynı anda tek vadide olabilir**
+
+### Ayrılıkta sahiplik — tam tablo
+
+| Varlık | Kim alır |
+|---|---|
+| Seviye, XP, çanta, aletler | Kendinde |
+| **Depo içeriği** | Vadiyi kurana — ama **ayrılan %50'sini "yol azığı" olarak alır** |
+| Kendi parselindeki ekili ürünler | Kaybolur; **tohum değeri altın olarak iade** |
+| Ev, depo yapısı ve kapasitesi, hayvanlar, vadi anıtı | Vadiyi kurana |
+| **Craft tarif açılımları** | **İkisinde de** — öğrenilmiş bilgi geri alınmaz |
+| Kozmetikler, çanta yükseltmeleri | İkisinde de (kişisel) |
+| Defter ilerlemesi | İkisinde de |
+| Dünya seviyesi, bölge/kat açılışları | Yeni vadide **kendi seviyesine göre** yeniden hesaplanır |
+
+⚠️ **%50 depo payı kasıtlı:** onsuz vadiyi kuran oyuncu partnerini hiçbir şeysiz bırakabilirdi.
 
 ---
 
@@ -300,9 +328,18 @@ Tarla → Çanta (çeşit) → Depo (miktar) → Tren
 | 160 | 6 | 1.200 | 2.2 |
 | 240 | 11 | 9.000 | 2.0 |
 | 340 | 15 | 45.000 | 1.8 |
-| 460 | 18 | 120.000 | 1.7 |
+| 460 | 18 | 100.000 | 1.7 |
 
 ⚠️ **Depo kapasitesi üretimden YAVAŞ büyümeli.** Büyüme doğrusal (+60/+80/+100/+120), maliyet üstel. Sefer karşılığı 2.5→1.7 düşer: **baskı ilerledikçe artar.** Cömert yaparsan tüm ekonomi tasarımı boşa gider.
+
+### Ortak kullanım UX'i
+| Konu | Karar |
+|---|---|
+| Kim koydu | Her yığında **koyanın renk rozeti** |
+| Partner alabilir mi | **Evet** — "sana demir bıraktım" bunun üzerine kurulu |
+| Kilitleme | Oyuncu **en fazla 3 yığın** kilitleyebilir. Sınır kasıtlı: yoksa depo ikiye bölünür. |
+| Kazara boşaltma | **"Depoya boşalt" var, "depodan al" toplu butonu YOK.** Tek yönlü kolaylık. |
+| Eşzamanlı alma | Sunucuya ilk ulaşan kazanır, diğeri `ESYA_YOK` |
 
 ### Zorunlu kolaylıklar
 - **Otomatik yığınlama**
@@ -316,8 +353,15 @@ Tarla → Çanta (çeşit) → Depo (miktar) → Tren
 
 ## 11. Ürünler — 16 ürün
 
-**Saatlik getiri kademesi** (uzun ürün daha kârlı, azalan artışla — 12 sa otomatik en iyi olmamalı):
+**Saatlik getiri kademesi** (taban fiyat türetme aracı):
 5 dk: 24 · 30 dk: 30 · 2 sa: 36 · 6 sa: 42 · 12 sa: 48 altın/saat/karo
+
+⚠️ **Bu kademe sadece büyüme süresi ≥ oturum arası (6.9 sa) olan ürünler için geçerlidir.** Günde 3.5 oturumda kısa ürün olgunlaştıktan sonra karoyu boş bekletir; gerçekleşen getirisi kademenin 14-80 katı altında kalır.
+
+> **Uzun ürün oyuncu yokken çalışır. Kısa ürün oyuncu oradayken çalışır.**
+> 5-30 dakikalık ürünler **aktif oturum dolgusudur** — oyuncu zaten oyundayken bir hasat daha verir. Saatlik getiri onların ölçüsü değildir.
+
+Kademe içi **±%10 sapma kasıtlıdır** — 4 ürün birebir aynı fiyatta olsaydı seçim anlamsız olurdu.
 
 | # | Ürün | Açılış | Süre | Fiyat | Tohum | Özel |
 |---|---|---|---|---|---|---|
@@ -326,22 +370,37 @@ Tarla → Çanta (çeşit) → Depo (miktar) → Tren
 | 3 | Havuç | Sv 3 ödül | 30 dk | 16 | 5 | |
 | 4 | Mısır | Sv 4 ödül | 2 sa | 72 | 22 | İlk gerçek karar |
 | 5 | Patates | Sv 5 ödül | 2 sa | 68 | 20 | |
-| 6 | Domates | Sv 6 market | 2 sa | 75 | 24 | **Yeniden verir ×3** (2 sa) |
+| 6 | Domates | Sv 6 market | 2 sa | 85 | 24 | **Yeniden verir ×4** (6 sa) |
 | 7 | Marul | Sv 7 market | 30 dk | 14 | 4 | |
 | 8 | Kabak | Sv 8 market | 6 sa | 252 | 76 | |
 | 9 | Çilek | Sv 10 market | 6 sa | 230 | 70 | **Yeniden verir ×4** (3 sa) |
 | 10 | Ayçiçeği | Sv 11 market | 6 sa | 245 | 74 | |
 | 11 | Lahana | Sv 12 market | 6 sa | 260 | 78 | |
 | 12 | Karpuz | Sv 14 market | 12 sa | 576 | 175 | |
-| 13 | Üzüm | Sv 15 market | 12 sa | 540 | 165 | **Yeniden verir ×3** (6 sa) |
+| 13 | Üzüm | Sv 15 market | 12 sa | 540 | 165 | **Yeniden verir ×3** (12 sa) |
 | 14 | Balkabağı | Sv 16 market | 12 sa | 600 | 180 | |
-| 15 | Kavun | Sv 18 market | 12 sa | 590 | 178 | Kısa pencere |
-| 16 | Safran | Sv 19 market | 12 sa | 900 | 300 | Nadir, kısa pencere, +%56 prim |
+| 15 | Kavun | Sv 18 market | 12 sa | 590 | 178 | **Tohum penceresi** |
+| 16 | Safran | Sv 19 market | 12 sa | 900 | 420 | Nadir, **tohum penceresi**, kıt tohum |
 
 ### ⚠️ Başlangıç ürünü kuralı (kalıcı, çok önemli)
 > **Buğday, turp, havuç, mısır, patates** hasatta **1 ürün + 1 tohum** verir. Market ürünleri (Sv 6+) vermez.
 
 Üç işi birden yapar: Perde 1 kendi kendine yeter · başlangıç ürünleri geç oyunda **bedava ama düşük getirili güvenlik ağı** kalır · market ürünleri gerçek yatırım kararı olur.
+
+### Yeniden veren ürünler (domates, çilek, üzüm)
+| Kural | Karar |
+|---|---|
+| `×N` ne sayar | **Toplam** hasat (ilk dahil). ×3 = 1 ilk + 2 yeniden. |
+| Tohum | Sadece ekimde bir kez |
+| Son hasattan sonra | Karo boşalır |
+| Gübre | **Sadece bir sonraki hasata** +1, tüm döngüye değil |
+| Depo doluysa | Hasat engellenir, **yeniden verme sayacı işlemez** |
+| Fiyat | Kademesinin **%15-20 üstünde** — karoyu 3-4 kat uzun kilitlemenin karşılığı |
+
+### Tohum penceresi (kavun, safran)
+Bu ürünlerin **tohumu** markette sadece belirli pencerelerde satılır (günde 3 kez, 2 saat, deterministik). **Büyüme ve hasat normaldir, hasat penceresi yoktur** — ürün tarlada bekleyebilir, çürümez. Fiyat primi bu arz kısıtından gelir: ölçekli ekilemez.
+
+⚠️ Bu, Sv 16 ormandaki **kısa pencereli toplama**dan farklı bir sistemdir, karıştırma.
 
 ### Büyüme aşaması
 4 görsel aşama. `aşama = min(3, floor(geçenSüre / büyümeSn × 4))`. Sunucu okuma anında hesaplar, **cron yok.**
@@ -469,12 +528,26 @@ Malzeme derinliği en fazla **2 kademe** (cevher → külçe → eşya).
 ⚠️ 25 dolu. **Yeni tarif eklemek isteyen bir tarif çıkarmak zorunda.**
 
 ### Hayvanlar
-| Hayvan | Yapı | Sv | Ürün | Periyot | Fiyat |
-|---|---|---|---|---|---|
-| Tavuk | Kümes | 8 | Yumurta | 24 sa | 40 |
-| İnek | Ahır | 14 | Süt | 24 sa | 180 |
+| | Tavuk | İnek |
+|---|---|---|
+| Açılış | Sv 8 (kümes) | Sv 14 (ahır) |
+| Satın alma | 500 | 4.000 |
+| Ürün (fiyat) | Yumurta (40) | Süt (180) |
+| Periyot | 24 sa | 24 sa |
+| Yem / periyot | 1 | 2 |
+| XP | 3 | 8 |
 
-**Yem yoksa üretmez, ÖLMEZ.** Kozy oyunda hayvan ölmez.
+**Kapasite:** Kümes 4 (Sv 8) → 8 (Sv 12, 6.000) · Ahır 2 (Sv 14) → 4 (Sv 17, 40.000)
+
+**Yem:** ormandan yem otu (45 dk yenilenme) veya marketten 12 altın. Craftlanmaz — 25 tarif sınırı dolu.
+
+**Besleme: TEK DOKUNUŞLA yapıdaki tüm hayvanlar.** 8 tavuğu tek tek beslemek mobilde işkence; bağlam duyarlı etkileşim felsefesiyle tutarlı.
+
+**Toplama:** ürün hayvanın yanında belirir, dokunarak **çantaya** alınır — otomatik depoya gitmez, depo kısıtı korunmalı.
+
+**Birikme limiti: 3 periyot.** 3 günden fazla birikmez, üretim durur. Sınırsız çevrimdışı birikim yok.
+
+**Yem yoksa üretmez, ÖLMEZ.** Mutluluk, hastalık, ölüm, üreme **yok** — kozy oyun, kapsam dışı.
 
 ---
 
@@ -485,7 +558,7 @@ Oyunun ekonomik kalbi.
 ### Tarife
 - **6 saatte bir sefer** → 00:00 / 06:00 / 12:00 / 18:00 **UTC** (sunucu saati; iki oyuncu farklı saat diliminde olabilir)
 - Her seferde **3 sipariş kartı**
-- Karşılanan sipariş: **1.6-2.0×** fiyat + 60 XP + defter ilerlemesi (küslükte 1.3×)
+- Karşılanan sipariş: **1.6-2.0×** fiyat + 60 XP + defter ilerlemesi
 - Manifesto tam doldurma: **+100 XP** bonus
 - **Kaçırma cezası yok.** Fırsat kaybı yeterli baskı.
 - **Kısmi yatırma YOK** — sipariş ancak tam miktar elindeyken karşılanır. Sıfır kenar durumu.
@@ -586,7 +659,13 @@ Perde 1 tek seferlik XP: 5 defter (375) + 3 bölge (150) + 3 craft (90) + 6 "ilk
 
 ## 17. Seviye seviye ilerleyiş
 
-**Tasarım kuralı: Her seviye TEK bir yeni şey açar. Asla iki.**
+**Tasarım kuralı: Her seviye tek bir yeni ETKİLEŞİM açar.**
+
+Pasif açılımlar sayılmaz — ürün çeşidi, kapasite artışı (çanta/depo/tarla), yeni craft tarifi, ekonomik gösterge.
+
+| Sayılır (etkileşim) | Sayılmaz (pasif) |
+|---|---|
+| Yeni bölge · yeni yapı · yeni iletişim kanalı · ortak proje · maden katı | Yeni ürün · kapasite yükseltmesi · yeni tarif · altın göstergesinin belirmesi |
 
 ### Perde 1 — Ev kurulur (Sv 1-5) · ~1.5-2 saat · para YOK
 
@@ -827,13 +906,29 @@ Oyuncuların çoğu sesi kapalı oynayacaksa dokunsal geri bildirim sesten önem
 | Maden girişi | Fener dayanıklılığını tazele |
 | Günlük sandık | İki katına çıkar |
 
-**Günde en fazla 5 · ilk 30 dakikada yok · çanta doluysa reklam BAŞLATILMAZ** (izlenmiş reklamın ödülü kaybolamaz)
+**Günde en fazla 5 · ilk 30 dakikada yok · çanta doluysa reklam BAŞLATILMAZ**
+
+⚠️ **Ödül atomikliği zorunlu.** İstemci ödülü asla kendisi vermez: sunucudan jeton alınır → reklam gösterilir → reklam ağı **sunucuya** SSV callback yapar → sunucu ödülü atomik uygular. Günlük 5 hakkını sunucu sayar. Tam akış ve kenar durumlar: `docs/amorland-sunucu-protokol.md` bölüm 6.
+
+**"2× hasat" tam anlamı:** sadece hasat edilen ürün katlanır · başlangıç ürünlerinin geri verdiği **tohum katlanmaz** · yeniden veren üründe **sadece o hasat** · gübreyle birleşince `(1 + gübre) × 2`.
 
 **ASLA:** ilerlemeyi kilitleyen · süre kısaltma satan · çift arasında dengesizlik yaratan · kozmetik veren reklam
 
-### Bildirim
-**Günde en fazla 2.** Fazlası kaldırılma sebebi.
-**Küslük ve partner terk durumu ASLA bildirim göndermez.**
+### Bildirim — öncelik sırası
+**Günde en fazla 2.** Hangi 2'si olduğu önceliğe göre:
+
+1. Partner mesajı / not tahtası
+2. Ortak proje tamamlandı
+3. Tren manifestosu bitiyor (son 1 saat **ve** karşılanabilir sipariş varsa)
+4. Günlük sandık hazır
+5. Hayvan ürünü birikme sınırına yaklaştı
+
+**Asla:** ürün büyüdü (çok sık) · depo doldu (dırdır) · **küslük** · **partner terk**
+
+Aralarında en az 4 saat · **yerel saatle 23:00-09:00 arası hiç yok** · oyuncu o gün girdiyse 4 ve 5 gönderilmez.
+
+### Günlük sandık
+Sıfırlama **son alımdan 24 saat sonra** (UTC gece yarısı değil — saat dilimi adaletsizliği ve çift alma açığı doğuruyor). İçerik: 3-5 tohum (açık ürünlerden) + `seviye × 50` altın. **Seri/streak yok** — kozy oyun, kaçırdığın gün cezalandırılmaz. Reklamla 2× hem altını hem tohum adedini katlar.
 
 ### Mağaza
 - Serbest sohbet → yaş derecelendirmesi yükselir, "kullanıcılar etkileşimde bulunur" beyanı
@@ -882,6 +977,11 @@ Oyuncuların çoğu sesi kapalı oynayacaksa dokunsal geri bildirim sesten önem
 | 18 | Perde/örnek varyasyonu olmadan tekrar eden ses | Sürükle-boyamada makineli tüfek sesi |
 | 19 | Ses altyapısını dikey dilimden sonraya bırakmak | 92 sesin hepsi yeniden elden geçer |
 | 20 | Müziği önce yapmak | Ses bütçesini bitiren klasik hata |
+| 21 | Küslüğe ekonomik diş takmak | Rol olmaktan çıkıp silaha dönüşür |
+| 22 | Ödülü istemcinin vermesi (reklam dahil) | Sunucu otoritesi delinir |
+| 23 | Paylaşılan duruma çevrimdışı dokunmak | Bağlantı dönünce toplu red yağmuru |
+| 24 | Ortak düğüm sağlığını ×1.5 yapmamak | Toplamda 4× cevher patlaması |
+| 25 | Kısa ürünleri saatlik getiriyle dengelemek | Oturum kapısı yüzünden 14-80 kat sapıyor |
 
 ---
 
@@ -889,7 +989,6 @@ Oyuncuların çoğu sesi kapalı oynayacaksa dokunsal geri bildirim sesten önem
 
 | Konu | Ne zaman |
 |---|---|
-| **Sunucu veri modeli + WebSocket protokolü** | Ayrı doküman, dikey dilimden hemen önce |
 | İsim müsaitliği (marka, paket adı, alan adı, mağaza araması) | Yayın kararından önce. **Sıra: mağaza araması → marka → paket adı → domain** |
 | Yerelleştirme | Altyapı baştan (string tablosu), içerik cilada |
 | 20 defter sayfasının gerçek metni | Perde perde yazılır |

@@ -63,7 +63,9 @@
       "$aciklama": "v0.4: geriden gelen partner yetisebilsin.",
       "seviyeFarkiEsigi": 3,
       "carpan": 1.5,
-      "kapanmaFarki": 2
+      "kapanmaFarki": 2,
+      "maksSureGun": 14,
+      "not": "v0.6: bonus en fazla 14 gun surer, sonra fark kapanmasa bile duser. Bilerek geri kalip biriktirmeyi engeller."
     }
   },
   "canta": {
@@ -128,9 +130,9 @@
       {
         "kapasite": 460,
         "acilisSeviye": 18,
-        "maliyet": 120000,
+        "maliyet": 100000,
         "seferKarsiligi": 1.7,
-        "not": "v0.4: 180000 -> 120000. Simulasyonda kasa eksiye dusuyordu."
+        "not": "v0.6: 120.000 -> 100.000. Urun dengesi degisince solo kasa Sv18'de eksiye dusuyordu."
       }
     ],
     "buyumeTipi": "dogrusal",
@@ -410,9 +412,10 @@
   "kusluk": {
     "tetikleme": "sadece_manuel",
     "hareketsizlikTetikler": false,
-    "manifestoCarpani": 1.3,
     "otomatikDusmeSn": 172800,
-    "bildirimGonderir": false
+    "bildirimGonderir": false,
+    "ekonomikEtki": false,
+    "not": "v0.6: manifesto carpani dusurme KALDIRILDI. Bir oyuncunun partnerini ekonomik olarak cezalandirabildigi bir dugmeydi. Kusluk artik sadece gosterge + barisma rituali."
   },
   "ayrilik": {
     "tekTarafliBeklemeSn": 172800,

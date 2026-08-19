@@ -59,7 +59,7 @@ Pay bilinçli: oyuncu bazılarını atlarsa bile Perde 1 tıkanmıyor.
 
 | Ne | v0.3 | v0.4 | Sebep |
 |---|---|---|---|
-| Depo IV maliyeti (Sv 18) | 180.000 | **120.000** | Simülasyonda kasa -32.805'e düşüyordu |
+| Depo IV maliyeti (Sv 18) | 180.000 | **120.000** | Simülasyonda kasa -32.805'e düşüyordu *(v0.6'da 100.000'e indi)* |
 | Çanta I maliyeti (Sv 4) | 400 | **0** (seviye ödülü) | Sv 4'te para kazanma yolu yok |
 | Vadi anıtı | "Sv 17'de açılan geç oyun çıkışı" | **"Sv 20 sonrası hedef"** | 820.000 altın, Sv 17-20 arası ~3.5 gün var. Oyun içinde bitmesi mümkün değil, öyle sunulmamalı. |
 

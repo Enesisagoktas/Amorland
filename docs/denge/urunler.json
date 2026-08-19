@@ -91,15 +91,16 @@
         "seviye": 6
       },
       "buyumeSn": 7200,
-      "tabanFiyat": 75,
+      "tabanFiyat": 85,
       "tohumFiyat": 24,
       "verim": 1,
       "xp": 4,
       "yenidenVerir": {
-        "adet": 3,
-        "araSn": 7200
+        "adet": 4,
+        "araSn": 21600
       },
-      "tohumGeriVerir": false
+      "tohumGeriVerir": false,
+      "not": "v0.6: ara sure 2sa->6sa, adet 3->4, fiyat 75->85. 2 saatlik ara oturum arasinin (6.9sa) altinda kaliyordu, yeniden verme hic ise yaramiyordu."
     },
     {
       "id": "marul",
@@ -203,9 +204,10 @@
       "xp": 24,
       "yenidenVerir": {
         "adet": 3,
-        "araSn": 21600
+        "araSn": 43200
       },
-      "tohumGeriVerir": false
+      "tohumGeriVerir": false,
+      "not": "v0.6: ara sure 6sa->12sa. Onceden kademesinin %69 ustundeydi, gec oyunda tek secenek haline geliyordu."
     },
     {
       "id": "balkabagi",
@@ -233,8 +235,8 @@
       "tohumFiyat": 178,
       "verim": 1,
       "xp": 24,
-      "kisaPencere": true,
-      "tohumGeriVerir": false
+      "tohumGeriVerir": false,
+      "tohumPenceresi": true
     },
     {
       "id": "safran",
@@ -245,12 +247,12 @@
       },
       "buyumeSn": 43200,
       "tabanFiyat": 900,
-      "tohumFiyat": 300,
+      "tohumFiyat": 420,
       "verim": 1,
       "xp": 24,
-      "kisaPencere": true,
-      "not": "Saatlik getiri kademesinin %56 ustunde. KASITLI: kisa pencere tohum arzini sinirliyor, olcekli ekilemiyor - nadirlik primi. Tek istisna.",
-      "tohumGeriVerir": false
+      "not": "v0.6: tohum 300->420. Yuksek fiyati korunuyor ama riski de artiyor - kit tohumlu prestij urunu.",
+      "tohumGeriVerir": false,
+      "tohumPenceresi": true
     }
   ],
   "buyumeAsamasi": {
@@ -312,5 +314,41 @@
       "turp"
     ],
     "etki": "Perde 1 kendi kendine yetiyor; baslangic urunleri gec oyunda 'bedava ama dusuk getirili' guvenlik agi olarak kaliyor."
+  },
+  "yenidenVerirKurali": {
+    "$aciklama": "v0.6: 'adet' semantigi tanimlandi. Onceden belirsizdi ve simulasyonu gecersiz kiliyordu.",
+    "adetAnlami": "TOPLAM hasat sayisi (ilk hasat dahil). adet=3 -> 1 ilk + 2 yeniden.",
+    "tohumHarcamasi": "Sadece ekimde bir kez. Yeniden hasatlar tohum harcamaz.",
+    "araSnAnlami": "Bir hasattan sonraki hasada kadar gecen sure.",
+    "sonHasattanSonra": "Karo bosalir, yeniden ekilmesi gerekir.",
+    "gubreEtkisi": "SADECE bir sonraki hasata +1 verim. Tum donguye degil - yoksa gubre+yenidenveren kombinasyonu otomatik en iyi secenek olurdu.",
+    "depoDoluysa": "Hasat engellenir, urun karoda bekler, YENIDEN VERME SAYACI ISLEMEZ. Ancak hasat edilince sonraki sayac baslar.",
+    "fiyatPrimi": {
+      "$aciklama": "v0.6: yeniden veren urunler kademesinin %15-20 USTUNDE fiyatlanir.",
+      "gerekce": "Karoyu 3-4 kat daha uzun kilitliyorlar. Prim bu esneklik kaybinin karsiligi.",
+      "not": "Bu, kademe ici +-%10 varyasyon kuralinin bilincli istisnasidir."
+    }
+  },
+  "tohumPenceresiKurali": {
+    "$aciklama": "v0.6: 'kisa pencere' etiketi hem yabani kaynak hem urun icin kullaniliyordu, urun tarafi hic tanimli degildi.",
+    "anlam": "Bu urunlerin TOHUMU markette sadece belirli pencerelerde satilir. Buyume ve hasat normaldir.",
+    "gunlukPencereSayisi": 3,
+    "pencereSuresiSn": 7200,
+    "deterministik": true,
+    "hasatPenceresiYok": "Urun tarlada bekleyebilir, cururmez. 'Esya asla yok edilmez' kurali gecerli.",
+    "not": "Fiyat primi (safran +%56) tam olarak bu arz kisitindan geliyor - olcekli ekilemiyor."
+  },
+  "saatlikGetiriVaryasyonu": {
+    "$aciklama": "v0.6: Kademe ici +-%10 sapma KASITLIDIR, hata degil.",
+    "bant": 0.1,
+    "gerekce": "Bir kademedeki 4 urun birebir ayni fiyatta olsaydi aralarinda secim yapmak anlamsiz olurdu.",
+    "istisna": "safran +%56 - tohum penceresi arz kisiti karsiligi."
+  },
+  "oturumKapisi": {
+    "$aciklama": "v0.6 KRITIK BULGU: saatlik getiri kademesi gercek oturum modelinde gecerli DEGIL.",
+    "oturumAralikSaat": 6.86,
+    "bulgu": "Gunde 3.5 oturumda oturum arasi 6.9 saat. Bundan kisa buyuyen urun, hasat edilene kadar karoyu bos bekletiyor. 30 dakikalik urun kademe tablosunda 30 altin/saat diyor ama gerceklesen deger 2.2 - 14 kat fark.",
+    "sonuc": "Kisa urunler saatlik getiride yarisamaz. Rolleri farkli: AKTIF OTURUM DOLGUSU. Oyuncu zaten oyundayken 5-30 dakikalik urun ek bir hasat verir; uzun urun ise oyuncu yokken calisir.",
+    "duzeltme": "'Uzun urun saatte ~%25 daha karli' ifadesi YANLIS. Gercek fark 10-20 kat. Saatlik getiri kademesi sadece buyume suresi >= oturum arasi olan urunler icin gecerlidir (2sa ve uzeri)."
   }
 }
