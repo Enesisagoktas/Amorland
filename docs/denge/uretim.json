@@ -2,27 +2,160 @@
   "$aciklama": "Amorland uretim tablolari: agac, yabani kaynak, maden, alet, craft. Sunucuda yapilandirma olarak yuklenir.",
   "surum": "0.3",
   "tarih": "2026-08-19",
-
   "agaclar": [
-    { "id": "cam",        "ad": "Cam",          "acilisSeviye": 7,  "buyumeSn": 28800,  "vurus": 3, "fidanFiyat": 30,   "getiri": [{ "id": "odun", "adet": 4 }],                                          "xp": 10 },
-    { "id": "mese",       "ad": "Mese",         "acilisSeviye": 10, "buyumeSn": 86400,  "vurus": 4, "fidanFiyat": 120,  "getiri": [{ "id": "sert_odun", "adet": 3 }],                                     "xp": 20 },
-    { "id": "ceviz",      "ad": "Ceviz",        "acilisSeviye": 13, "buyumeSn": 172800, "vurus": 5, "fidanFiyat": 400,  "getiri": [{ "id": "degerli_odun", "adet": 2 }, { "id": "ceviz_urun", "adet": 3 }], "xp": 40 },
-    { "id": "gumus_kavak","ad": "Gumus kavak",  "acilisSeviye": 16, "buyumeSn": 259200, "vurus": 6, "fidanFiyat": 1200, "getiri": [{ "id": "nadir_odun", "adet": 2 }],                                    "xp": 60 }
+    {
+      "id": "cam",
+      "ad": "Çam",
+      "acilisSeviye": 7,
+      "buyumeSn": 28800,
+      "vurus": 3,
+      "fidanFiyat": 30,
+      "getiri": [
+        {
+          "id": "odun",
+          "adet": 4
+        }
+      ],
+      "xp": 10
+    },
+    {
+      "id": "mese",
+      "ad": "Meşe",
+      "acilisSeviye": 10,
+      "buyumeSn": 86400,
+      "vurus": 4,
+      "fidanFiyat": 120,
+      "getiri": [
+        {
+          "id": "sert_odun",
+          "adet": 3
+        }
+      ],
+      "xp": 20
+    },
+    {
+      "id": "ceviz",
+      "ad": "Ceviz",
+      "acilisSeviye": 13,
+      "buyumeSn": 172800,
+      "vurus": 5,
+      "fidanFiyat": 400,
+      "getiri": [
+        {
+          "id": "degerli_odun",
+          "adet": 2
+        },
+        {
+          "id": "ceviz_urun",
+          "adet": 3
+        }
+      ],
+      "xp": 40
+    },
+    {
+      "id": "gumus_kavak",
+      "ad": "Gümüş kavak",
+      "acilisSeviye": 16,
+      "buyumeSn": 259200,
+      "vurus": 6,
+      "fidanFiyat": 1200,
+      "getiri": [
+        {
+          "id": "nadir_odun",
+          "adet": 2
+        }
+      ],
+      "xp": 60
+    }
   ],
-
   "kutukKalir": false,
-
   "yabaniKaynaklar": {
     "$aciklama": "Kisa ritim. Ormanin olu bolge olmasini engeller VE alet kilitlenmesine karsi guvenlik agi - hicbiri alet gerektirmez.",
     "kaynaklar": [
-      { "id": "dal",        "ad": "Dal",           "yenilenmeSn": 1800, "getiri": [{ "id": "odun", "adetMin": 1, "adetMax": 2 }], "bolgeler": ["orman", "tarla_kenari", "maden_girisi"], "xp": 1 },
-      { "id": "tas_parca",  "ad": "Tas parcasi",   "yenilenmeSn": 1800, "getiri": [{ "id": "tas",  "adetMin": 1, "adetMax": 2 }], "bolgeler": ["orman", "maden_girisi"],                 "xp": 1 },
-      { "id": "mantar",     "ad": "Mantar",        "yenilenmeSn": 5400, "getiri": [{ "id": "mantar", "adet": 1 }],                "bolgeler": ["orman"],                                 "xp": 1 },
-      { "id": "yaban_meyve","ad": "Yaban meyvesi", "yenilenmeSn": 7200, "getiri": [{ "id": "meyve", "adetMin": 1, "adetMax": 2 }], "bolgeler": ["orman"],                                "xp": 1 },
-      { "id": "yem_otu",    "ad": "Yem otu",       "yenilenmeSn": 2700, "getiri": [{ "id": "yem", "adet": 1 }],                    "bolgeler": ["orman", "tarla_kenari"],                "xp": 1 }
+      {
+        "id": "dal",
+        "ad": "Dal",
+        "yenilenmeSn": 1800,
+        "getiri": [
+          {
+            "id": "odun",
+            "adetMin": 1,
+            "adetMax": 2
+          }
+        ],
+        "bolgeler": [
+          "orman",
+          "tarla_kenari",
+          "maden_girisi"
+        ],
+        "xp": 1
+      },
+      {
+        "id": "tas_parca",
+        "ad": "Tas parcasi",
+        "yenilenmeSn": 1800,
+        "getiri": [
+          {
+            "id": "tas",
+            "adetMin": 1,
+            "adetMax": 2
+          }
+        ],
+        "bolgeler": [
+          "orman",
+          "maden_girisi"
+        ],
+        "xp": 1
+      },
+      {
+        "id": "mantar",
+        "ad": "Mantar",
+        "yenilenmeSn": 5400,
+        "getiri": [
+          {
+            "id": "mantar",
+            "adet": 1
+          }
+        ],
+        "bolgeler": [
+          "orman"
+        ],
+        "xp": 1
+      },
+      {
+        "id": "yaban_meyve",
+        "ad": "Yaban meyvesi",
+        "yenilenmeSn": 7200,
+        "getiri": [
+          {
+            "id": "meyve",
+            "adetMin": 1,
+            "adetMax": 2
+          }
+        ],
+        "bolgeler": [
+          "orman"
+        ],
+        "xp": 1
+      },
+      {
+        "id": "yem_otu",
+        "ad": "Yem otu",
+        "yenilenmeSn": 2700,
+        "getiri": [
+          {
+            "id": "yem",
+            "adet": 1
+          }
+        ],
+        "bolgeler": [
+          "orman",
+          "tarla_kenari"
+        ],
+        "xp": 1
+      }
     ]
   },
-
   "kisaPencereToplama": {
     "$aciklama": "Sv 16 'kisa mevsimli toplama' yerine gecen sistem. Oyun ici takvim gerektirmez.",
     "acilisSeviye": 16,
@@ -31,18 +164,100 @@
     "deterministik": true,
     "not": "Pencere zamanlari sunucu tohumu + gun numarasindan hesaplanir."
   },
-
   "maden": {
     "katlar": [
-      { "kat": 1, "ad": "Kat 1", "gerekenKazmaKademe": 1, "acilisSeviye": 9,  "vurus": 3, "yenilenmeSn": 1200, "dugumler": [{ "id": "tas",   "adetMin": 2, "adetMax": 3, "agirlik": 60 }, { "id": "komur", "adetMin": 2, "adetMax": 3, "agirlik": 40 }] },
-      { "kat": 2, "ad": "Kat 2", "gerekenKazmaKademe": 2, "acilisSeviye": 12, "vurus": 4, "yenilenmeSn": 1800, "dugumler": [{ "id": "komur", "adetMin": 2, "adetMax": 3, "agirlik": 50 }, { "id": "demir", "adetMin": 2, "adetMax": 3, "agirlik": 50 }] },
-      { "kat": 3, "ad": "Kat 3", "gerekenKazmaKademe": 3, "acilisSeviye": 15, "vurus": 5, "yenilenmeSn": 2700, "dugumler": [{ "id": "demir", "adetMin": 1, "adetMax": 2, "agirlik": 65 }, { "id": "altin", "adetMin": 1, "adetMax": 2, "agirlik": 35 }] },
-      { "kat": 4, "ad": "Dip",   "gerekenKazmaKademe": 4, "acilisSeviye": 18, "vurus": 6, "yenilenmeSn": 3600, "dugumler": [{ "id": "altin", "adetMin": 1, "adetMax": 2, "agirlik": 70 }, { "id": "elmas", "adetMin": 1, "adetMax": 2, "agirlik": 30 }] }
+      {
+        "kat": 1,
+        "ad": "Kat 1",
+        "gerekenKazmaKademe": 1,
+        "acilisSeviye": 9,
+        "vurus": 3,
+        "yenilenmeSn": 1200,
+        "dugumler": [
+          {
+            "id": "tas",
+            "adetMin": 2,
+            "adetMax": 3,
+            "agirlik": 60
+          },
+          {
+            "id": "komur",
+            "adetMin": 2,
+            "adetMax": 3,
+            "agirlik": 40
+          }
+        ]
+      },
+      {
+        "kat": 2,
+        "ad": "Kat 2",
+        "gerekenKazmaKademe": 2,
+        "acilisSeviye": 12,
+        "vurus": 4,
+        "yenilenmeSn": 1800,
+        "dugumler": [
+          {
+            "id": "komur",
+            "adetMin": 2,
+            "adetMax": 3,
+            "agirlik": 50
+          },
+          {
+            "id": "demir",
+            "adetMin": 2,
+            "adetMax": 3,
+            "agirlik": 50
+          }
+        ]
+      },
+      {
+        "kat": 3,
+        "ad": "Kat 3",
+        "gerekenKazmaKademe": 3,
+        "acilisSeviye": 15,
+        "vurus": 5,
+        "yenilenmeSn": 2700,
+        "dugumler": [
+          {
+            "id": "demir",
+            "adetMin": 1,
+            "adetMax": 2,
+            "agirlik": 65
+          },
+          {
+            "id": "altin",
+            "adetMin": 1,
+            "adetMax": 2,
+            "agirlik": 35
+          }
+        ]
+      },
+      {
+        "kat": 4,
+        "ad": "Dip",
+        "gerekenKazmaKademe": 4,
+        "acilisSeviye": 18,
+        "vurus": 6,
+        "yenilenmeSn": 3600,
+        "dugumler": [
+          {
+            "id": "altin",
+            "adetMin": 1,
+            "adetMax": 2,
+            "agirlik": 70
+          },
+          {
+            "id": "elmas",
+            "adetMin": 1,
+            "adetMax": 2,
+            "agirlik": 30
+          }
+        ]
+      }
     ],
     "dugumXp": 3,
     "not": "Bakir ve gumus YOK. v0.2 Bolum 9'daki 'Kat 3 bakir gumus' ifadesi Bolum 7b ile celisiyordu; 4 cevher korundu."
   },
-
   "ortakDugum": {
     "$aciklama": "Acik madde #11. Iki oyuncu ayni dugume vurursa.",
     "model": "paylasimli_saglik",
@@ -51,30 +266,221 @@
     "yenilenmeDegismez": true,
     "not": "Katkisi %25 ustunde olan HER oyuncu tam getiriyi alir. Birlikte calismak asla tek basina calismaktan kotu olmamali."
   },
-
   "aletler": [
-    { "id": "tas_kazma",    "tur": "kazma", "kademe": 1, "dayaniklilik": 40,   "malzeme": [{ "id": "odun", "adet": 5 }, { "id": "tas", "adet": 10 }],                                             "craftSeviye": 1,  "marketFiyat": 50,   "herZamanMarkette": true },
-    { "id": "demir_kazma",  "tur": "kazma", "kademe": 2, "dayaniklilik": 120,  "malzeme": [{ "id": "odun", "adet": 5 }, { "id": "demir_kulce", "adet": 8 }],                                     "craftSeviye": 10 },
-    { "id": "celik_kazma",  "tur": "kazma", "kademe": 3, "dayaniklilik": 300,  "malzeme": [{ "id": "sert_odun", "adet": 5 }, { "id": "celik_kulce", "adet": 10 }],                               "craftSeviye": 12 },
-    { "id": "elmas_kazma",  "tur": "kazma", "kademe": 4, "dayaniklilik": 800,  "malzeme": [{ "id": "degerli_odun", "adet": 5 }, { "id": "celik_kulce", "adet": 8 }, { "id": "elmas", "adet": 3 }], "craftSeviye": 15 },
-
-    { "id": "tas_balta",    "tur": "balta", "kademe": 1, "dayaniklilik": 120,  "malzeme": [{ "id": "odun", "adet": 5 }, { "id": "tas", "adet": 8 }],                                              "craftSeviye": 1,  "marketFiyat": 45,   "herZamanMarkette": true },
-    { "id": "demir_balta",  "tur": "balta", "kademe": 2, "dayaniklilik": 360,  "malzeme": [{ "id": "odun", "adet": 5 }, { "id": "demir_kulce", "adet": 6 }],                                      "craftSeviye": 10 },
-    { "id": "celik_balta",  "tur": "balta", "kademe": 3, "dayaniklilik": 900,  "malzeme": [{ "id": "sert_odun", "adet": 5 }, { "id": "celik_kulce", "adet": 8 }],                                 "craftSeviye": 12 },
-    { "id": "elmas_balta",  "tur": "balta", "kademe": 4, "dayaniklilik": 2400, "malzeme": [{ "id": "degerli_odun", "adet": 5 }, { "id": "celik_kulce", "adet": 6 }, { "id": "elmas", "adet": 2 }], "craftSeviye": 15 },
-
-    { "id": "ahsap_kova",   "tur": "kova",  "kademe": 1, "dayaniklilik": null, "kapasiteKaro": 6,  "malzeme": [{ "id": "odun", "adet": 8 }],                                                        "craftSeviye": 1 },
-    { "id": "demir_kova",   "tur": "kova",  "kademe": 2, "dayaniklilik": null, "kapasiteKaro": 12, "malzeme": [{ "id": "demir_kulce", "adet": 6 }],                                                "craftSeviye": 10 },
-    { "id": "celik_kova",   "tur": "kova",  "kademe": 3, "dayaniklilik": null, "kapasiteKaro": 20, "malzeme": [{ "id": "celik_kulce", "adet": 8 }],                                               "craftSeviye": 12 },
-    { "id": "elmas_kova",   "tur": "kova",  "kademe": 4, "dayaniklilik": null, "kapasiteKaro": 40, "malzeme": [{ "id": "celik_kulce", "adet": 6 }, { "id": "elmas", "adet": 2 }],                  "craftSeviye": 15 }
+    {
+      "id": "tas_kazma",
+      "tur": "kazma",
+      "kademe": 1,
+      "dayaniklilik": 40,
+      "malzeme": [
+        {
+          "id": "odun",
+          "adet": 5
+        },
+        {
+          "id": "tas",
+          "adet": 10
+        }
+      ],
+      "craftSeviye": 1,
+      "marketFiyat": 50,
+      "herZamanMarkette": true
+    },
+    {
+      "id": "demir_kazma",
+      "tur": "kazma",
+      "kademe": 2,
+      "dayaniklilik": 120,
+      "malzeme": [
+        {
+          "id": "odun",
+          "adet": 5
+        },
+        {
+          "id": "demir_kulce",
+          "adet": 8
+        }
+      ],
+      "craftSeviye": 10
+    },
+    {
+      "id": "celik_kazma",
+      "tur": "kazma",
+      "kademe": 3,
+      "dayaniklilik": 300,
+      "malzeme": [
+        {
+          "id": "sert_odun",
+          "adet": 5
+        },
+        {
+          "id": "celik_kulce",
+          "adet": 10
+        }
+      ],
+      "craftSeviye": 12
+    },
+    {
+      "id": "elmas_kazma",
+      "tur": "kazma",
+      "kademe": 4,
+      "dayaniklilik": 800,
+      "malzeme": [
+        {
+          "id": "degerli_odun",
+          "adet": 5
+        },
+        {
+          "id": "celik_kulce",
+          "adet": 8
+        },
+        {
+          "id": "elmas",
+          "adet": 3
+        }
+      ],
+      "craftSeviye": 15
+    },
+    {
+      "id": "tas_balta",
+      "tur": "balta",
+      "kademe": 1,
+      "dayaniklilik": 120,
+      "malzeme": [
+        {
+          "id": "odun",
+          "adet": 5
+        },
+        {
+          "id": "tas",
+          "adet": 8
+        }
+      ],
+      "craftSeviye": 1,
+      "marketFiyat": 45,
+      "herZamanMarkette": true
+    },
+    {
+      "id": "demir_balta",
+      "tur": "balta",
+      "kademe": 2,
+      "dayaniklilik": 360,
+      "malzeme": [
+        {
+          "id": "odun",
+          "adet": 5
+        },
+        {
+          "id": "demir_kulce",
+          "adet": 6
+        }
+      ],
+      "craftSeviye": 10
+    },
+    {
+      "id": "celik_balta",
+      "tur": "balta",
+      "kademe": 3,
+      "dayaniklilik": 900,
+      "malzeme": [
+        {
+          "id": "sert_odun",
+          "adet": 5
+        },
+        {
+          "id": "celik_kulce",
+          "adet": 8
+        }
+      ],
+      "craftSeviye": 12
+    },
+    {
+      "id": "elmas_balta",
+      "tur": "balta",
+      "kademe": 4,
+      "dayaniklilik": 2400,
+      "malzeme": [
+        {
+          "id": "degerli_odun",
+          "adet": 5
+        },
+        {
+          "id": "celik_kulce",
+          "adet": 6
+        },
+        {
+          "id": "elmas",
+          "adet": 2
+        }
+      ],
+      "craftSeviye": 15
+    },
+    {
+      "id": "ahsap_kova",
+      "tur": "kova",
+      "kademe": 1,
+      "dayaniklilik": null,
+      "kapasiteKaro": 6,
+      "malzeme": [
+        {
+          "id": "odun",
+          "adet": 8
+        }
+      ],
+      "craftSeviye": 1
+    },
+    {
+      "id": "demir_kova",
+      "tur": "kova",
+      "kademe": 2,
+      "dayaniklilik": null,
+      "kapasiteKaro": 12,
+      "malzeme": [
+        {
+          "id": "demir_kulce",
+          "adet": 6
+        }
+      ],
+      "craftSeviye": 10
+    },
+    {
+      "id": "celik_kova",
+      "tur": "kova",
+      "kademe": 3,
+      "dayaniklilik": null,
+      "kapasiteKaro": 20,
+      "malzeme": [
+        {
+          "id": "celik_kulce",
+          "adet": 8
+        }
+      ],
+      "craftSeviye": 12
+    },
+    {
+      "id": "elmas_kova",
+      "tur": "kova",
+      "kademe": 4,
+      "dayaniklilik": null,
+      "kapasiteKaro": 40,
+      "malzeme": [
+        {
+          "id": "celik_kulce",
+          "adet": 6
+        },
+        {
+          "id": "elmas",
+          "adet": 2
+        }
+      ],
+      "craftSeviye": 15
+    }
   ],
-
   "aletKurallari": {
-    "dayaniklilikUyariEsigi": 0.20,
+    "dayaniklilikUyariEsigi": 0.2,
     "kirilincaAltKademeyeDus": true,
     "kilitlenmeDegismezi": "Hicbir alet, o aleti yapmak icin gereken kaynagin tek edinme yolu olmamali. Dal ve tas parcasi elle toplanir; tas kazma ve tas balta Sv 1'den craftlanabilir; market ikisini de her zaman ucuz satar."
   },
-
   "craftTarifleri": {
     "$aciklama": "TAM 25 tarif. v0.2 siniri. Yeni tarif eklemek isteyen bir tarif cikarmak zorunda. Malzeme derinligi en fazla 2 kademe.",
     "sinir": 25,
@@ -87,42 +493,183 @@
       "evEsyasi": 6
     },
     "araMalzeme": [
-      { "id": "demir_kulce", "ad": "Demir kulcesi", "girdi": [{ "id": "demir", "adet": 2 }, { "id": "komur", "adet": 1 }], "craftSeviye": 10 },
-      { "id": "celik_kulce", "ad": "Celik kulcesi", "girdi": [{ "id": "demir_kulce", "adet": 2 }, { "id": "komur", "adet": 2 }], "craftSeviye": 12 },
-      { "id": "altin_kulce", "ad": "Altin kulcesi", "girdi": [{ "id": "altin", "adet": 2 }, { "id": "komur", "adet": 1 }], "craftSeviye": 15 }
+      {
+        "id": "demir_kulce",
+        "ad": "Demir kulcesi",
+        "girdi": [
+          {
+            "id": "demir",
+            "adet": 2
+          },
+          {
+            "id": "komur",
+            "adet": 1
+          }
+        ],
+        "craftSeviye": 10
+      },
+      {
+        "id": "celik_kulce",
+        "ad": "Celik kulcesi",
+        "girdi": [
+          {
+            "id": "demir_kulce",
+            "adet": 2
+          },
+          {
+            "id": "komur",
+            "adet": 2
+          }
+        ],
+        "craftSeviye": 12
+      },
+      {
+        "id": "altin_kulce",
+        "ad": "Altin kulcesi",
+        "girdi": [
+          {
+            "id": "altin",
+            "adet": 2
+          },
+          {
+            "id": "komur",
+            "adet": 1
+          }
+        ],
+        "craftSeviye": 15
+      }
     ],
     "isleme": [
-      { "id": "un",     "ad": "Un",     "girdi": [{ "id": "bugday", "adet": 3 }],                        "acilisSeviye": 13, "fiyatCarpani": 2.5, "yapi": "degirmen" },
-      { "id": "ekmek",  "ad": "Ekmek",  "girdi": [{ "id": "un", "adet": 2 }, { "id": "odun", "adet": 1 }], "acilisSeviye": 13, "fiyatCarpani": 3.0, "yapi": "degirmen" },
-      { "id": "peynir", "ad": "Peynir", "girdi": [{ "id": "sut", "adet": 2 }],                            "acilisSeviye": 14, "fiyatCarpani": 2.8, "yapi": "ahir" }
+      {
+        "id": "un",
+        "ad": "Un",
+        "girdi": [
+          {
+            "id": "bugday",
+            "adet": 3
+          }
+        ],
+        "acilisSeviye": 13,
+        "fiyatCarpani": 2.5,
+        "yapi": "degirmen"
+      },
+      {
+        "id": "ekmek",
+        "ad": "Ekmek",
+        "girdi": [
+          {
+            "id": "un",
+            "adet": 2
+          },
+          {
+            "id": "odun",
+            "adet": 1
+          }
+        ],
+        "acilisSeviye": 13,
+        "fiyatCarpani": 3.0,
+        "yapi": "degirmen"
+      },
+      {
+        "id": "peynir",
+        "ad": "Peynir",
+        "girdi": [
+          {
+            "id": "sut",
+            "adet": 2
+          }
+        ],
+        "acilisSeviye": 14,
+        "fiyatCarpani": 2.8,
+        "yapi": "ahir"
+      }
     ],
     "yapi": [
-      { "id": "yagmurlama", "ad": "Yagmurlama", "girdi": [{ "id": "celik_kulce", "adet": 4 }, { "id": "elmas", "adet": 1 }], "acilisSeviye": 14, "etki": "4 komsu karoyu her buyume cevriminde otomatik sular" }
+      {
+        "id": "yagmurlama",
+        "ad": "Yagmurlama",
+        "girdi": [
+          {
+            "id": "celik_kulce",
+            "adet": 4
+          },
+          {
+            "id": "elmas",
+            "adet": 1
+          }
+        ],
+        "acilisSeviye": 14,
+        "etki": "4 komsu karoyu her buyume cevriminde otomatik sular"
+      }
     ],
     "evEsyasi": {
       "adet": 6,
-      "girdiTemeli": ["altin_kulce", "degerli_odun", "nadir_odun", "elmas"],
+      "girdiTemeli": [
+        "altin_kulce",
+        "degerli_odun",
+        "nadir_odun",
+        "elmas"
+      ],
       "islevselFayda": false,
       "not": "Gec oyunun ana altin/elmas kuyusu. Kozmetik + defter kaydi."
     },
-    "craftXp": { "ilkKez": 30, "tekrar": 5 }
+    "craftXp": {
+      "ilkKez": 30,
+      "tekrar": 5
+    }
   },
-
   "vadiAniti": {
     "$aciklama": "Acik madde #14. Gec oyun prestij cikisi. Tek model + malzeme/olcek degisimi.",
     "acilisSeviye": 17,
     "islevselFayda": false,
     "kademeler": [
-      { "kademe": 1, "altin": 10000,  "elmas": 0 },
-      { "kademe": 2, "altin": 30000,  "elmas": 5 },
-      { "kademe": 3, "altin": 80000,  "elmas": 15 },
-      { "kademe": 4, "altin": 200000, "elmas": 40 },
-      { "kademe": 5, "altin": 500000, "elmas": 100 }
+      {
+        "kademe": 1,
+        "altin": 10000,
+        "elmas": 0
+      },
+      {
+        "kademe": 2,
+        "altin": 30000,
+        "elmas": 5
+      },
+      {
+        "kademe": 3,
+        "altin": 80000,
+        "elmas": 15
+      },
+      {
+        "kademe": 4,
+        "altin": 200000,
+        "elmas": 40
+      },
+      {
+        "kademe": 5,
+        "altin": 500000,
+        "elmas": 100
+      }
     ]
   },
-
   "hayvanlar": [
-    { "id": "tavuk", "ad": "Tavuk", "yapi": "kumes", "acilisSeviye": 8,  "urun": "yumurta", "periyotSn": 86400, "yemGerekli": true, "tabanFiyat": 40 },
-    { "id": "inek",  "ad": "Inek",  "yapi": "ahir",  "acilisSeviye": 14, "urun": "sut",     "periyotSn": 86400, "yemGerekli": true, "tabanFiyat": 180 }
+    {
+      "id": "tavuk",
+      "ad": "Tavuk",
+      "yapi": "kumes",
+      "acilisSeviye": 8,
+      "urun": "yumurta",
+      "periyotSn": 86400,
+      "yemGerekli": true,
+      "tabanFiyat": 40
+    },
+    {
+      "id": "inek",
+      "ad": "İnek",
+      "yapi": "ahir",
+      "acilisSeviye": 14,
+      "urun": "sut",
+      "periyotSn": 86400,
+      "yemGerekli": true,
+      "tabanFiyat": 180
+    }
   ]
 }

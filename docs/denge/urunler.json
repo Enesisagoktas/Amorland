@@ -13,7 +13,7 @@
   "urunler": [
     {
       "id": "bugday",
-      "ad": "Bugday",
+      "ad": "Buğday",
       "acilis": {
         "tip": "seviye_odulu",
         "seviye": 1
@@ -42,7 +42,7 @@
     },
     {
       "id": "havuc",
-      "ad": "Havuc",
+      "ad": "Havuç",
       "acilis": {
         "tip": "seviye_odulu",
         "seviye": 3
@@ -56,7 +56,7 @@
     },
     {
       "id": "misir",
-      "ad": "Misir",
+      "ad": "Mısır",
       "acilis": {
         "tip": "seviye_odulu",
         "seviye": 4
@@ -131,7 +131,7 @@
     },
     {
       "id": "cilek",
-      "ad": "Cilek",
+      "ad": "Çilek",
       "acilis": {
         "tip": "market",
         "seviye": 10
@@ -149,7 +149,7 @@
     },
     {
       "id": "aycicegi",
-      "ad": "Aycicegi",
+      "ad": "Ayçiçeği",
       "acilis": {
         "tip": "market",
         "seviye": 11
@@ -191,7 +191,7 @@
     },
     {
       "id": "uzum",
-      "ad": "Uzum",
+      "ad": "Üzüm",
       "acilis": {
         "tip": "market",
         "seviye": 15
@@ -209,7 +209,7 @@
     },
     {
       "id": "balkabagi",
-      "ad": "Balkabagi",
+      "ad": "Balkabağı",
       "acilis": {
         "tip": "market",
         "seviye": 16
