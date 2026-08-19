@@ -3,7 +3,9 @@
 Bu dosya Claude Code'un projeyi tanıması için.
 
 - Tam tasarım: `docs/amorland-tasarim-dokumani.md` (v0.2)
-- **Eksikleri kapatan ek: `docs/amorland-tasarim-v0.3-ek.md`** — çelişki çözümleri ve kesin sayılar burada, çakışma olursa **v0.3 geçerli**
+- **Birleştirilmiş tek doğruluk kaynağı: `AMORLAND-MASTER-PROMPT.md`** — oyunun tamamı burada, kendi kendine yeter
+- Ekler (karar günlüğü): `docs/amorland-tasarim-v0.3-ek.md` (etkileşim + sayılar) · `v0.4-ek.md` (ekonomi düzeltmeleri + kural boşlukları) · `v0.5-ses.md` (ses + haptik)
+- Çakışma olursa geçerlilik sırası: **JSON > master prompt > v0.5 > v0.4 > v0.3 > v0.2**
 - Denge tabloları: `docs/denge/*.json` — sunucuda yapılandırma olarak yüklenir, koda gömülmez
 
 ## Proje nedir
@@ -54,6 +56,8 @@ Bu dosya Claude Code'un projeyi tanıması için.
 | Enerji barı | **Yok** |
 | Premium para birimi | **Yok** |
 | Cevherler | 4 tane: kömür, demir, altın, elmas. Bakır/gümüş yok. |
+| Perde 1 (Sv 1-4) | **Para yok.** Başlangıç ürünleri hasatta tohumunu geri verir. |
+| Ses | Oyuncuların çoğu kapalı oynar — **hiçbir mekanik sese bağlı olamaz.** Haptik birincil kanal. |
 
 ## Donanım gerçeği ⚠️
 

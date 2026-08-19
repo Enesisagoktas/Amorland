@@ -1,7 +1,7 @@
 # AMORLAND — Tam Oyun Spesifikasyonu (Master Prompt)
 
 > Bu dosya oyunun **tek doğruluk kaynağıdır.** Kendi kendine yeter — başka dokümana bakmadan oyun buradan inşa edilebilir.
-> Sürüm 1.0 · 2026-08-19 · v0.2 + v0.3 eki + v0.4 eki birleştirilmiş hali
+> Sürüm 1.1 · 2026-08-19 · v0.2 + v0.3 + v0.4 + v0.5 (ses) birleştirilmiş hali
 > Sayısal tablolar `docs/denge/*.json` ile birebir aynıdır. Çakışma olursa **JSON geçerlidir.**
 
 ---
@@ -721,7 +721,104 @@ Kayıp değil, davet. Sonradan eş davet edilirse o satır dolar.
 
 ---
 
-## 23. Reklam ve mağaza
+## 23. Ses ve haptik
+
+### ⚠️ İki gerçek — sıradan ses planını geçersiz kılar
+
+**1. Oyuncularının çoğu sesi kapalı oynayacak.** Mobil kozy oyunlar podcast/müzik dinlerken oynanır.
+- **Hiçbir mekanik sese bağlı olamaz.** Alet kırılma, depo dolu, tren gelişi — hepsinin görsel karşılığı zorunlu. Ses ikinci kanal.
+- **Oyuncunun sesini çalma.** iOS `AVAudioSessionCategoryAmbient`, Android `AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`. Birinin podcast'ini kesen kozy oyun kaldırılır.
+
+**2. Sürükle-boyama sesi katleder.** 24 karo kuyruğa alınınca aynı ses 24 kez çalar → makineli tüfek. Üçü de zorunlu:
+
+| Önlem | Değer |
+|---|---|
+| Perde varyasyonu | Her tekrarda **±%8** rastgele pitch |
+| Örnek varyasyonu | Sık tekrar eden her eylemin **en az 3 kaydı** |
+| Eşzamanlılık sınırı | Etiket başına aynı anda en fazla **3** kanal |
+
+Kuyruk eylemlerinde ses hafif alçalır (1. eylem %100, sonrakiler %75).
+
+### Yatırım sırası — içgüdüye bırakma
+
+**1)** Eylem sesleri · **2)** Ödül anları · **3)** Ortam döngüleri · **4)** Haptik · **5)** UI · **6)** Müzik
+
+> ⚠️ Müzik **en pahalı, en az fark edilen** katman — çoğu oyuncu kendi müziğini dinliyor. Önce müzikle uğraşmak tek kişilik ses bütçesini bitiren klasik hatadır.
+
+### Envanter — 52 benzersiz ses, ~92 dosya
+
+| Grup | Adet | Not |
+|---|---|---|
+| **Eylem** | 14 (**×3 varyasyon**) | Ekme, sulama, hasat ×2, kazma ×2, düğüm kırılma, balta, ağaç, toplama, kova, craft ×2, **alet kırılma** |
+| **Ayak sesi** | 4 yüzey (**×5 varyasyon**) | Toprak, çim, tahta, taş |
+| **Ödül/olay** | 8 | Seviye, **tren gelişi (~4 sn, oyunun en büyük olayı)**, tren kalkış, manifesto, defter sayfası, ortak proje katkı, **ortak proje tamamlandı**, günlük sandık |
+| **Ortam döngüsü** | 7 | Bölge başına 30-45 sn. Maden dışında hepsi sakin. |
+| **Hayvan** | 3 | Tavuk, inek, yumurta |
+| **UI** | 12 | |
+| **Müzik** | 4 | Ana tema, genel döngü, maden, final |
+
+### Kaynak — 0 TL, ses tasarımcısı yok
+
+⚠️ **Çiftlik oyununda en iyi 0 TL ses kaynağı senin telefonun.** Foley tam olarak budur, bir öğleden sonra sürer ve kütüphane sesinden iyi çıkar.
+
+| Ses | Nasıl kaydedilir |
+|---|---|
+| Sulama | Kovadan leğene su dök *(en çok duyulan ses — en iyi kayıt buraya)* |
+| Ekme / toprak | Saksı toprağını avuçla, sık |
+| Hasat | Marul kopar, kâğıt buruştur |
+| Balta | Tahtaya tahta vur |
+| Kazma | Taşa taş vur, çakıl karıştır |
+| Ayak sesi | Toprakta / tahtada / çakılda yürü |
+| Defter sayfası | Kalın kâğıt çevir |
+
+Her sesin **5-6 tekrarını** kaydet (varyasyon buradan çıkar), Audacity ile kırp + normalize.
+
+**Kütüphane** (kalan için): Kenney Audio (CC0) · Freesound (**CC0 filtresini mutlaka aç**) · Sonniss GDC bundle · Pixabay Audio
+⚠️ **Lisans kaydı tut:** her dosya için kaynak + lisans + tarih bir CSV'de.
+
+**Üretilen:** UI sesleri Python ile sentezlenebilir. Organik sesler (su, toprak, ahşap) sentezle iyi çıkmaz — oraya girme.
+
+### Stil sözleşmesi
+| Kural | Değer |
+|---|---|
+| Format | OGG Vorbis (kaynak 48 kHz WAV) |
+| Ses yüksekliği | Tüm SFX **-16 LUFS**, tepe -1 dBFS |
+| Eylem sesi | **300 ms altı** |
+| Ödül sesi | 1-4 sn |
+| Ortam döngüsü | 30-45 sn, sıfır geçişli kusursuz döngü |
+| Ton | Yumuşak, alçak frekanslı. **Kozy = keskin transient yok.** |
+
+### Haptik — sessizken çalışan TEK kanal
+
+Oyuncuların çoğu sesi kapalı oynayacaksa dokunsal geri bildirim sesten önemli. Ve bedava.
+
+| Olay | Titreşim |
+|---|---|
+| Hasat | Çok hafif, tek darbe |
+| Düğüm kırılma | Orta, tek darbe |
+| **Alet kırılma** | **Çift darbe** — sesi kapalı oyuncu bunu kaçırmamalı |
+| Seviye atlama | Yükselen üçlü desen |
+| Ortak proje tamamlandı | Uzun, belirgin |
+| Hata | Çok kısa, sert |
+
+- Ayarlarda **kapatılabilir**
+- Kuyruk eylemlerinde **sadece ilk ve son** titreşir — 24 titreşim işkence
+- iOS `UIFeedbackGenerator`, Android `VibrationEffect`. `Handheld.Vibrate()` tek başına yetmez.
+
+### Unity teknik
+| Konu | Karar |
+|---|---|
+| AudioMixer | Master → Müzik / Ortam / Eylem / UI, her biri ayrı kaydırıcı |
+| Kısa SFX | Decompress on Load, ADPCM/PCM |
+| Ortam + müzik | Streaming, Vorbis %70, Addressables ile bölgeyle |
+| **AudioSource havuzu** | Ses başına `Instantiate` YOK. 16 kaynaklı havuz. |
+| Sessiz anahtarı | iOS'ta sessizdeyse ses çalmaz |
+| Arka plan | Uygulama arka plana atılınca tüm ses durur |
+| Boyut bütçesi | **~20 MB** (150 MB indirme hedefi içinde) |
+
+---
+
+## 24. Reklam ve mağaza
 
 ### Reklam — sadece ödüllü
 | Yer | Ödül |
@@ -746,22 +843,22 @@ Kayıp değil, davet. Sonradan eş davet edilirse o satır dolar.
 
 ---
 
-## 24. Yapım sırası
+## 25. Yapım sırası
 
-1. **Dikey dilim** — Ev + Tarla, tek ürün, ek/sula/biç, iki oyuncu bağlı, durum kalıcı
-2. **Perde 1 tam (Sv 1-5)** — oyunun vitrini
+1. **Dikey dilim** — Ev + Tarla, tek ürün, ek/sula/biç, iki oyuncu bağlı, durum kalıcı, **ses altyapısı (mixer + havuz + varyasyon) + yer tutucu ses seti**
+2. **Perde 1 tam (Sv 1-5)** — oyunun vitrini. **Eylem sesleri (kendi kaydın) + haptik + tarla/ev ortamı** — vitrin sessiz olamaz.
 3. Market + Orman (Sv 6-7)
 4. Maden + craft (Sv 9-10)
 5. İlk ortak proje (Sv 11) — sosyal tasarımın gerçek testi
 6. Perde 3 içeriği
-7. Cila, ses, bildirim, mağaza materyali
+7. Cila, UI sesleri, müzik, karışım dengesi, bildirim, mağaza materyali
 8. **(v2)** Sesli sohbet
 
 > ⚠️ **Perde 1 bitmeden Perde 3'e tek satır içerik üretme.**
 
 ---
 
-## 25. Yasaklar — bunları yaparsan oyun bozulur
+## 26. Yasaklar — bunları yaparsan oyun bozulur
 
 | # | Yasak | Sonuç |
 |---|---|---|
@@ -780,16 +877,20 @@ Kayıp değil, davet. Sonradan eş davet edilirse o satır dolar.
 | 13 | Rastgele eşleşme eklemek | Taşınamaz moderasyon yükü, partner kaybında oyun ölür |
 | 14 | Perde 1'de para/market açmak | Öğretici yükü katlanır, tren kapanışının anlamı gider |
 | 15 | AI 3D üretimine güvenmek | Stil tutarsızlığı, bozuk topoloji |
+| 16 | Oyuncunun çalan müziğini/podcast'ini kesmek | Kozy oyunun 1 numaralı kaldırılma sebebi |
+| 17 | Bir mekanığı sadece sesle bildirmek | Oyuncuların çoğu sesi kapalı oynuyor |
+| 18 | Perde/örnek varyasyonu olmadan tekrar eden ses | Sürükle-boyamada makineli tüfek sesi |
+| 19 | Ses altyapısını dikey dilimden sonraya bırakmak | 92 sesin hepsi yeniden elden geçer |
+| 20 | Müziği önce yapmak | Ses bütçesini bitiren klasik hata |
 
 ---
 
-## 26. Bilerek kapsam dışı bırakılanlar
+## 27. Bilerek kapsam dışı bırakılanlar
 
 | Konu | Ne zaman |
 |---|---|
 | **Sunucu veri modeli + WebSocket protokolü** | Ayrı doküman, dikey dilimden hemen önce |
 | İsim müsaitliği (marka, paket adı, alan adı, mağaza araması) | Yayın kararından önce. **Sıra: mağaza araması → marka → paket adı → domain** |
-| Ses tasarımı | Perde 3 sonrası |
 | Yerelleştirme | Altyapı baştan (string tablosu), içerik cilada |
 | 20 defter sayfasının gerçek metni | Perde perde yazılır |
 
