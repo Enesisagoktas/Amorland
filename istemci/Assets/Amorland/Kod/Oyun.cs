@@ -1,0 +1,658 @@
+using System;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using Amorland.Ag;
+using Amorland.Arayuz;
+using Amorland.Durum;
+using Amorland.Girdi;
+using Amorland.Gorsel;
+using Amorland.Ogretici;
+using Amorland.Oynanis;
+using Amorland.Ses;
+
+namespace Amorland
+{
+    /// <summary>
+    /// Oyunun kok bileseni: butun katmanlari kurar ve birbirine baglar.
+    ///
+    /// Katman sirasi bilincli:
+    ///   denge -> kimlik -> vadi -> durum -> gorsel -> girdi -> UI -> ogretici
+    /// Her katman yalnizca altindakini bilir. Ust katman (UI) oyun kurali icermez;
+    /// alt katman (durum) UI'i tanimaz.
+    ///
+    /// ⚠ Mimari kural 1: bu dosyada tek bir odul/miktar hesabi yoktur. Istemci
+    /// niyet gonderir, sunucu sonucu hesaplar, istemci gelen degisimi cizer.
+    /// </summary>
+    public class Oyun : MonoBehaviour
+    {
+        // --- katmanlar
+        private RestIstemci _rest;
+        private WsIstemci _ws;
+        private BaglantiYoneticisi _baglanti;
+        private readonly DunyaDurumu _durum = new DunyaDurumu();
+        private readonly DengeVerisi _denge = new DengeVerisi();
+
+        // --- sahne
+        private Camera _kamera;
+        private KameraYoneticisi _kameraYoneticisi;
+        private TarlaGorunumu _tarla;
+        private KarakterKontrolcusu _karakter;
+        private Transform _partnerGorsel;
+        private Izgara _izgara;
+        private EtkilesimYoneticisi _etkilesim;
+        private SesYoneticisi _ses;
+
+        // --- arayuz
+        private Canvas _oyunKanvasi;
+        private Canvas _ustKanvas;
+        private Hud _hud;
+        private Joystick _joystick;
+        private CantaEkrani _canta;
+        private DepoEkrani _depo;
+        private TezgahEkrani _tezgah;
+        private DefterEkrani _defter;
+        private HaritaEkrani _harita;
+        private DavetEkrani _davet;
+        private AyarlarEkrani _ayarlar;
+        private GirisEkrani _giris;
+        private Bildirimler _bildirimler;
+        private BaglantiPerdesi _perde;
+        private SeviyeAtlamaEkrani _seviyeEkrani;
+        private YuklemeEkrani _yukleme;
+        private OgreticiAkisi _ogretici;
+
+        private string _yenilemeJetonu;
+        private string _aktifBolge = "tarla";
+        private float _sonrakiKonumYayini;
+
+        private const string YenilemeAnahtari = "amorland.yenileme";
+
+        // ================================================================== yasam dongusu
+
+        private void Start()
+        {
+            Application.targetFrameRate = 60;
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            // Yatay oyun (B.0)
+            Screen.autorotateToLandscapeLeft = true;
+            Screen.autorotateToLandscapeRight = true;
+            Screen.autorotateToPortrait = false;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.orientation = ScreenOrientation.AutoRotation;
+            // Gercek zamanli golge YOK (B.2): sahte blob golge kullanilir.
+            QualitySettings.shadows = ShadowQuality.Disable;
+
+            SahneKur();
+            ArayuzKur();
+            _yukleme.Goster("Sunucuya baglaniliyor...");
+            StartCoroutine(Acilis());
+        }
+
+        private void Update()
+        {
+            _baglanti?.Guncelle();
+
+            if (_baglanti != null)
+            {
+                if (_baglanti.PerdeIndi) _perde.Goster(_baglanti.KuyruktakiEylem);
+                else if (_perde.Acik && _baglanti.Bagli) _perde.Gizle();
+            }
+
+            KonumYayinla();
+            JoystickGuncelle();
+        }
+
+        private void OnDestroy() => _baglanti?.Durdur();
+
+        // ================================================================== kurulum
+
+        private void SahneKur()
+        {
+            var kameraGo = new GameObject("Kamera");
+            kameraGo.transform.SetParent(transform, false);
+            _kamera = kameraGo.AddComponent<Camera>();
+            _kameraYoneticisi = kameraGo.AddComponent<KameraYoneticisi>();
+
+            // Yonlu isik: gercek zamanli golge kapali, yalnizca yuzey ayrimi icin.
+            var isikGo = new GameObject("Isik");
+            isikGo.transform.SetParent(transform, false);
+            var isik = isikGo.AddComponent<Light>();
+            isik.type = LightType.Directional;
+            isik.color = new Color(1f, 0.97f, 0.90f);
+            isik.intensity = 1.05f;
+            isik.shadows = LightShadows.None;
+            isikGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+
+            var sesGo = new GameObject("Ses");
+            sesGo.transform.SetParent(transform, false);
+            _ses = sesGo.AddComponent<SesYoneticisi>();
+            _ses.Kur();
+            _ses.SeviyeleriYukle();
+
+            var tarlaGo = new GameObject("TarlaGorunumu");
+            tarlaGo.transform.SetParent(transform, false);
+            _tarla = tarlaGo.AddComponent<TarlaGorunumu>();
+
+            _izgara = new Izgara();
+
+            var karakterGo = new GameObject("Karakter");
+            karakterGo.transform.SetParent(transform, false);
+            _karakter = karakterGo.AddComponent<KarakterKontrolcusu>();
+
+            var etkilesimGo = new GameObject("Etkilesim");
+            etkilesimGo.transform.SetParent(transform, false);
+            _etkilesim = etkilesimGo.AddComponent<EtkilesimYoneticisi>();
+        }
+
+        private void ArayuzKur()
+        {
+            if (EventSystem.current == null)
+            {
+                var esGo = new GameObject("EventSystem");
+                esGo.transform.SetParent(transform, false);
+                esGo.AddComponent<EventSystem>();
+#if ENABLE_INPUT_SYSTEM
+                esGo.AddComponent<InputSystemUIInputModule>();
+#else
+                esGo.AddComponent<StandaloneInputModule>();
+#endif
+            }
+
+            _oyunKanvasi = UiKit.Kanvas("OyunKanvasi", 10);
+            _oyunKanvasi.transform.SetParent(transform, false);
+            _ustKanvas = UiKit.Kanvas("UstKanvas", 50);
+            _ustKanvas.transform.SetParent(transform, false);
+
+            var bildirimGo = new GameObject("BildirimKatmani");
+            bildirimGo.transform.SetParent(transform, false);
+            _bildirimler = bildirimGo.AddComponent<Bildirimler>();
+            _bildirimler.Kur(_ustKanvas.transform);
+
+            _perde = bildirimGo.AddComponent<BaglantiPerdesi>();
+            _perde.Kur(_ustKanvas.transform);
+
+            _seviyeEkrani = bildirimGo.AddComponent<SeviyeAtlamaEkrani>();
+            _seviyeEkrani.Kur(_ustKanvas.transform);
+
+            _yukleme = bildirimGo.AddComponent<YuklemeEkrani>();
+            _yukleme.Kur(_ustKanvas.transform);
+        }
+
+        // ================================================================== acilis akisi
+
+        private IEnumerator Acilis()
+        {
+            _rest = new RestIstemci(this);
+
+            bool dengeGeldi = false;
+            bool dengeBasarili = false;
+            _rest.Denge(sonuc =>
+            {
+                dengeGeldi = true;
+                dengeBasarili = sonuc.Basarili;
+                if (sonuc.Basarili)
+                {
+                    try
+                    {
+                        _denge.Yukle(sonuc.Veri);
+                    }
+                    catch (Exception e)
+                    {
+                        dengeBasarili = false;
+                        Debug.LogError("[Amorland] Denge cozulemedi: " + e.Message);
+                    }
+                }
+            });
+            while (!dengeGeldi) yield return null;
+
+            if (!dengeBasarili)
+            {
+                _yukleme.Goster(
+                    "Sunucuya ulasilamadi.\n" + SunucuAyari.Temel
+                    + "\n\nSunucu calisiyor mu? Ayarlardan adresi degistirebilirsin.");
+                yield break;
+            }
+
+            EkranlariKur();
+
+            // Kayitli oturum varsa sessizce gir; yoksa isim ekrani.
+            _yenilemeJetonu = PlayerPrefs.GetString(YenilemeAnahtari, "");
+            if (!string.IsNullOrEmpty(_yenilemeJetonu))
+            {
+                bool geldi = false;
+                _rest.JetonYenile(_yenilemeJetonu, sonuc =>
+                {
+                    geldi = true;
+                    if (sonuc.Basarili) OturumKuruldu(sonuc.Veri);
+                    else
+                    {
+                        PlayerPrefs.DeleteKey(YenilemeAnahtari);
+                        _yukleme.Gizle();
+                        _giris.Ac();
+                    }
+                });
+                while (!geldi) yield return null;
+                yield break;
+            }
+
+            _yukleme.Gizle();
+            _giris.Ac();
+        }
+
+        private void EkranlariKur()
+        {
+            _giris = new GirisEkrani(_ustKanvas.transform, _denge);
+            _giris.Basla += (isim, renk) =>
+            {
+                _yukleme.Goster("Vadi hazirlaniyor...");
+                _rest.MisafirGiris(isim, renk, sonuc =>
+                {
+                    if (!sonuc.Basarili)
+                    {
+                        _yukleme.Gizle();
+                        _giris.HataGoster(sonuc.HataMesaji ?? "Baglanti kurulamadi.");
+                        return;
+                    }
+                    // Yas kapisi bir kez sorulur (B.18 0:15).
+                    if (sonuc.Veri.DogumYili == null)
+                    {
+                        _bekleyenOturum = sonuc.Veri;
+                        _yukleme.Gizle();
+                        _giris.YasAdimiGoster();
+                        return;
+                    }
+                    OturumKuruldu(sonuc.Veri);
+                });
+            };
+            _giris.YasVerildi += yil =>
+            {
+                if (_bekleyenOturum == null) return;
+                _rest.ErisimJetonu = _bekleyenOturum.ErisimJetonu;
+                _rest.YasKapisi(yil, _ =>
+                {
+                    var paket = _bekleyenOturum;
+                    _bekleyenOturum = null;
+                    OturumKuruldu(paket);
+                });
+            };
+        }
+
+        private OturumPaketi _bekleyenOturum;
+
+        private void OturumKuruldu(OturumPaketi paket)
+        {
+            _rest.ErisimJetonu = paket.ErisimJetonu;
+            _yenilemeJetonu = paket.YenilemeJetonu;
+            PlayerPrefs.SetString(YenilemeAnahtari, paket.YenilemeJetonu);
+            PlayerPrefs.Save();
+
+            _durum.BenimId = paket.OyuncuId;
+            _giris.Kapat();
+            _yukleme.Goster("Vadi aciliyor...");
+
+            _rest.VadiKur(sonuc =>
+            {
+                if (!sonuc.Basarili)
+                {
+                    _yukleme.Goster("Vadi kurulamadi: " + sonuc.HataMesaji);
+                    return;
+                }
+                DunyayiKur();
+                _baglanti.Baslat(paket.ErisimJetonu);
+                _yukleme.Gizle();
+            });
+        }
+
+        // ================================================================== dunya
+
+        private void DunyayiKur()
+        {
+            _ws = new WsIstemci();
+            _baglanti = new BaglantiYoneticisi(this, _ws, _durum)
+            {
+                MaksKuyrukEylem = _denge.MaksKuyrukEylem,
+                MaksKopusSn = _denge.MaksKopusSn
+            };
+            _baglanti.Bildirim += mesaj => _bildirimler.Goster(mesaj, uyari: true);
+            _baglanti.BaglantiDegisti += bagli =>
+            {
+                if (bagli) _perde.Gizle();
+                else _perde.DurumYaz("Yeniden baglaniyor...");
+            };
+
+            _durum.Red += (kod, mesaj) =>
+            {
+                _bildirimler.Goster(_denge.RedMetni(kod, mesaj), uyari: true);
+                _ses.Cal(SesEtiketi.UiHata);
+                Haptik.Haptik.Calistir(Haptik.Haptik.Desen.Hata);
+            };
+            _durum.OyunOlayi += OlayIsle;
+            _durum.SohbetMesaji += (gonderen, metin) => _bildirimler.Goster(metin);
+            _durum.NotTahtasi += (gonderen, sablon, nesne) =>
+                _bildirimler.Goster("Not tahtasi: " + sablon + (nesne != null ? " (" + nesne + ")" : ""));
+
+            _tarla.Kur(_durum, _denge);
+
+            // Karakter gorseli: renk oyuncunun sectigi renkten gelir.
+            var gorselGo = new GameObject("KarakterGorsel");
+            gorselGo.transform.SetParent(_karakter.transform, false);
+            int benimRenk = 0;
+            var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(benimRenk), new Color(0.88f, 0.76f, 0.64f));
+            MateryalDeposu.Nesne("Govde", mesh, gorselGo.transform, Vector3.zero);
+            // Sahte golge (B.2): gercek zamanli golge yok.
+            MateryalDeposu.Nesne(
+                "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), gorselGo.transform,
+                new Vector3(0f, 0.01f, 0f));
+
+            IzgarayiKur();
+            _karakter.KaroBasinaSn = _denge.YurumeKaroSn;
+            _karakter.Kur(gorselGo.transform, _izgara, new Vector3(1f, 0f, -2f));
+
+            _kameraYoneticisi.Pitch = _denge.KameraPitch;
+            _kameraYoneticisi.YumusatmaSn = _denge.KameraYumusatma;
+            _kameraYoneticisi.OluBolge = new Vector2(_denge.OluBolgeX, _denge.OluBolgeY);
+            _kameraYoneticisi.ZoomYakin = _denge.ZoomYakin;
+            _kameraYoneticisi.ZoomUzak = _denge.ZoomUzak;
+            _kameraYoneticisi.Kur(_kamera, _karakter.transform);
+
+            PartnerGorseliKur();
+            HudKur();
+
+            _etkilesim.Kur(_durum, _denge, _baglanti, _kameraYoneticisi, _karakter, _tarla, _ses);
+            _etkilesim.Bildirim += mesaj => _bildirimler.Goster(mesaj);
+            _etkilesim.UzunBasildi += DaireselMenu;
+
+            _ses.OrtamBaslat(SesEtiketi.OrtamTarla);
+
+            _ogretici = gameObject.AddComponent<OgreticiAkisi>();
+            _ogretici.Kur(_durum, _denge, _ustKanvas.transform, _hud);
+        }
+
+        private void IzgarayiKur()
+        {
+            _izgara.Temizle();
+            // Kuyu gecilemez: uzerinden yurunmez, yanina gidilir.
+            Vector3 kuyu = TarlaGorunumu.KuyuKonumu;
+            _izgara.EngelKoy(Mathf.RoundToInt(kuyu.x), Mathf.RoundToInt(kuyu.z));
+        }
+
+        private void PartnerGorseliKur()
+        {
+            var go = new GameObject("PartnerGorsel");
+            go.transform.SetParent(transform, false);
+            _partnerGorsel = go.transform;
+            var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(1), new Color(0.86f, 0.72f, 0.60f));
+            MateryalDeposu.Nesne("Govde", mesh, go.transform, Vector3.zero);
+            MateryalDeposu.Nesne(
+                "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), go.transform, new Vector3(0f, 0.01f, 0f));
+            go.SetActive(false);
+        }
+
+        private void HudKur()
+        {
+            var hudGo = new GameObject("Hud");
+            hudGo.transform.SetParent(transform, false);
+            _hud = hudGo.AddComponent<Hud>();
+            _hud.Kur(_oyunKanvasi.transform, _durum, _denge);
+            _hud.TohumSecildi += tohum => _etkilesim.SeciliTohum = tohum;
+            _etkilesim.SeciliTohum = _hud.SeciliTohum;
+
+            _joystick = hudGo.AddComponent<Joystick>();
+            _joystick.Kur(_oyunKanvasi);
+
+            _canta = new CantaEkrani(_ustKanvas.transform, _durum, _denge);
+            _depo = new DepoEkrani(_ustKanvas.transform, _durum, _denge);
+            _tezgah = new TezgahEkrani(_ustKanvas.transform, _durum, _denge);
+            _defter = new DefterEkrani(_ustKanvas.transform, _durum);
+            _harita = new HaritaEkrani(_ustKanvas.transform, _durum, _denge);
+            _davet = new DavetEkrani(_ustKanvas.transform);
+            _ayarlar = new AyarlarEkrani(_ustKanvas.transform, _ses);
+
+            _hud.CantaAcildi += () => { _canta.Ac(); _ses.Cal(SesEtiketi.UiAcilis); };
+            _hud.HaritaAcildi += () => { _harita.Ac(); _ses.Cal(SesEtiketi.UiAcilis); };
+            _hud.DefterAcildi += () => { _defter.Ac(); _ses.Cal(SesEtiketi.UiAcilis); };
+            _hud.AyarlarAcildi += () => { _ayarlar.Ac(); _ses.Cal(SesEtiketi.UiAcilis); };
+
+            _canta.DepoyaGonder += esyaId =>
+            {
+                if (esyaId == null) Gonder("depoya_bosalt");
+                else Gonder("depoya_koy", ek: new NiyetEk { EsyaId = esyaId });
+            };
+            _canta.TohumSec += tohum => _etkilesim.SeciliTohum = tohum;
+
+            _depo.DepodanAl += (esyaId, adet) =>
+                Gonder("depodan_al", ek: new NiyetEk { EsyaId = esyaId, Adet = adet });
+            _depo.KilitDegistir += esyaId =>
+                Gonder("depo_kilit", ek: new NiyetEk { EsyaId = esyaId });
+            _depo.DepoyaBosalt += () => Gonder("depoya_bosalt");
+
+            _tezgah.Craftla += tarifId => Gonder("craft", ek: new NiyetEk { TarifId = tarifId });
+
+            _harita.BolgeSecildi += BolgeyeGit;
+
+            _davet.KodIste += () => _rest.DavetKodu(sonuc =>
+            {
+                if (sonuc.Basarili)
+                {
+                    try
+                    {
+                        var nesne = Newtonsoft.Json.Linq.JObject.Parse(sonuc.Veri);
+                        _davet.KodGoster((string)nesne["kod"]);
+                    }
+                    catch (Exception)
+                    {
+                        _davet.HataGoster("Kod okunamadi.");
+                    }
+                }
+                else _davet.HataGoster(sonuc.HataMesaji ?? "Kod uretilemedi.");
+            });
+            _davet.Katil += kod => _rest.Katil(kod, sonuc =>
+            {
+                if (sonuc.Basarili)
+                {
+                    _bildirimler.Goster("Vadiye katildin.");
+                    _baglanti.Baslat(_rest.ErisimJetonu);
+                }
+                else _davet.HataGoster(sonuc.HataMesaji ?? "Katilamadi.");
+            });
+            _davet.HesapBagla += () =>
+            {
+                // Dikey dilimde gercek OAuth yok: kurtarma kodu ureterek ayni sarti karsilar (B.19).
+                _rest.KurtarmaKodu(sonuc =>
+                {
+                    if (!sonuc.Basarili)
+                    {
+                        _davet.HataGoster(sonuc.HataMesaji ?? "Kod alinamadi.");
+                        return;
+                    }
+                    try
+                    {
+                        var nesne = Newtonsoft.Json.Linq.JObject.Parse(sonuc.Veri);
+                        _bildirimler.Goster("Kurtarma kodun: " + (string)nesne["kod"] + " — bir yere yaz!", false, 12f);
+                        _davet.KodGoster(null);
+                    }
+                    catch (Exception)
+                    {
+                        _davet.HataGoster("Kod okunamadi.");
+                    }
+                });
+            };
+
+            _ayarlar.AdresDegisti += adres =>
+            {
+                SunucuAyari.AdresYaz(adres);
+                _bildirimler.Goster("Sunucu adresi kaydedildi. Oyunu yeniden baslat.");
+            };
+        }
+
+        // ================================================================== eylemler
+
+        private void Gonder(string tip, NiyetHedef hedef = null, NiyetEk ek = null)
+        {
+            if (_baglanti == null) return;
+            _baglanti.NiyetGonder(Niyet.Olustur(tip, hedef, ek));
+        }
+
+        private void BolgeyeGit(string bolgeId)
+        {
+            _aktifBolge = bolgeId;
+            Gonder("bolgeye_gir", NiyetHedef.Bolgeye(bolgeId));
+
+            // Bolge gecisinde 0.5-1 sn kararma (B.4). Gizlemeye calisilmaz.
+            StartCoroutine(BolgeGecisi(bolgeId));
+        }
+
+        private IEnumerator BolgeGecisi(string bolgeId)
+        {
+            _yukleme.Goster(_denge.BolgeAdi(bolgeId) + " yukleniyor...");
+            yield return new WaitForSecondsRealtime(0.6f);
+            _yukleme.Gizle();
+
+            // Dikey dilimde yalnizca tarla ve ev cizilir; digerleri panel olarak acilir.
+            switch (bolgeId)
+            {
+                case "depo":
+                    _depo.Ac();
+                    break;
+                case "ev":
+                    _tezgah.Ac();
+                    _ses.OrtamBaslat(SesEtiketi.OrtamEv);
+                    break;
+                default:
+                    _ses.OrtamBaslat(SesEtiketi.OrtamTarla);
+                    break;
+            }
+        }
+
+        /// <summary>Uzun bas -> dairesel menu. Belirsiz karolarda (B.6).</summary>
+        private void DaireselMenu(Vector2Int karo)
+        {
+            var eylem = _etkilesim.EylemBelirle(karo);
+            _bildirimler.Goster(
+                eylem == EtkilesimYoneticisi.Eylem.Yok
+                    ? "Burada yapilacak bir sey yok."
+                    : "Bu karoda: " + eylem);
+        }
+
+        private void OlayIsle(Ag.Olay olay)
+        {
+            switch (olay.Tip)
+            {
+                case "seviye_atlama":
+                    int seviye = olay.Sayi ?? 0;
+                    _seviyeEkrani.Goster(seviye, SeviyeAcilimi(seviye));
+                    _ses.Cal(SesEtiketi.SeviyeAtlama);
+                    Haptik.Haptik.Calistir(Haptik.Haptik.Desen.UcluYukselen);
+                    break;
+
+                case "defter_sayfasi":
+                    _bildirimler.Goster("Defterde yeni sayfa: " + olay.Sayi);
+                    _ses.Cal(SesEtiketi.DefterSayfasi);
+                    break;
+
+                case "bolge_acildi":
+                    _bildirimler.Goster(_denge.BolgeAdi(olay.Deger) + " acildi.");
+                    break;
+
+                case "alet_kirildi":
+                    // ⚠ Sessizce kirilan alet ofke uretir (B.14). Cift darbe + gorsel + yazi.
+                    _bildirimler.Goster(_denge.EsyaAdi(olay.Deger) + " kirildi!", uyari: true, sure: 5f);
+                    _ses.Cal(SesEtiketi.AletKirilma);
+                    Haptik.Haptik.Calistir(Haptik.Haptik.Desen.CiftDarbe);
+                    break;
+
+                case "alet_dayaniklilik_dustu":
+                    _bildirimler.Goster(
+                        _denge.EsyaAdi(olay.Deger) + " yipraniyor (%20 alti).", uyari: true, sure: 5f);
+                    break;
+
+                case "depo_doldu":
+                    _bildirimler.Goster("Depo dolu — hasat engellendi. Urun tarlada bekliyor.", true, 5f);
+                    break;
+
+                case "ilk_kez":
+                    _ses.Cal(SesEtiketi.UiOnay);
+                    break;
+            }
+        }
+
+        private string SeviyeAcilimi(int seviye)
+        {
+            switch (seviye)
+            {
+                case 2: return "Depo acildi · Turp";
+                case 3: return "Partner daveti · Havuc";
+                case 4: return "Misir · Canta 12 slot";
+                case 5: return "Tren gari · Patates · Para oyuna girdi";
+                default: return "";
+            }
+        }
+
+        // ================================================================== her kare
+
+        /// <summary>Konum 5 Hz yayinlanir ve revizyon URETMEZ (C.3).</summary>
+        private void KonumYayinla()
+        {
+            if (_baglanti == null || !_baglanti.Bagli || _karakter == null) return;
+            if (Time.unscaledTime < _sonrakiKonumYayini) return;
+            _sonrakiKonumYayini = Time.unscaledTime + 1f / Mathf.Max(1, _denge.KonumYayinHz);
+
+            Vector3 p = _karakter.transform.position;
+            _baglanti.KonumGonder(_aktifBolge, new Vector2(p.x, p.z), 0f);
+
+            PartnerKonumunuUygula();
+        }
+
+        private void PartnerKonumunuUygula()
+        {
+            var partner = _durum.Partner;
+            if (partner == null || _partnerGorsel == null)
+            {
+                if (_partnerGorsel != null) _partnerGorsel.gameObject.SetActive(false);
+                return;
+            }
+            if (!_durum.PartnerKonumlari.TryGetValue(partner.Id, out WsKonum konum))
+            {
+                _partnerGorsel.gameObject.SetActive(false);
+                return;
+            }
+            _partnerGorsel.gameObject.SetActive(true);
+            // 5 Hz gelen konum ARA DEGERLERLE yumusatilir; yoksa partner ziplayarak yurur.
+            Vector3 hedef = new Vector3(konum.X, 0f, konum.Y);
+            _partnerGorsel.position =
+                Vector3.Lerp(_partnerGorsel.position, hedef, Time.deltaTime * 8f);
+        }
+
+        private void JoystickGuncelle()
+        {
+            if (_joystick == null || _karakter == null) return;
+
+            Girdi.Girdi.Temas[] temaslar = Girdi.Girdi.Temaslar(out int adet);
+            for (int i = 0; i < adet; i++)
+            {
+                var t = temaslar[i];
+                if (t.Basladi) _joystick.Basildi(t.Id, t.Konum);
+                else if (t.Suruyor) _joystick.Suruklendi(t.Id, t.Konum);
+                else if (t.Bitti) _joystick.Birakildi(t.Id);
+            }
+
+            if (!_joystick.Aktif || _joystick.Yon == Vector2.zero) return;
+
+            // Joystick karo karo yurutmez, dogrudan iter: gezinmek icin daha akici.
+            Vector3 yon = new Vector3(_joystick.Yon.x, 0f, _joystick.Yon.y);
+            float hiz = 1f / Mathf.Max(0.01f, _denge.YurumeKaroSn);
+            _karakter.Dur();
+            _karakter.transform.position += yon * (hiz * Time.deltaTime);
+        }
+
+        // ================================================================== disaridan
+
+        public void DavetEkraniniAc() => _davet.Ac();
+
+        public void DepoAc() => _depo.Ac();
+
+        public void TezgahAc() => _tezgah.Ac();
+    }
+}

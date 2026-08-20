@@ -1,0 +1,315 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Amorland.Gorsel
+{
+    /// <summary>
+    /// Prosedurel low-poly mesh uretimi (B.22).
+    ///
+    /// ⚠ Butun mesh'ler <b>sert normalli</b> uretilir: her ucgenin kendi koseleri vardir,
+    /// paylasilan kose yoktur. Yumusak normal low-poly gorunumu bozar ve "ucuz mobil oyun"
+    /// hissi verir. Bu, uslup sozlesmesinin en ucuz ve en etkili maddesi.
+    ///
+    /// ⚠ Kamera yaw KILITLI (B.5): modellerin arkasi hic gorunmez. Bu yuzden hicbir sekilde
+    /// arka yuz detayi uretilmez — asset butcesinin en buyuk kaldiraci budur.
+    /// </summary>
+    public static class MeshUretici
+    {
+        private class Yapici
+        {
+            public readonly List<Vector3> Koseler = new List<Vector3>();
+            public readonly List<int> Ucgenler = new List<int>();
+            public readonly List<Color> Renkler = new List<Color>();
+
+            /// <summary>Ucgen ekler. Her cagrida YENI koseler yazilir -> sert normal.</summary>
+            public void Ucgen(Vector3 a, Vector3 b, Vector3 c, Color renk)
+            {
+                int i = Koseler.Count;
+                Koseler.Add(a);
+                Koseler.Add(b);
+                Koseler.Add(c);
+                Renkler.Add(renk);
+                Renkler.Add(renk);
+                Renkler.Add(renk);
+                Ucgenler.Add(i);
+                Ucgenler.Add(i + 1);
+                Ucgenler.Add(i + 2);
+            }
+
+            public void DortGen(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Color renk)
+            {
+                Ucgen(a, b, c, renk);
+                Ucgen(a, c, d, renk);
+            }
+
+            public Mesh Kapat(string ad)
+            {
+                var mesh = new Mesh { name = ad };
+                mesh.vertices = Koseler.ToArray();
+                mesh.triangles = Ucgenler.ToArray();
+                mesh.colors = Renkler.ToArray();
+                mesh.RecalculateNormals();
+                mesh.RecalculateBounds();
+                return mesh;
+            }
+        }
+
+        // ------------------------------------------------------------------ temel sekiller
+
+        /// <summary>Merkezi tabanda olan kutu. Ust yuz daha acik, yan yuzler koyu: sahte isik.</summary>
+        public static Mesh Kutu(Vector3 boyut, Color renk, string ad = "kutu")
+        {
+            var y = new Yapici();
+            KutuEkle(y, Vector3.zero, boyut, renk);
+            return y.Kapat(ad);
+        }
+
+        private static void KutuEkle(Yapici y, Vector3 merkez, Vector3 boyut, Color renk)
+        {
+            float gx = boyut.x / 2f, gz = boyut.z / 2f, yy = boyut.y;
+            Vector3 o = merkez;
+
+            Color ust = renk;
+            Color yan = renk * 0.86f;
+            Color on = renk * 0.94f;
+
+            Vector3 a0 = o + new Vector3(-gx, 0, -gz);
+            Vector3 a1 = o + new Vector3(gx, 0, -gz);
+            Vector3 a2 = o + new Vector3(gx, 0, gz);
+            Vector3 a3 = o + new Vector3(-gx, 0, gz);
+            Vector3 u0 = a0 + Vector3.up * yy;
+            Vector3 u1 = a1 + Vector3.up * yy;
+            Vector3 u2 = a2 + Vector3.up * yy;
+            Vector3 u3 = a3 + Vector3.up * yy;
+
+            y.DortGen(u0, u1, u2, u3, ust);          // ust
+            y.DortGen(a1, a0, u0, u1, on);           // on (-z, kameraya bakan)
+            y.DortGen(a0, a3, u3, u0, yan);          // sol
+            y.DortGen(a2, a1, u1, u2, yan);          // sag
+            // Arka yuz uretilmez: yaw kilitli oldugu icin asla gorunmez.
+        }
+
+        /// <summary>Yatay disk. Blob golge ve zemin yamalari icin.</summary>
+        public static Mesh Disk(float yaricap, int dilim, Color renk, string ad = "disk")
+        {
+            var y = new Yapici();
+            Vector3 merkez = Vector3.zero;
+            for (int i = 0; i < dilim; i++)
+            {
+                float a0 = (i / (float)dilim) * Mathf.PI * 2f;
+                float a1 = ((i + 1) / (float)dilim) * Mathf.PI * 2f;
+                Vector3 p0 = new Vector3(Mathf.Cos(a0) * yaricap, 0, Mathf.Sin(a0) * yaricap);
+                Vector3 p1 = new Vector3(Mathf.Cos(a1) * yaricap, 0, Mathf.Sin(a1) * yaricap);
+                y.Ucgen(merkez, p1, p0, renk);
+            }
+            return y.Kapat(ad);
+        }
+
+        /// <summary>Koni. Agac tepesi ve fidan icin.</summary>
+        public static Mesh Koni(float yaricap, float yukseklik, int dilim, Color renk, string ad = "koni")
+        {
+            var y = new Yapici();
+            Vector3 tepe = Vector3.up * yukseklik;
+            for (int i = 0; i < dilim; i++)
+            {
+                float a0 = (i / (float)dilim) * Mathf.PI * 2f;
+                float a1 = ((i + 1) / (float)dilim) * Mathf.PI * 2f;
+                Vector3 p0 = new Vector3(Mathf.Cos(a0) * yaricap, 0, Mathf.Sin(a0) * yaricap);
+                Vector3 p1 = new Vector3(Mathf.Cos(a1) * yaricap, 0, Mathf.Sin(a1) * yaricap);
+                float golge = 0.86f + 0.14f * Mathf.Abs(Mathf.Cos((a0 + a1) * 0.5f));
+                y.Ucgen(p0, p1, tepe, renk * golge);
+            }
+            return y.Kapat(ad);
+        }
+
+        public static Mesh Silindir(float yaricap, float yukseklik, int dilim, Color renk, string ad = "silindir")
+        {
+            var y = new Yapici();
+            for (int i = 0; i < dilim; i++)
+            {
+                float a0 = (i / (float)dilim) * Mathf.PI * 2f;
+                float a1 = ((i + 1) / (float)dilim) * Mathf.PI * 2f;
+                Vector3 p0 = new Vector3(Mathf.Cos(a0) * yaricap, 0, Mathf.Sin(a0) * yaricap);
+                Vector3 p1 = new Vector3(Mathf.Cos(a1) * yaricap, 0, Mathf.Sin(a1) * yaricap);
+                Vector3 u0 = p0 + Vector3.up * yukseklik;
+                Vector3 u1 = p1 + Vector3.up * yukseklik;
+                float golge = 0.84f + 0.16f * Mathf.Abs(Mathf.Cos((a0 + a1) * 0.5f));
+                y.DortGen(p0, p1, u1, u0, renk * golge);
+                y.Ucgen(u0, u1, Vector3.up * yukseklik, renk);
+            }
+            return y.Kapat(ad);
+        }
+
+        // ------------------------------------------------------------------ oyun nesneleri
+
+        /// <summary>Islenmis tarla karosu: hafif yukseltilmis, kenarlari pahli toprak.</summary>
+        public static Mesh TarlaKarosu(Color renk)
+        {
+            var y = new Yapici();
+            const float k = 0.46f;   // karo yarim genisligi (1 birim karo, aralarinda bosluk)
+            const float h = 0.06f;   // yukseklik
+            const float pah = 0.08f;
+
+            Vector3 u0 = new Vector3(-k + pah, h, -k + pah);
+            Vector3 u1 = new Vector3(k - pah, h, -k + pah);
+            Vector3 u2 = new Vector3(k - pah, h, k - pah);
+            Vector3 u3 = new Vector3(-k + pah, h, k - pah);
+            Vector3 a0 = new Vector3(-k, 0, -k);
+            Vector3 a1 = new Vector3(k, 0, -k);
+            Vector3 a2 = new Vector3(k, 0, k);
+            Vector3 a3 = new Vector3(-k, 0, k);
+
+            y.DortGen(u0, u1, u2, u3, renk);
+            y.DortGen(a1, a0, u0, u1, renk * 0.88f);
+            y.DortGen(a0, a3, u3, u0, renk * 0.82f);
+            y.DortGen(a2, a1, u1, u2, renk * 0.82f);
+            return y.Kapat("tarla_karosu");
+        }
+
+        /// <summary>
+        /// Urun mesh'i, buyume asamasina gore. 4 asama (D: buyumeAsamasi.asamaSayisi).
+        /// Asama 0 filiz, 3 olgun. Silueti asamayla belirgin degistir: oyuncu
+        /// uzaktan bakip "olgun mu" diyebilmeli — bu bir OKUNABILIRLIK sarti.
+        /// </summary>
+        public static Mesh Urun(int asama, int asamaSayisi, Color renk)
+        {
+            var y = new Yapici();
+            float t = asamaSayisi <= 1 ? 1f : Mathf.Clamp01(asama / (float)(asamaSayisi - 1));
+            float boy = Mathf.Lerp(0.12f, 0.55f, t);
+            float en = Mathf.Lerp(0.06f, 0.20f, t);
+
+            // Sap
+            KutuEkle(y, Vector3.zero, new Vector3(en * 0.4f, boy, en * 0.4f), Palet.Sap);
+
+            // Yapraklar: asama arttikca sayilari artar
+            int yaprakSayisi = 2 + asama;
+            for (int i = 0; i < yaprakSayisi; i++)
+            {
+                float aci = (i / (float)yaprakSayisi) * Mathf.PI * 2f;
+                float yaricap = en * 0.9f;
+                Vector3 kok = new Vector3(0, boy * (0.35f + 0.15f * (i % 2)), 0);
+                Vector3 uc = kok + new Vector3(Mathf.Cos(aci) * yaricap, boy * 0.18f, Mathf.Sin(aci) * yaricap);
+                Vector3 yanA = kok + new Vector3(Mathf.Cos(aci + 0.5f) * yaricap * 0.35f, 0,
+                                                 Mathf.Sin(aci + 0.5f) * yaricap * 0.35f);
+                Vector3 yanB = kok + new Vector3(Mathf.Cos(aci - 0.5f) * yaricap * 0.35f, 0,
+                                                 Mathf.Sin(aci - 0.5f) * yaricap * 0.35f);
+                y.Ucgen(yanA, yanB, uc, renk);
+            }
+
+            // Olgun asamada tepede meyve/basak: "hasada hazir" isareti
+            if (asama >= asamaSayisi - 1)
+            {
+                KutuEkle(y, new Vector3(0, boy, 0), new Vector3(en, en * 0.9f, en), renk);
+            }
+            return y.Kapat("urun_" + asama);
+        }
+
+        /// <summary>Karakter: govde + kafa + iki kol. ~40 ucgen; hedef 1.200-2.000 degil,
+        /// cunku bu bir YER TUTUCU (CC0 karakterle degistirilecek, B.22 kaynak stratejisi).</summary>
+        public static Mesh Karakter(Color govdeRengi, Color tenRengi)
+        {
+            var y = new Yapici();
+            const float boy = 1.6f; // B.5: karakter 1.6 birim
+            KutuEkle(y, Vector3.zero, new Vector3(0.42f, boy * 0.55f, 0.28f), govdeRengi);
+            KutuEkle(y, new Vector3(0, boy * 0.55f, 0), new Vector3(0.34f, boy * 0.28f, 0.30f), tenRengi);
+            KutuEkle(y, new Vector3(-0.28f, boy * 0.30f, 0), new Vector3(0.12f, boy * 0.25f, 0.12f), govdeRengi * 0.9f);
+            KutuEkle(y, new Vector3(0.28f, boy * 0.30f, 0), new Vector3(0.12f, boy * 0.25f, 0.12f), govdeRengi * 0.9f);
+            return y.Kapat("karakter");
+        }
+
+        /// <summary>Kuyu: tas govde + ahsap cati. Tarla sahnesinin icinde (B.11).</summary>
+        public static Mesh Kuyu()
+        {
+            var y = new Yapici();
+            KutuEkle(y, Vector3.zero, new Vector3(0.9f, 0.5f, 0.9f), Palet.Tas);
+            KutuEkle(y, new Vector3(0, 0.5f, 0), new Vector3(0.75f, 0.05f, 0.75f), Palet.Su);
+            KutuEkle(y, new Vector3(-0.35f, 0.55f, 0), new Vector3(0.1f, 0.8f, 0.1f), Palet.Ahsap);
+            KutuEkle(y, new Vector3(0.35f, 0.55f, 0), new Vector3(0.1f, 0.8f, 0.1f), Palet.Ahsap);
+            KutuEkle(y, new Vector3(0, 1.35f, 0), new Vector3(1.1f, 0.12f, 1.0f), Palet.Cati);
+            return y.Kapat("kuyu");
+        }
+
+        /// <summary>Ev: govde + prizma cati.</summary>
+        public static Mesh Ev()
+        {
+            var y = new Yapici();
+            KutuEkle(y, Vector3.zero, new Vector3(3f, 1.8f, 2.4f), Palet.Ahsap);
+
+            float gx = 1.6f, gz = 1.3f, tabani = 1.8f, tepe = 1.1f;
+            Vector3 o0 = new Vector3(-gx, tabani, -gz);
+            Vector3 o1 = new Vector3(gx, tabani, -gz);
+            Vector3 a0 = new Vector3(-gx, tabani, gz);
+            Vector3 a1 = new Vector3(gx, tabani, gz);
+            Vector3 t0 = new Vector3(-gx, tabani + tepe, 0);
+            Vector3 t1 = new Vector3(gx, tabani + tepe, 0);
+
+            y.DortGen(o0, o1, t1, t0, Palet.Cati);
+            y.DortGen(a1, a0, t0, t1, Palet.Cati * 0.88f);
+            y.Ucgen(o0, t0, a0, Palet.Cati * 0.8f);
+            y.Ucgen(o1, a1, t1, Palet.Cati * 0.8f);
+
+            KutuEkle(y, new Vector3(0, 0, -1.21f), new Vector3(0.7f, 1.2f, 0.05f), Palet.AhsapKoyu);
+            return y.Kapat("ev");
+        }
+
+        /// <summary>Yabani kaynak: dal / tas parcasi / ot. Hepsi ELLE toplanir, alet gerekmez (B.14).</summary>
+        public static Mesh YabaniKaynak(string tur)
+        {
+            var y = new Yapici();
+            switch (tur)
+            {
+                case "tas_parca":
+                    KutuEkle(y, Vector3.zero, new Vector3(0.34f, 0.22f, 0.30f), Palet.Tas);
+                    KutuEkle(y, new Vector3(0.16f, 0, 0.10f), new Vector3(0.20f, 0.14f, 0.18f), Palet.TasKoyu);
+                    break;
+                case "yem_otu":
+                    for (int i = 0; i < 5; i++)
+                    {
+                        float a = i * 1.25f;
+                        KutuEkle(
+                            y,
+                            new Vector3(Mathf.Cos(a) * 0.12f, 0, Mathf.Sin(a) * 0.12f),
+                            new Vector3(0.05f, 0.3f + 0.06f * (i % 3), 0.05f),
+                            Palet.Yaprak);
+                    }
+                    break;
+                default: // dal
+                    KutuEkle(y, Vector3.zero, new Vector3(0.5f, 0.08f, 0.09f), Palet.AhsapKoyu);
+                    KutuEkle(y, new Vector3(0.12f, 0.06f, 0.05f), new Vector3(0.3f, 0.06f, 0.07f), Palet.Ahsap);
+                    break;
+            }
+            return y.Kapat("yabani_" + tur);
+        }
+
+        /// <summary>Zemin: tek buyuk dortgen. Karo izgarasi ayri cizilir.</summary>
+        public static Mesh Zemin(float genislik, float derinlik, Color renk)
+        {
+            var y = new Yapici();
+            float gx = genislik / 2f, gz = derinlik / 2f;
+            y.DortGen(
+                new Vector3(-gx, 0, -gz),
+                new Vector3(gx, 0, -gz),
+                new Vector3(gx, 0, gz),
+                new Vector3(-gx, 0, gz),
+                renk);
+            return y.Kapat("zemin");
+        }
+
+        /// <summary>Karo vurgusu: ince cerceve. Dokunulabilir karoyu parlatmak icin (ogretici).</summary>
+        public static Mesh Cerceve(float boyut, float kalinlik, Color renk)
+        {
+            var y = new Yapici();
+            float d = boyut / 2f;
+            float i = d - kalinlik;
+            const float h = 0.02f;
+
+            void Serit(Vector3 a, Vector3 b, Vector3 c, Vector3 dd) => y.DortGen(a, b, c, dd, renk);
+
+            Serit(new Vector3(-d, h, -d), new Vector3(d, h, -d), new Vector3(d, h, -i), new Vector3(-d, h, -i));
+            Serit(new Vector3(-d, h, i), new Vector3(d, h, i), new Vector3(d, h, d), new Vector3(-d, h, d));
+            Serit(new Vector3(-d, h, -i), new Vector3(-i, h, -i), new Vector3(-i, h, i), new Vector3(-d, h, i));
+            Serit(new Vector3(i, h, -i), new Vector3(d, h, -i), new Vector3(d, h, i), new Vector3(i, h, i));
+            return y.Kapat("cerceve");
+        }
+    }
+}

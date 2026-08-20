@@ -27,7 +27,9 @@ import java.time.Instant;
  *
  * <p>Saat sahtelenir: buyume ve yenilenme testleri gercek zamani beklemez, ileri sarar.
  */
-@SpringBootTest
+// RANDOM_PORT: gercek servlet kapsayicisi olmadan WebSocket bean'i (ServerContainer)
+// olusturulamiyor. Testlerin uretimle ayni yolu yurumesi icin hepsi gercek portta kosar.
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @ContextConfiguration(classes = {AmorlandUygulamasi.class, TestTemeli.TestAyarlari.class})
 public abstract class TestTemeli {
