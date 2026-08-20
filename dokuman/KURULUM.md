@@ -9,7 +9,9 @@ gerektiği yazıyor; görmüyorsan devam etme.
 
 ### Gerekli
 - Java 21 (kurulu: Temurin 21.0.11 ✅)
-- Docker Desktop **veya** hiçbir şey (gömülü veritabanı yolu var)
+- Docker Desktop (kurulu ✅)
+
+> ⚠ Amorland Postgres'i **5433**'te. 5432'de `serum-postgres` (başka projen) var, ona dokunulmadı.
 
 ### A) Docker ile — veri kalıcı
 
@@ -57,19 +59,18 @@ Beklenen: `Temiz: 32 denetimin hepsi gecti.`
 ## 2. Unity
 
 ### Gerekli
-- **Unity 6.3 LTS (6000.3.x)** — Unity Hub > Installs > Install Editor
-  - Modüller: **Android Build Support** (JDK + SDK & NDK Tools dahil)
+- **Unity 6000.3.22f1** — bu makinede kurulu ✅ (Android Build Support + SDK/NDK/JDK dahil)
   - ⚠ Unity **6000.0 LTS kullanma** — desteği Ekim 2026'da bitiyor (B.2)
 
 ### Önerilen yol: mevcut klasörü aç
 
 1. Unity Hub > **Add** > `C:\App\Amorland\istemci` klasörünü seç
-2. Unity sürüm uyuşmazlığı sorarsa **kendi 6.3 sürümünü seç** — yükseltmeyi kabul et
+2. Sürüm zaten `6000.3.22f1`'e sabitli, uyuşmazlık sorulmamalı
 3. İlk açılış paketleri indirir (URP, Input System, Newtonsoft), **2-5 dakika sürer**
 4. Console'da kırmızı hata olmamalı
 
-> Paket sürümü hatası alırsan: `Window > Package Manager` aç, hatalı paketi kaldırıp
-> aynı ismi tekrar ekle. Unity kendi sürümüne uygun olanı seçer.
+> Paket sürümleri `manifest.json`'da bu editörün önerdiği sürümlere **birebir sabitlendi**
+> (URP 17.3.0, Input System 1.20.0, Newtonsoft 3.2.2), sürüm hatası çıkmamalı.
 
 ### Alternatif yol: temiz proje (paket hatası alırsan)
 

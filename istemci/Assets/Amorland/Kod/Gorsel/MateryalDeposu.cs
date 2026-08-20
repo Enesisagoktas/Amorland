@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;   // ShadowCastingMode burada
 
 namespace Amorland.Gorsel
 {

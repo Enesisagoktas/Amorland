@@ -72,3 +72,14 @@ namespace UnityEngine.InputSystem.Controls
     }
 }
 #endif
+
+#if ENABLE_INPUT_SYSTEM
+namespace UnityEngine.InputSystem.UI
+{
+    /// <summary>
+    /// ⚠ Gercek Unity'de bu tip UnityEngine.EventSystems'te DEGIL, burada.
+    /// Stub'i EventSystems altina koymak Unity'de CS0246 uretiyordu.
+    /// </summary>
+    public class InputSystemUIInputModule : UnityEngine.EventSystems.BaseInputModule { }
+}
+#endif

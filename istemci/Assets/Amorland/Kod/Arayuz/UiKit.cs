@@ -96,7 +96,9 @@ namespace Amorland.Arayuz
             renkler.fadeDuration = 0.06f;
             buton.colors = renkler;
 
-            if (tiklama != null) buton.onClick.AddListener(tiklama);
+            // ⚠ UnityEvent.AddListener UnityAction ister. System.Action degiskeni
+            // dogrudan gecirilemez (CS1503); lambda ile sarmalanir.
+            if (tiklama != null) buton.onClick.AddListener(() => tiklama());
 
             var yazi = Yazi(rt, "Yazi", metin, 22, Palet.UiYazi, TextAnchor.MiddleCenter);
             Doldur(yazi.rectTransform, 8f);

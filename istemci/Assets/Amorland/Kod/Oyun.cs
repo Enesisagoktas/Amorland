@@ -156,7 +156,9 @@ namespace Amorland
                 esGo.transform.SetParent(transform, false);
                 esGo.AddComponent<EventSystem>();
 #if ENABLE_INPUT_SYSTEM
-                esGo.AddComponent<InputSystemUIInputModule>();
+                // ⚠ InputSystemUIInputModule UnityEngine.EventSystems'te DEGIL,
+                // UnityEngine.InputSystem.UI ad alanindadir.
+                esGo.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
 #else
                 esGo.AddComponent<StandaloneInputModule>();
 #endif

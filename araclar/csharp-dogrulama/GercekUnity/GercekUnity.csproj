@@ -1,0 +1,87 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Istemci C#'ini GERCEK Unity assembly'lerine karsi derler.
+
+    UnityStub/ ile fark: stub'lar imzalari elle taklit eder ve bir imza yanlissa
+    derleme yesil gorunur ama Unity'de kirmizi olur. Bu proje o riski kapatir —
+    Unity'nin kendi DLL'leri kullanilir. Lisans GEREKTIRMEZ, editor acilmaz.
+
+    Unity yolu UnityDizin ile gecilir:
+      dotnet build GercekUnity.csproj -p:UnityDizin="C:\Program Files\Unity\Hub\Editor\6000.3.22f1"
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <!-- Unity 6, C# 9 kullanir. Daha yenisini yazarsak Unity'de derlenmez. -->
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>Amorland.GercekUnity</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS0067;CS0649;CS0169;CS0414;CS0618;CS0612</NoWarn>
+    <UnityDizin Condition="'$(UnityDizin)' == ''">C:\Program Files\Unity\Hub\Editor\6000.3.22f1</UnityDizin>
+    <UnityManaged>$(UnityDizin)\Editor\Data\Managed</UnityManaged>
+    <UnityPaketleri>$(UnityDizin)\Editor\Data\Resources\PackageManager\ProjectTemplates\libcache\com.unity.template.3d-cross-platform-17.0.14\ScriptAssemblies</UnityPaketleri>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../../istemci/Assets/Amorland/Kod/**/*.cs" />
+    <Compile Include="../../../istemci/Assets/Amorland/Editor/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Motor modulleri.
+         DIKKAT: UnityEngine.dll ve UnityEditor.dll birer FACADE'dir; tipleri
+         modullere yonlendirir. Ikisi birden referans edilirse her tip iki kez
+         gorunur (CS0433). Yalnizca moduller referans edilir. -->
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.UnityWebRequestModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AndroidJNIModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.AndroidJNIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
+
+    <!-- Editor -->
+    <Reference Include="UnityEditor.CoreModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEditor.CoreModule.dll</HintPath>
+    </Reference>
+
+    <!-- Paket assembly'leri: editorun proje sablonu onbelleginden -->
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(UnityPaketleri)\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>$(UnityPaketleri)\Unity.InputSystem.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- com.unity.nuget.newtonsoft-json ile ayni API yuzeyi -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>

@@ -527,7 +527,7 @@ namespace UnityEngine
         public Material sharedMaterial { get; set; }
         public Material[] materials { get; set; }
         public bool enabled { get; set; }
-        public ShadowCastingMode shadowCastingMode { get; set; }
+        public Rendering.ShadowCastingMode shadowCastingMode { get; set; }
         public bool receiveShadows { get; set; }
     }
 
@@ -581,7 +581,6 @@ namespace UnityEngine
     public enum TextureFormat { RGBA32, ARGB32, RGB24 }
     public enum FilterMode { Point, Bilinear, Trilinear }
     public enum TextureWrapMode { Repeat, Clamp }
-    public enum ShadowCastingMode { Off, On, TwoSided, ShadowsOnly }
 
     public class Sprite : Object
     {
@@ -912,9 +911,11 @@ namespace UnityEngine.UI
     public class Button : Selectable
     {
         public ButtonClickedEvent onClick { get; set; }
+        // GERCEK Unity imzasi: UnityAction, System.Action DEGIL.
+        // Stub burada Action kabul etseydi Unity'de CS1503 alirdik.
         public class ButtonClickedEvent
         {
-            public void AddListener(Action a) { }
+            public void AddListener(UnityEngine.Events.UnityAction a) { }
             public void RemoveAllListeners() { }
             public void Invoke() { }
         }
@@ -937,8 +938,8 @@ namespace UnityEngine.UI
         public OnChangeEvent onValueChanged { get; set; }
         public SubmitEvent onEndEdit { get; set; }
         public enum ContentType { Standard, Alphanumeric, IntegerNumber, Name, EmailAddress }
-        public class OnChangeEvent { public void AddListener(Action<string> a) { } }
-        public class SubmitEvent { public void AddListener(Action<string> a) { } }
+        public class OnChangeEvent { public void AddListener(UnityEngine.Events.UnityAction<string> a) { } }
+        public class SubmitEvent { public void AddListener(UnityEngine.Events.UnityAction<string> a) { } }
         public void ActivateInputField() { }
     }
 
@@ -1046,7 +1047,6 @@ namespace UnityEngine.EventSystems
 
     public class BaseInputModule : Behaviour { }
     public class StandaloneInputModule : BaseInputModule { }
-    public class InputSystemUIInputModule : BaseInputModule { }
 
     public class PointerEventData
     {
@@ -1063,4 +1063,27 @@ namespace UnityEngine.EventSystems
     public interface IDragHandler { void OnDrag(PointerEventData e); }
     public interface IBeginDragHandler { void OnBeginDrag(PointerEventData e); }
     public interface IEndDragHandler { void OnEndDrag(PointerEventData e); }
+}
+
+namespace UnityEngine.Rendering
+{
+    public enum ShadowCastingMode { Off, On, TwoSided, ShadowsOnly }
+}
+
+namespace UnityEngine.Events
+{
+    /// <summary>
+    /// ⚠ Gercek Unity'de UnityEvent.AddListener bunu ister, System.Action'i DEGIL.
+    /// Stub bunu Action olarak taklit ederse derleme yesil gorunur ama Unity'de kirilir.
+    /// </summary>
+    public delegate void UnityAction();
+
+    public delegate void UnityAction<T0>(T0 arg0);
+
+    public class UnityEvent
+    {
+        public void AddListener(UnityAction a) { }
+        public void RemoveAllListeners() { }
+        public void Invoke() { }
+    }
 }
