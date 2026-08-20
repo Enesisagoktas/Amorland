@@ -26,32 +26,40 @@ namespace Amorland.Arayuz
         {
             _kapaninca = kapaninca;
 
-            Kok = UiKit.Panel(kanvas, ad, new Color(0f, 0f, 0f, 0.55f));
+            // Perde: arkadaki oyunu karartir. Modalin "uzerinde durdugu" hissi buradan gelir.
+            Kok = UiKit.Panel(kanvas, ad, new Color(0.04f, 0.035f, 0.03f, 0.62f));
             UiKit.Doldur(Kok);
 
             // Disariya dokunmak kapatir: mobilde geri tusundan daha guvenilir.
             var arkaButon = Kok.gameObject.AddComponent<Button>();
             arkaButon.targetGraphic = Kok.gameObject.GetComponent<Image>();
+            arkaButon.transition = Selectable.Transition.None;
             arkaButon.onClick.AddListener(Kapat);
 
-            var cerceve = UiKit.Panel(Kok, "Cerceve", Palet.UiPanel);
+            var cerceve = UiKit.Kart(Kok, "Cerceve", Palet.UiPanel, 22);
             UiKit.Sabitle(cerceve, 0.5f, 0.5f, 0f, 0f, genislik, yukseklik);
+            UiKit.GolgeEkle(cerceve, 22, 28, 10f);
             // Cerceveye dokunmak kapatmasin diye kendi butonu var ama hicbir sey yapmaz.
             var yutucu = cerceve.gameObject.AddComponent<Button>();
             yutucu.targetGraphic = cerceve.gameObject.GetComponent<Image>();
+            yutucu.transition = Selectable.Transition.None;
 
-            Baslik = UiKit.Yazi(cerceve, "Baslik", baslik, 26, Palet.UiYazi, TextAnchor.UpperLeft);
-            UiKit.Sabitle(Baslik.rectTransform, 0f, 1f, 20f, -16f, genislik - 100f, 34f);
+            Baslik = UiKit.Yazi(
+                cerceve, "Baslik", baslik, UiKit.YaziBuyuk, Palet.UiYazi, TextAnchor.MiddleLeft, true);
+            UiKit.Sabitle(Baslik.rectTransform, 0f, 1f, 24f, -18f, genislik - 110f, 38f);
 
-            var kapat = UiKit.Buton(cerceve, "Kapat", "X", Kapat);
-            UiKit.Sabitle(kapat.GetComponent<RectTransform>(), 1f, 1f, -16f, -14f, 44f, 40f);
-            kapat.GetComponent<RectTransform>().pivot = new Vector2(1f, 1f);
+            // Baslik ile icerigi ayiran ince cizgi: modalin iki bolgesi net ayrilsin.
+            var cizgi = UiKit.Ayirac(cerceve);
+            UiKit.Sabitle(cizgi, 0f, 1f, 24f, -64f, genislik - 48f, 1f);
+
+            var kapat = UiKit.DaireButon(cerceve, "Kapat", "×", Kapat);
+            UiKit.Sabitle(kapat.GetComponent<RectTransform>(), 1f, 1f, -18f, -16f, 40f, 40f);
 
             Icerik = UiKit.Panel(cerceve, "Icerik", Color.clear);
             Icerik.anchorMin = Vector2.zero;
             Icerik.anchorMax = Vector2.one;
-            Icerik.offsetMin = new Vector2(16f, 16f);
-            Icerik.offsetMax = new Vector2(-16f, -60f);
+            Icerik.offsetMin = new Vector2(20f, 20f);
+            Icerik.offsetMax = new Vector2(-20f, -76f);
 
             Kok.gameObject.SetActive(false);
         }

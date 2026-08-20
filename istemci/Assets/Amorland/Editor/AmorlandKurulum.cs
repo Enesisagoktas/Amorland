@@ -243,38 +243,79 @@ namespace Amorland.EditorAraclari
             }
 
             string varlikYolu = UrpKlasoru + "/AmorlandUrp.asset";
-            var mevcut = AssetDatabase.LoadAssetAtPath<ScriptableObject>(varlikYolu);
-            if (mevcut != null)
-            {
-                GrafikAyarinaBagla(mevcut);
-                return;
-            }
+            string rendererYolu = UrpKlasoru + "/AmorlandRenderer.asset";
 
-            ScriptableObject rendererData = null;
-            if (rendererTipi != null)
+            // Renderer once gelir: URP varligi ona baglanacak.
+            var rendererData = AssetDatabase.LoadAssetAtPath<ScriptableObject>(rendererYolu);
+            if (rendererData == null && rendererTipi != null)
             {
                 rendererData = ScriptableObject.CreateInstance(rendererTipi);
-                AssetDatabase.CreateAsset(rendererData, UrpKlasoru + "/AmorlandRenderer.asset");
+                AssetDatabase.CreateAsset(rendererData, rendererYolu);
             }
 
-            ScriptableObject urp = null;
-            MethodInfo olustur = urpVarlikTipi.GetMethod(
-                "Create", BindingFlags.Public | BindingFlags.Static);
-            if (olustur != null && rendererData != null)
+            var urp = AssetDatabase.LoadAssetAtPath<ScriptableObject>(varlikYolu);
+            if (urp == null)
             {
-                try
+                MethodInfo olustur = urpVarlikTipi.GetMethod(
+                    "Create", BindingFlags.Public | BindingFlags.Static);
+                if (olustur != null && rendererData != null)
                 {
-                    urp = olustur.Invoke(null, new object[] { rendererData, false }) as ScriptableObject;
+                    try
+                    {
+                        urp = olustur.Invoke(null, new object[] { rendererData, false }) as ScriptableObject;
+                    }
+                    catch (Exception e)
+                    {
+                        // ⚠ Bu istisna eskiden SESSIZCE yutuluyordu. URP 17'de Create imzasi
+                        // uymadigi icin cagri patliyor, yedek yol renderer'i BAGLANMAMIS bir
+                        // varlik uretiyor ve oyun her karede "Default Renderer is missing"
+                        // hatasi basiyordu. Sessiz catch, hatanin bir oturum boyunca
+                        // gorunmemesinin tek sebebiydi.
+                        Debug.LogWarning(
+                            "[Amorland] URP Create() reflection cagrisi basarisiz ("
+                            + e.GetType().Name + "), varlik elle kurulacak.");
+                        urp = null;
+                    }
                 }
-                catch (Exception)
-                {
-                    urp = null;
-                }
+                if (urp == null) urp = ScriptableObject.CreateInstance(urpVarlikTipi);
+                AssetDatabase.CreateAsset(urp, varlikYolu);
             }
-            if (urp == null) urp = ScriptableObject.CreateInstance(urpVarlikTipi);
 
-            AssetDatabase.CreateAsset(urp, varlikYolu);
+            // ⚠ Her calismada baglanir, yalnizca yeni olusturuldugunda degil: varlik
+            // bozuk kaldiysa kurulumu tekrar calistirmak onu ONARMALI.
+            RendererBagla(urp, rendererData);
             GrafikAyarinaBagla(urp);
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// URP varligina varsayilan renderer'i yazar.
+        ///
+        /// Reflection yerine <see cref="SerializedObject"/> kullanilir: alan adlari
+        /// (<c>m_RendererDataList</c>) URP surumleri arasinda sabit kalirken
+        /// <c>Create</c> gibi API imzalari degisiyor.
+        /// </summary>
+        private static void RendererBagla(ScriptableObject urp, ScriptableObject rendererData)
+        {
+            if (urp == null || rendererData == null) return;
+
+            var so = new SerializedObject(urp);
+
+            SerializedProperty liste = so.FindProperty("m_RendererDataList");
+            if (liste != null)
+            {
+                if (liste.arraySize == 0) liste.arraySize = 1;
+                liste.GetArrayElementAtIndex(0).objectReferenceValue = rendererData;
+            }
+
+            SerializedProperty tekil = so.FindProperty("m_RendererData");
+            if (tekil != null) tekil.objectReferenceValue = rendererData;
+
+            SerializedProperty varsayilanIndeks = so.FindProperty("m_DefaultRendererIndex");
+            if (varsayilanIndeks != null) varsayilanIndeks.intValue = 0;
+
+            so.ApplyModifiedProperties();
+            EditorUtility.SetDirty(urp);
         }
 
         private static void GrafikAyarinaBagla(ScriptableObject urp)

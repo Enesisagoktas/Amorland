@@ -21,6 +21,11 @@ namespace Amorland
         {
             if (_kok != null) return;
 
+            // ⚠ UI sprite'lari statik onbellekte tutuluyor. Play modu bittiginde Unity
+            // texture'lari yok eder ama Editor'de domain reload kapaliysa statik alanlar
+            // hayatta kalir — ikinci Play yok edilmis texture'a bakar ve UI kaybolur.
+            Gorsel.Sekil.Unut();
+
             _kok = new GameObject("Amorland");
             Object.DontDestroyOnLoad(_kok);
             _kok.AddComponent<Oyun>();

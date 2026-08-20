@@ -50,12 +50,22 @@ namespace Amorland.Arayuz
 
             foreach (string tarifId in _denge.TezgahTarifleri("basit_tezgah"))
             {
-                var satir = UiKit.Panel(_liste, "Tarif_" + tarifId, Palet.UiZemin);
-                UiKit.Boyut(satir.gameObject, 0f, 54f);
-                UiKit.YatayDizi(satir, 8f, 8);
+                // Satir panelin UZERINE binen bir yuzeydir: UiZemin degil UiYuzey.
+                // UiZemin kullanildiginda satirlar panel zeminine karisip liste
+                // duz bir metin blogu gibi gorunuyordu.
+                var satir = UiKit.Kart(_liste, "Tarif_" + tarifId, Palet.UiYuzey, UiKit.YaricapKucuk);
+                UiKit.Boyut(satir.gameObject, 0f, 58f);
+                // ⚠ Kenar 10: buton (36) + 2x10 = 56 ve satira sigar. 12 kenarla
+                // buton satirin zemininden tasip alt satira giriyordu.
+                var dizi = UiKit.YatayDizi(satir, 10f, 10);
+                // ⚠ Kapatilmazsa buton satir yuksekligine gerilir (sunger buton).
+                dizi.childForceExpandHeight = false;
+                dizi.childAlignment = TextAnchor.MiddleLeft;
 
-                var ad = UiKit.Yazi(satir, "Ad", _denge.EsyaAdi(tarifId), 18, Palet.UiYazi, TextAnchor.MiddleLeft);
-                UiKit.Boyut(ad.gameObject, 180f, 36f);
+                var ad = UiKit.Yazi(
+                    satir, "Ad", _denge.EsyaAdi(tarifId), UiKit.YaziGovde, Palet.UiYazi,
+                    TextAnchor.MiddleLeft, true);
+                UiKit.Boyut(ad.gameObject, 168f, 34f);
 
                 var malzemeler = _denge.AletMalzemesi(tarifId);
                 bool yeter = true;
@@ -68,23 +78,25 @@ namespace Amorland.Arayuz
                 }
 
                 var malzemeYazi = UiKit.Yazi(
-                    satir, "Malzeme", string.Join("  ·  ", parcalar), 15,
+                    satir, "Malzeme", string.Join("  ·  ", parcalar), UiKit.YaziKucuk,
                     yeter ? Palet.UiYazi : Palet.UiUyari, TextAnchor.MiddleLeft);
-                UiKit.Boyut(malzemeYazi.gameObject, 320f, 36f);
+                // Esneyen sutun malzeme listesi olsun: buton hep sagda hizali kalir.
+                UiKit.Boyut(malzemeYazi.gameObject, 240f, 34f).flexibleWidth = 1f;
 
                 bool sahip = _durum.AletVar(tarifId);
                 string tid = tarifId;
+                // Listede N tane satir var; hicbiri ana buton olamaz (ekranda tek ana buton).
                 var buton = UiKit.Buton(satir, "Yap", sahip ? "Yenile" : "Yap", () => Craftla?.Invoke(tid));
                 buton.interactable = yeter && ben.Seviye >= _denge.AletCraftSeviyesi(tarifId);
-                UiKit.Boyut(buton.gameObject, 100f, 40f);
+                UiKit.Boyut(buton.gameObject, 104f, 36f);
             }
 
             var not = UiKit.Yazi(
                 _liste, "Not",
                 "Tas kazma ve tas balta Sv 1'den yapilabilir; dal ve tas parcasi elle toplanir. "
                 + "Boylece alet kirilsa bile oyun kilitlenmez.",
-                14, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
-            UiKit.Boyut(not.gameObject, 0f, 46f);
+                UiKit.YaziMini, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
+            UiKit.Boyut(not.gameObject, 0f, 48f);
         }
     }
 
@@ -94,6 +106,8 @@ namespace Amorland.Arayuz
         private readonly Panel _panel;
         private readonly DunyaDurumu _durum;
         private RectTransform _liste;
+
+        private const int ToplamSayfa = 20;
 
         /// <summary>Dikey dilimde ilk 5 sayfanin metni. Gerisi perde perde yazilir (A.8).</summary>
         private static readonly Dictionary<int, string> Sayfalar = new Dictionary<int, string>
@@ -130,31 +144,78 @@ namespace Amorland.Arayuz
                 UnityEngine.Object.Destroy(_liste.GetChild(i).gameObject);
             }
 
-            int acik = _durum.DefterSayfasi;
-            var baslik = UiKit.Yazi(
-                _liste, "Ilerleme", acik + " / 20 sayfa", 16, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
-            UiKit.Boyut(baslik.gameObject, 0f, 26f);
+            IlerlemeSeridi(_durum.DefterSayfasi);
 
-            for (int no = 1; no <= 20; no++)
+            for (int no = 1; no <= ToplamSayfa; no++)
             {
-                bool acikMi = _durum.IsaretVar("defter:" + no);
-                var kart = UiKit.Panel(_liste, "Sayfa" + no, Palet.UiZemin);
-                UiKit.Boyut(kart.gameObject, 0f, acikMi ? 96f : 40f);
-                UiKit.DikeyDizi(kart, 4f, 10);
-
-                var no_ = UiKit.Yazi(
-                    kart, "No", "Sayfa " + no, 15,
-                    acikMi ? Palet.UiVurgu : Palet.UiYaziSolgun, TextAnchor.UpperLeft);
-                UiKit.Boyut(no_.gameObject, 0f, 20f);
-
-                string metin = acikMi
-                    ? (Sayfalar.TryGetValue(no, out string m) ? m : "(bu sayfanin metni henuz yazilmadi)")
-                    : "Henuz acilmadi.";
-                var govde = UiKit.Yazi(
-                    kart, "Metin", metin, 15,
-                    acikMi ? Palet.UiYazi : Palet.UiYaziSolgun, TextAnchor.UpperLeft);
-                UiKit.Boyut(govde.gameObject, 0f, acikMi ? 64f : 0f);
+                if (_durum.IsaretVar("defter:" + no)) AcikSayfa(no);
+                else KapaliSayfa(no);
             }
+        }
+
+        /// <summary>Listenin basindaki sayac. Ice cokuk yuzey: sayfa kartlarindan ayrilsin.</summary>
+        private void IlerlemeSeridi(int acik)
+        {
+            var serit = UiKit.Kart(_liste, "Ilerleme", Palet.UiYuzeyKoyu, UiKit.YaricapKucuk);
+            // Yukseklik = en uzun oge (sayac 28) + 2x12 kenar. Onceki 46/14 ikilisi
+            // sayaci seridin disina tasiriyordu.
+            UiKit.Boyut(serit.gameObject, 0f, 52f);
+            var dizi = UiKit.YatayDizi(serit, 8f, 12);
+            dizi.childForceExpandHeight = false;
+            dizi.childAlignment = TextAnchor.MiddleLeft;
+
+            var etiket = UiKit.Yazi(
+                serit, "Etiket", "Acilan sayfalar", UiKit.YaziKucuk, Palet.UiYaziSolgun,
+                TextAnchor.MiddleLeft);
+            UiKit.Boyut(etiket.gameObject, 180f, 24f).flexibleWidth = 1f;
+
+            var sayac = UiKit.Yazi(
+                serit, "Sayac", acik + " / " + ToplamSayfa, UiKit.YaziBaslik, Palet.UiVurgu,
+                TextAnchor.MiddleRight, true);
+            UiKit.Boyut(sayac.gameObject, 110f, 28f);
+        }
+
+        private void AcikSayfa(int no)
+        {
+            var kart = UiKit.Kart(_liste, "Sayfa" + no, Palet.UiYuzey, UiKit.YaricapKucuk);
+            // 2x14 kenar + baslik 22 + 6 aralik + govde 64 = 120. Kart bundan alcak
+            // olursa govde metni kendi zemininin disina tasar.
+            UiKit.Boyut(kart.gameObject, 0f, 120f);
+            UiKit.DikeyDizi(kart, 6f, 14);
+
+            var basli = UiKit.Yazi(
+                kart, "No", "Sayfa " + no, UiKit.YaziKucuk, Palet.UiVurgu, TextAnchor.UpperLeft, true);
+            UiKit.Boyut(basli.gameObject, 0f, 22f);
+
+            string metin = Sayfalar.TryGetValue(no, out string m)
+                ? m
+                : "(bu sayfanin metni henuz yazilmadi)";
+            var govde = UiKit.Yazi(
+                kart, "Metin", metin, UiKit.YaziKucuk, Palet.UiYazi, TextAnchor.UpperLeft);
+            UiKit.Boyut(govde.gameObject, 0f, 64f);
+        }
+
+        /// <summary>
+        /// Kapali sayfa TEK SATIR ve ice cokuk. Onceden acik sayfayla ayni kutu kabugunu
+        /// paylasiyor, govde yazisi 0 yukseklikli bir rect'ten tasiyordu.
+        /// </summary>
+        private void KapaliSayfa(int no)
+        {
+            var kart = UiKit.Kart(_liste, "Sayfa" + no, Palet.UiYuzeyKoyu, UiKit.YaricapKucuk);
+            UiKit.Boyut(kart.gameObject, 0f, 44f);
+            // 22'lik yazi + 2x10 kenar = 42; 14 kenarla satir kendi zeminini asiyordu.
+            var dizi = UiKit.YatayDizi(kart, 8f, 10);
+            dizi.childForceExpandHeight = false;
+            dizi.childAlignment = TextAnchor.MiddleLeft;
+
+            var basli = UiKit.Yazi(
+                kart, "No", "Sayfa " + no, UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.MiddleLeft);
+            UiKit.Boyut(basli.gameObject, 120f, 22f).flexibleWidth = 1f;
+
+            var kilit = UiKit.Yazi(
+                kart, "Kilit", "henuz acilmadi", UiKit.YaziMini, Palet.UiYaziSolgun,
+                TextAnchor.MiddleRight);
+            UiKit.Boyut(kilit.gameObject, 140f, 22f);
         }
     }
 
@@ -200,26 +261,33 @@ namespace Amorland.Arayuz
                 int gereken = _denge.BolgeAcilisSeviyesi(bolgeId);
                 bool acik = dunyaSeviyesi >= gereken;
 
-                var satir = UiKit.Panel(_liste, "Bolge_" + bolgeId, Palet.UiZemin);
-                UiKit.Boyut(satir.gameObject, 0f, 52f);
-                UiKit.YatayDizi(satir, 8f, 10);
+                // Kapali bolge ice cokuk yuzeyde durur: kilitli oldugu renkten de anlasilsin,
+                // yalnizca soluk yazidan degil.
+                var satir = UiKit.Kart(
+                    _liste, "Bolge_" + bolgeId, acik ? Palet.UiYuzey : Palet.UiYuzeyKoyu,
+                    UiKit.YaricapKucuk);
+                UiKit.Boyut(satir.gameObject, 0f, 58f);
+                // Tezgah satiriyla ayni olcu: 36'lik buton + 2x10 kenar = 56.
+                var dizi = UiKit.YatayDizi(satir, 10f, 10);
+                dizi.childForceExpandHeight = false;
+                dizi.childAlignment = TextAnchor.MiddleLeft;
 
                 var ad = UiKit.Yazi(
-                    satir, "Ad", _denge.BolgeAdi(bolgeId), 19,
+                    satir, "Ad", _denge.BolgeAdi(bolgeId), UiKit.YaziGovde,
                     // Kapali bolgeler SILIK gorunur ama GORUNUR (B.18 0:30): oyuncu
                     // vadinin buyuklugunu ilk dakikada gorsun.
-                    acik ? Palet.UiYazi : Palet.UiYaziSolgun, TextAnchor.MiddleLeft);
-                UiKit.Boyut(ad.gameObject, 260f, 34f);
+                    acik ? Palet.UiYazi : Palet.UiYaziSolgun, TextAnchor.MiddleLeft, true);
+                UiKit.Boyut(ad.gameObject, 240f, 34f).flexibleWidth = 1f;
 
                 var durum = UiKit.Yazi(
-                    satir, "Durum", acik ? "" : "Sv " + gereken, 15,
+                    satir, "Durum", acik ? "" : "Sv " + gereken, UiKit.YaziKucuk,
                     Palet.UiYaziSolgun, TextAnchor.MiddleRight);
-                UiKit.Boyut(durum.gameObject, 90f, 34f);
+                UiKit.Boyut(durum.gameObject, 84f, 34f);
 
                 string bid = bolgeId;
                 var git = UiKit.Buton(satir, "Git", "Git", () => BolgeSecildi?.Invoke(bid));
                 git.interactable = acik;
-                UiKit.Boyut(git.gameObject, 90f, 38f);
+                UiKit.Boyut(git.gameObject, 96f, 36f);
             }
         }
     }
@@ -232,52 +300,66 @@ namespace Amorland.Arayuz
         private Text _durumYazi;
         private InputField _kodGiris;
 
+        private const string BosKod = "— — — — — —";
+
         public event Action KodIste;
         public event Action<string> Katil;
         public event Action HesapBagla;
 
         public DavetEkrani(Transform kanvas)
         {
-            _panel = new Panel(kanvas, "DavetEkrani", "Esini vadiye cagir", null, 660f, 420f);
+            // ⚠ Panel yuksekligi icerigin toplamina gore secildi. Fazla yuksek panel
+            // dikey diziyi bosluga yayip butonlari sisiriyor.
+            _panel = new Panel(kanvas, "DavetEkrani", "Esini vadiye cagir", null, 660f, 520f);
 
             var dikey = UiKit.Panel(_panel.Icerik, "Dikey", Color.clear);
             UiKit.Doldur(dikey);
-            UiKit.DikeyDizi(dikey, 10f, 8);
+            UiKit.DikeyDizi(dikey, 10f, 16);
 
             var aciklama = UiKit.Yazi(
                 dikey, "Aciklama",
                 "Bu vadide hicbir is tek basina gorulmez. Kodu esine gonder; ayni vadiye duser.\n"
                 + "Rastgele eslesme yoktur — yalnizca cagirdigin kisi gelir.",
-                16, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
-            UiKit.Boyut(aciklama.gameObject, 0f, 60f);
+                UiKit.YaziGovde, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
+            UiKit.Boyut(aciklama.gameObject, 0f, 50f);
 
-            _kodYazi = UiKit.Yazi(dikey, "Kod", "— — — — — —", 44, Palet.UiVurgu, TextAnchor.MiddleCenter);
-            UiKit.Boyut(_kodYazi.gameObject, 0f, 70f);
+            // Kod ice cokuk bir kutuda durur: kopyalanacak bir DEGER oldugu okunsun,
+            // ekrandaki baska bir baslik gibi gorunmesin.
+            var kodKart = UiKit.Kart(dikey, "KodKart", Palet.UiYuzeyKoyu, UiKit.Yaricap);
+            UiKit.Boyut(kodKart.gameObject, 0f, 70f);
+            _kodYazi = UiKit.Yazi(
+                kodKart, "Kod", BosKod, UiKit.YaziDev, Palet.UiVurgu, TextAnchor.MiddleCenter, true);
+            UiKit.Doldur(_kodYazi.rectTransform, 10f);
 
-            var uret = UiKit.Buton(dikey, "Uret", "Davet kodu uret", () => KodIste?.Invoke());
-            UiKit.Boyut(uret.gameObject, 0f, 48f);
+            // Ekranin tek ana eylemi: kod uretmek. Katilma ve baglama ikincil kalir.
+            var uret = UiKit.AnaButon(dikey, "Uret", "Davet kodu uret", () => KodIste?.Invoke());
+            UiKit.Boyut(uret.gameObject, 0f, 52f);
 
-            _durumYazi = UiKit.Yazi(dikey, "Durum", "", 15, Palet.UiUyari, TextAnchor.UpperLeft);
-            UiKit.Boyut(_durumYazi.gameObject, 0f, 46f);
+            _durumYazi = UiKit.Yazi(
+                dikey, "Durum", "", UiKit.YaziKucuk, Palet.UiUyari, TextAnchor.MiddleCenter);
+            UiKit.Boyut(_durumYazi.gameObject, 0f, 28f);
+
+            UiKit.Ayirac(dikey);
+
+            var ayracEtiket = UiKit.Yazi(
+                dikey, "AyracEtiket", "veya elindeki kodla katil", UiKit.YaziMini,
+                Palet.UiYaziSolgun, TextAnchor.MiddleCenter);
+            UiKit.Boyut(ayracEtiket.gameObject, 0f, 20f);
+
+            var katilSatir = UiKit.Panel(dikey, "KatilSatir", Color.clear);
+            UiKit.Boyut(katilSatir.gameObject, 0f, 52f);
+            var katilDizi = UiKit.YatayDizi(katilSatir, 10f, 0);
+            katilDizi.childForceExpandHeight = false;
+            katilDizi.childAlignment = TextAnchor.MiddleLeft;
+
+            _kodGiris = UiKit.Giris(katilSatir, "KodGiris", "8 haneli kod", 8, TextAnchor.MiddleCenter);
+            UiKit.Boyut(_kodGiris.gameObject, 300f, 52f).flexibleWidth = 1f;
+
+            var katilButon = UiKit.Buton(katilSatir, "Katil", "Katil", () => Katil?.Invoke(_kodGiris.text));
+            UiKit.Boyut(katilButon.gameObject, 170f, 52f);
 
             var bagla = UiKit.Buton(dikey, "Bagla", "Hesabimi bagla (e-posta)", () => HesapBagla?.Invoke());
             UiKit.Boyut(bagla.gameObject, 0f, 44f);
-
-            var ayrac = UiKit.Yazi(dikey, "Ayrac", "— veya kodla katil —", 14, Palet.UiYaziSolgun,
-                TextAnchor.MiddleCenter);
-            UiKit.Boyut(ayrac.gameObject, 0f, 24f);
-
-            var girisRt = UiKit.Panel(dikey, "KodGiris", Palet.UiZemin);
-            UiKit.Boyut(girisRt.gameObject, 0f, 44f);
-            _kodGiris = girisRt.gameObject.AddComponent<InputField>();
-            var girisYazi = UiKit.Yazi(girisRt, "Yazi", "", 22, Palet.UiYazi, TextAnchor.MiddleCenter);
-            UiKit.Doldur(girisYazi.rectTransform, 6f);
-            _kodGiris.textComponent = girisYazi;
-            _kodGiris.characterLimit = 8;
-
-            var katilButon = UiKit.Buton(dikey, "Katil", "Kodla katil",
-                () => Katil?.Invoke(_kodGiris.text));
-            UiKit.Boyut(katilButon.gameObject, 0f, 44f);
         }
 
         public void Ac() => _panel.Ac();
@@ -286,7 +368,7 @@ namespace Amorland.Arayuz
 
         public void KodGoster(string kod)
         {
-            _kodYazi.text = string.IsNullOrEmpty(kod) ? "— — — — — —" : kod;
+            _kodYazi.text = string.IsNullOrEmpty(kod) ? BosKod : kod;
             _durumYazi.text = string.IsNullOrEmpty(kod) ? "" : "Kod 24 saat gecerli.";
             _durumYazi.color = Palet.UiOnay;
         }
@@ -305,87 +387,149 @@ namespace Amorland.Arayuz
         private readonly SesYoneticisi _ses;
         private InputField _adresGiris;
 
+        /// <summary>Ses cubugunun sabit genisligi. <c>CubukAyarla</c> tam genislik ister.</summary>
+        private const float SesCubukGenislik = 150f;
+
         public event Action<string> AdresDegisti;
 
         public AyarlarEkrani(Transform kanvas, SesYoneticisi ses)
         {
             _ses = ses;
-            _panel = new Panel(kanvas, "AyarlarEkrani", "Ayarlar", null, 620f, 480f);
+            // ⚠ Yukseklik icerigin toplamindan (4 ses satiri + haptik + adres + not)
+            // hesaplandi; daha alcak panel son satiri modalin disinda birakiyordu.
+            _panel = new Panel(kanvas, "AyarlarEkrani", "Ayarlar", null, 640f, 580f);
 
             var dikey = UiKit.Panel(_panel.Icerik, "Dikey", Color.clear);
             UiKit.Doldur(dikey);
-            UiKit.DikeyDizi(dikey, 8f, 8);
+            UiKit.DikeyDizi(dikey, 8f, 16);
 
             foreach (SesKanali kanal in Enum.GetValues(typeof(SesKanali)))
             {
-                SesKanali k = kanal;
-                var satir = UiKit.Panel(dikey, "Ses_" + kanal, Palet.UiZemin);
-                UiKit.Boyut(satir.gameObject, 0f, 44f);
-                UiKit.YatayDizi(satir, 8f, 8);
-
-                var ad = UiKit.Yazi(satir, "Ad", kanal.ToString(), 17, Palet.UiYazi, TextAnchor.MiddleLeft);
-                UiKit.Boyut(ad.gameObject, 140f, 30f);
-
-                var deger = UiKit.Yazi(
-                    satir, "Deger", Mathf.RoundToInt(_ses.KanalSeviyesi(k) * 100f) + "%",
-                    16, Palet.UiVurgu, TextAnchor.MiddleRight);
-                UiKit.Boyut(deger.gameObject, 70f, 30f);
-
-                var azalt = UiKit.Buton(satir, "Az", "-", () =>
-                {
-                    _ses.KanalSeviyesiAyarla(k, _ses.KanalSeviyesi(k) - 0.1f);
-                    deger.text = Mathf.RoundToInt(_ses.KanalSeviyesi(k) * 100f) + "%";
-                });
-                UiKit.Boyut(azalt.gameObject, 54f, 36f);
-
-                var artir = UiKit.Buton(satir, "Cok", "+", () =>
-                {
-                    _ses.KanalSeviyesiAyarla(k, _ses.KanalSeviyesi(k) + 0.1f);
-                    deger.text = Mathf.RoundToInt(_ses.KanalSeviyesi(k) * 100f) + "%";
-                });
-                UiKit.Boyut(artir.gameObject, 54f, 36f);
+                SesKanaliSatiri(dikey, kanal);
             }
 
-            // Haptik kapatilabilir olmak ZORUNDA (B.23).
-            var haptikSatir = UiKit.Panel(dikey, "Haptik", Palet.UiZemin);
-            UiKit.Boyut(haptikSatir.gameObject, 0f, 44f);
-            UiKit.YatayDizi(haptikSatir, 8f, 8);
-            var haptikAd = UiKit.Yazi(haptikSatir, "Ad", "Titresim", 17, Palet.UiYazi, TextAnchor.MiddleLeft);
-            UiKit.Boyut(haptikAd.gameObject, 200f, 30f);
-            Button haptikButon = null;
-            haptikButon = UiKit.Buton(haptikSatir, "Degistir",
-                Haptik.Haptik.Acik ? "Acik" : "Kapali",
-                () =>
-                {
-                    Haptik.Haptik.Acik = !Haptik.Haptik.Acik;
-                    var y = haptikButon.GetComponentInChildren<Text>();
-                    if (y != null) y.text = Haptik.Haptik.Acik ? "Acik" : "Kapali";
-                });
-            UiKit.Boyut(haptikButon.gameObject, 120f, 36f);
-
-            var adresSatir = UiKit.Panel(dikey, "Adres", Palet.UiZemin);
-            UiKit.Boyut(adresSatir.gameObject, 0f, 44f);
-            UiKit.YatayDizi(adresSatir, 8f, 8);
-            var adresAd = UiKit.Yazi(adresSatir, "Ad", "Sunucu", 17, Palet.UiYazi, TextAnchor.MiddleLeft);
-            UiKit.Boyut(adresAd.gameObject, 100f, 30f);
-
-            var girisRt = UiKit.Panel(adresSatir, "Giris", Palet.UiPanel);
-            UiKit.Boyut(girisRt.gameObject, 280f, 36f);
-            _adresGiris = girisRt.gameObject.AddComponent<InputField>();
-            var girisYazi = UiKit.Yazi(girisRt, "Yazi", SunucuAyari.Temel, 15, Palet.UiYazi, TextAnchor.MiddleLeft);
-            UiKit.Doldur(girisYazi.rectTransform, 6f);
-            _adresGiris.textComponent = girisYazi;
-            _adresGiris.text = SunucuAyari.Temel;
-
-            var kaydet = UiKit.Buton(adresSatir, "Kaydet", "Kaydet",
-                () => AdresDegisti?.Invoke(_adresGiris.text));
-            UiKit.Boyut(kaydet.gameObject, 100f, 36f);
+            UiKit.Ayirac(dikey);
+            HaptikSatiri(dikey);
+            AdresSatiri(dikey);
+            UiKit.Ayirac(dikey);
 
             var not = UiKit.Yazi(
                 dikey, "Not",
                 "Sesi kapali oynayabilirsin: hicbir mekanik yalnizca sesle bildirilmez.",
-                14, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
+                UiKit.YaziMini, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
             UiKit.Boyut(not.gameObject, 0f, 40f);
+        }
+
+        /// <summary>Ortak satir kabugu: panel uzerine binen yuvarlak koseli yuzey.</summary>
+        private static RectTransform Satir(Transform ebeveyn, string ad, float yukseklik)
+        {
+            var satir = UiKit.Kart(ebeveyn, ad, Palet.UiYuzey, UiKit.YaricapKucuk);
+            UiKit.Boyut(satir.gameObject, 0f, yukseklik);
+            // Kenar 10: 56'lik satirda 36'lik daire buton ve butonlar tam oturur.
+            var dizi = UiKit.YatayDizi(satir, 10f, 10);
+            // ⚠ Kapatilmazsa cubuk ve daire butonlar satir yuksekligine gerilir;
+            // daire butonlar elipse doner.
+            dizi.childForceExpandHeight = false;
+            dizi.childAlignment = TextAnchor.MiddleLeft;
+            return satir;
+        }
+
+        /// <summary>Sag bloku saga iten gorunmez esneme. Yatay dizide bosluk yaratmanin yolu.</summary>
+        private static void Esneme(Transform ebeveyn)
+        {
+            var bosluk = UiKit.Panel(ebeveyn, "Bosluk", Color.clear);
+            bosluk.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+        }
+
+        private void SesKanaliSatiri(Transform ebeveyn, SesKanali kanal)
+        {
+            SesKanali k = kanal;
+            var satir = Satir(ebeveyn, "Ses_" + kanal, 56f);
+
+            var ad = UiKit.Yazi(
+                satir, "Ad", kanal.ToString(), UiKit.YaziGovde, Palet.UiYazi, TextAnchor.MiddleLeft, true);
+            UiKit.Boyut(ad.gameObject, 96f, 28f);
+
+            // Sayi tek basina seviyeyi HISSETTIRMIYOR; cubuk bir bakista okunur.
+            Image dolgu;
+            var cubuk = UiKit.Cubuk(satir, "Cubuk", Palet.UiYuzeyKoyu, Palet.UiVurgu, out dolgu);
+            UiKit.Boyut(cubuk.gameObject, SesCubukGenislik, 8f);
+
+            var deger = UiKit.Yazi(
+                satir, "Deger", "", UiKit.YaziKucuk, Palet.UiVurgu, TextAnchor.MiddleRight, true);
+            UiKit.Boyut(deger.gameObject, 58f, 28f);
+
+            Esneme(satir);
+
+            Action tazele = () =>
+            {
+                float seviye = _ses.KanalSeviyesi(k);
+                deger.text = Mathf.RoundToInt(seviye * 100f) + "%";
+                UiKit.CubukAyarla(dolgu, seviye, SesCubukGenislik);
+            };
+            tazele();
+
+            var azalt = UiKit.DaireButon(satir, "Az", "−", () =>
+            {
+                _ses.KanalSeviyesiAyarla(k, _ses.KanalSeviyesi(k) - 0.1f);
+                tazele();
+            });
+            UiKit.Boyut(azalt.gameObject, 36f, 36f);
+
+            var artir = UiKit.DaireButon(satir, "Cok", "+", () =>
+            {
+                _ses.KanalSeviyesiAyarla(k, _ses.KanalSeviyesi(k) + 0.1f);
+                tazele();
+            });
+            UiKit.Boyut(artir.gameObject, 36f, 36f);
+        }
+
+        // Haptik kapatilabilir olmak ZORUNDA (B.23).
+        private void HaptikSatiri(Transform ebeveyn)
+        {
+            var satir = Satir(ebeveyn, "Haptik", 56f);
+
+            var ad = UiKit.Yazi(
+                satir, "Ad", "Titresim", UiKit.YaziGovde, Palet.UiYazi, TextAnchor.MiddleLeft, true);
+            UiKit.Boyut(ad.gameObject, 180f, 28f);
+
+            Esneme(satir);
+
+            Button haptikButon = null;
+            haptikButon = UiKit.Buton(satir, "Degistir", Haptik.Haptik.Acik ? "Acik" : "Kapali", () =>
+            {
+                Haptik.Haptik.Acik = !Haptik.Haptik.Acik;
+                var y = haptikButon.GetComponentInChildren<Text>();
+                if (y == null) return;
+                y.text = Haptik.Haptik.Acik ? "Acik" : "Kapali";
+                // Acik/kapali farki renkten de okunsun: yalniz yazi degisimi gozden kaciyor.
+                y.color = Haptik.Haptik.Acik ? Palet.UiOnay : Palet.UiYaziSolgun;
+            });
+            UiKit.Boyut(haptikButon.gameObject, 124f, 36f);
+
+            var etiket = haptikButon.GetComponentInChildren<Text>();
+            if (etiket != null) etiket.color = Haptik.Haptik.Acik ? Palet.UiOnay : Palet.UiYaziSolgun;
+        }
+
+        private void AdresSatiri(Transform ebeveyn)
+        {
+            var satir = Satir(ebeveyn, "Adres", 56f);
+
+            var ad = UiKit.Yazi(
+                satir, "Ad", "Sunucu", UiKit.YaziGovde, Palet.UiYazi, TextAnchor.MiddleLeft, true);
+            UiKit.Boyut(ad.gameObject, 88f, 28f);
+
+            _adresGiris = UiKit.Giris(satir, "Giris", "http://...", 120);
+            UiKit.Boyut(_adresGiris.gameObject, 240f, 36f).flexibleWidth = 1f;
+            // ⚠ Giris varsayilan yazi boyutu baslik olcegidir; bir URL bu
+            // yukseklikteki kutuya o boyutla sigmiyor. Kucuk olcege indiriliyor.
+            _adresGiris.textComponent.fontSize = UiKit.YaziKucuk;
+            var ipucu = _adresGiris.placeholder as Text;
+            if (ipucu != null) ipucu.fontSize = UiKit.YaziKucuk;
+            _adresGiris.text = SunucuAyari.Temel;
+
+            var kaydet = UiKit.Buton(satir, "Kaydet", "Kaydet", () => AdresDegisti?.Invoke(_adresGiris.text));
+            UiKit.Boyut(kaydet.gameObject, 110f, 36f);
         }
 
         public void Ac() => _panel.Ac();

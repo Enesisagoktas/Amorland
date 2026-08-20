@@ -12,6 +12,11 @@ namespace Amorland.Arayuz
     /// icinde nereye basarsan orada olusur.
     ///
     /// Birincil girdi karoya dokunmaktir; joystick yalnizca gezinmek isteyene.
+    ///
+    /// ⚠ Butun parcalari <see cref="Sekil.Daire"/> ile cizilir. Sprite'siz <c>Image</c>
+    /// keskin kare verir; oyun alaninin ortasinda duran kare bir joystick arayuzun
+    /// tamamini ucuzlatiyordu. Ayrica yari saydamdir: joystick oyunun UZERINDE durur,
+    /// altindaki tarlayi kapatmamali.
     /// </summary>
     public class Joystick : MonoBehaviour
     {
@@ -27,6 +32,15 @@ namespace Amorland.Arayuz
         private const float Yaricap = 90f;
         private const float OlanBolge = 0.12f;
 
+        /// <summary>Basparmak topuzunun capi. Tabanin yaklasik ucte biri: yon okunur, taban kapanmaz.</summary>
+        private const float SapCap = 68f;
+
+        /// <summary>Taban halkasinin kalinligi.</summary>
+        private const float HalkaKalinlik = 3f;
+
+        /// <summary>Sap topuzunun dis halesinin kalinligi.</summary>
+        private const float SapHale = 7f;
+
         /// <summary>-1..1 araliginda yon. Sifir ise girdi yok.</summary>
         public Vector2 Yon { get; private set; }
 
@@ -39,13 +53,21 @@ namespace Amorland.Arayuz
             UiKit.Doldur(_kok);
             _kok.gameObject.GetComponent<Image>().raycastTarget = false;
 
-            _taban = UiKit.Panel(_kok, "Taban", new Color(1f, 1f, 1f, 0.10f));
-            _taban.sizeDelta = new Vector2(Yaricap * 2f, Yaricap * 2f);
-            _taban.gameObject.GetComponent<Image>().raycastTarget = false;
+            // Taban ic ice iki daire: alttaki kenar halkasi, ustteki iceri cekilmis koyu
+            // dolgu. Sekil.Halka yuvarlak KOSE uretir ve 180 px'e gerildiginde daire
+            // kalmaz; gercek dairesel halka ancak boyle kuruluyor.
+            _taban = Daire(_kok, "Taban", Saydam(Palet.UiYazi, 0.20f), Yaricap * 2f);
+            var tabanIc = Daire(_taban, "TabanIc", Saydam(Palet.UiZemin, 0.55f), Yaricap * 2f);
+            UiKit.Doldur(tabanIc, HalkaKalinlik);
 
-            _sap = UiKit.Panel(_taban, "Sap", new Color(1f, 1f, 1f, 0.28f));
-            _sap.sizeDelta = new Vector2(64f, 64f);
-            _sap.gameObject.GetComponent<Image>().raycastTarget = false;
+            // ⚠ Sap TABANIN cocugu: Suruklendi anchoredPosition'i tabanin merkezine gore
+            // yaziyor. Baska bir ebeveyne alinirsa yon dogru, konum yanlis olur.
+            _sap = Daire(_taban, "Sap", Saydam(Palet.UiYazi, 0.30f), SapCap);
+            var sapIc = Daire(_sap, "SapIc", Saydam(Palet.UiYazi, 0.78f), SapCap);
+            UiKit.Doldur(sapIc, SapHale);
+
+            // Golge yok: taban her dokunusta .position ile tasiniyor, UiKit.GolgeEkle ise
+            // golgeyi kardes olarak birakip o anki konumu kopyaliyor — golge yerinde kalirdi.
 
             _taban.gameObject.SetActive(false);
         }
@@ -89,5 +111,27 @@ namespace Amorland.Arayuz
             Yon = Vector2.zero;
             _taban.gameObject.SetActive(false);
         }
+
+        // ------------------------------------------------------------------ gorunum
+
+        /// <summary>Dolu daire katmani. Joystick'in her parcasi daire, hicbiri kare degil.</summary>
+        private static RectTransform Daire(Transform ebeveyn, string ad, Color renk, float cap)
+        {
+            var rt = UiKit.Panel(ebeveyn, ad, renk);
+            var img = rt.gameObject.GetComponent<Image>();
+            img.sprite = Sekil.Daire();
+            img.type = Image.Type.Simple;
+            // Joystick yalnizca Dokunma'dan beslenir; karoya dokunmayi yutmamali.
+            img.raycastTarget = false;
+            rt.sizeDelta = new Vector2(cap, cap);
+            return rt;
+        }
+
+        /// <summary>
+        /// Palet renginin saydam hali. Ham renk uydurmamak icin: ton hep paletten gelir,
+        /// yalnizca alfa degisir — joystick oyun alaninin uzerinde yuzdugu icin opak olamaz.
+        /// </summary>
+        private static Color Saydam(Color renk, float alfa) =>
+            new Color(renk.r, renk.g, renk.b, alfa);
     }
 }

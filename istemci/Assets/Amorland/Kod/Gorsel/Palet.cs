@@ -40,15 +40,31 @@ namespace Amorland.Gorsel
         public static readonly Color Gokyuzu = H(178, 206, 220);
 
         // UI
-        public static readonly Color UiZemin = new Color(0.10f, 0.11f, 0.12f, 0.92f);
-        public static readonly Color UiPanel = new Color(0.16f, 0.17f, 0.19f, 0.96f);
-        public static readonly Color UiCizgi = new Color(1f, 1f, 1f, 0.12f);
-        public static readonly Color UiYazi = new Color(0.94f, 0.93f, 0.90f, 1f);
-        public static readonly Color UiYaziSolgun = new Color(0.94f, 0.93f, 0.90f, 0.55f);
-        public static readonly Color UiVurgu = H(214, 180, 92);
-        public static readonly Color UiUyari = H(206, 112, 88);
-        public static readonly Color UiOnay = H(126, 168, 92);
-        public static readonly Color Golge = new Color(0f, 0f, 0f, 0.22f);
+        //
+        // ⚠ Notr gri degil, ILIK koyu tonlar. Kozy bir ciftlik oyununda notr gri panel
+        // ekrandaki sicak yesil/toprak paletiyle catisir ve arayuzu oyundan kopuk,
+        // "sistem menusu" gibi gosterir. Tonlar hafif kahverengiye cekilmistir.
+        public static readonly Color UiZemin = new Color(0.115f, 0.105f, 0.095f, 0.90f);
+        public static readonly Color UiPanel = new Color(0.175f, 0.160f, 0.145f, 0.97f);
+
+        /// <summary>Panelin uzerine binen yuzey: slot, giris kutusu, ikincil buton.</summary>
+        public static readonly Color UiYuzey = new Color(0.245f, 0.222f, 0.196f, 1f);
+
+        /// <summary>Basili/secili yuzey.</summary>
+        public static readonly Color UiYuzeyKoyu = new Color(0.145f, 0.132f, 0.120f, 1f);
+
+        public static readonly Color UiCizgi = new Color(1f, 0.96f, 0.90f, 0.10f);
+        public static readonly Color UiYazi = new Color(0.960f, 0.945f, 0.915f, 1f);
+        public static readonly Color UiYaziSolgun = new Color(0.960f, 0.945f, 0.915f, 0.58f);
+        public static readonly Color UiVurgu = H(224, 188, 96);
+        public static readonly Color UiVurguKoyu = H(186, 152, 72);
+
+        /// <summary>Vurgu zemin uzerine yazi. Acik zeminde beyaz yazi okunmaz.</summary>
+        public static readonly Color UiVurguUstuYazi = new Color(0.16f, 0.13f, 0.08f, 1f);
+
+        public static readonly Color UiUyari = H(212, 116, 92);
+        public static readonly Color UiOnay = H(132, 176, 96);
+        public static readonly Color Golge = new Color(0f, 0f, 0f, 0.38f);
 
         /// <summary>Buyume asamasina gore bitki rengi. Asama ilerledikce koyulasir ve doyar.</summary>
         public static Color UrunRengi(int asama, int asamaSayisi)

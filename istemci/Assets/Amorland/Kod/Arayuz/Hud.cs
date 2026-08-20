@@ -79,48 +79,57 @@ namespace Amorland.Arayuz
 
         private void SolUstKur(RectTransform kok)
         {
-            var panel = UiKit.Panel(kok, "SolUst", Palet.UiZemin);
-            UiKit.Sabitle(panel, 0f, 1f, 12f, -12f, 260f, 62f);
+            var panel = UiKit.Kart(kok, "SolUst", Palet.UiZemin);
+            UiKit.Sabitle(panel, 0f, 1f, 14f, -14f, 264f, 66f);
+            UiKit.GolgeEkle(panel, UiKit.Yaricap, 14, 4f);
 
-            _seviyeYazi = UiKit.Yazi(panel, "Seviye", "Sv 1", 20, Palet.UiYazi, TextAnchor.UpperLeft);
-            UiKit.Sabitle(_seviyeYazi.rectTransform, 0f, 1f, 10f, -8f, 100f, 24f);
+            _seviyeYazi = UiKit.Yazi(
+                panel, "Seviye", "Sv 1", UiKit.YaziBaslik, Palet.UiYazi, TextAnchor.UpperLeft, true);
+            UiKit.Sabitle(_seviyeYazi.rectTransform, 0f, 1f, 14f, -10f, 110f, 26f);
 
-            var arka = UiKit.Cubuk(panel, "XpCubuk", new Color(1f, 1f, 1f, 0.12f), Palet.UiVurgu, out _xpDolgu);
+            // Cubuk zemini paletten gelir; Ayarlar ve Depo cubuklariyla ayni ton olmali
+            // ki ilerleme cubugu her ekranda ayni sey gibi okunsun.
+            var arka = UiKit.Cubuk(panel, "XpCubuk", Palet.UiYuzeyKoyu, Palet.UiVurgu, out _xpDolgu);
             _xpArka = arka.rectTransform;
-            UiKit.Sabitle(_xpArka, 0f, 1f, 10f, -36f, XpGenislik, 10f);
+            UiKit.Sabitle(_xpArka, 0f, 1f, 14f, -42f, XpGenislik, 10f);
 
             // Altin kutusu Sv 5'e kadar GIZLI kalir (B.15).
             _altinKutu = UiKit.Panel(panel, "Altin", Color.clear);
-            UiKit.Sabitle(_altinKutu, 1f, 1f, -10f, -8f, 90f, 24f);
-            _altinYazi = UiKit.Yazi(_altinKutu, "AltinYazi", "0", 18, Palet.UiVurgu, TextAnchor.UpperRight);
+            UiKit.Sabitle(_altinKutu, 1f, 1f, -14f, -10f, 90f, 26f);
+            _altinYazi = UiKit.Yazi(
+                _altinKutu, "AltinYazi", "0", UiKit.YaziGovde, Palet.UiVurgu, TextAnchor.UpperRight, true);
             UiKit.Doldur(_altinYazi.rectTransform);
             _altinKutu.gameObject.SetActive(false);
         }
 
         private void SagUstKur(RectTransform kok)
         {
-            var panel = UiKit.Panel(kok, "SagUst", Palet.UiZemin);
-            UiKit.Sabitle(panel, 1f, 1f, -12f, -12f, 250f, 62f);
+            var panel = UiKit.Kart(kok, "SagUst", Palet.UiZemin);
+            UiKit.Sabitle(panel, 1f, 1f, -14f, -14f, 254f, 66f);
+            UiKit.GolgeEkle(panel, UiKit.Yaricap, 14, 4f);
 
-            _partnerRozet = UiKit.Rozet(panel, Palet.UiYaziSolgun, 16f);
-            UiKit.Sabitle(_partnerRozet.rectTransform, 0f, 1f, 10f, -10f, 16f, 16f);
+            _partnerRozet = UiKit.Rozet(panel, Palet.UiYaziSolgun, 14f);
+            UiKit.Sabitle(_partnerRozet.rectTransform, 0f, 1f, 14f, -13f, 14f, 14f);
 
-            _partnerYazi = UiKit.Yazi(panel, "Partner", "Tek imza", 16, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
-            UiKit.Sabitle(_partnerYazi.rectTransform, 0f, 1f, 34f, -8f, 200f, 22f);
+            _partnerYazi = UiKit.Yazi(
+                panel, "Partner", "Tek imza", UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
+            UiKit.Sabitle(_partnerYazi.rectTransform, 0f, 1f, 36f, -11f, 206f, 22f);
 
-            _depoYazi = UiKit.Yazi(panel, "Depo", "", 14, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
-            UiKit.Sabitle(_depoYazi.rectTransform, 0f, 1f, 10f, -34f, 220f, 20f);
+            _depoYazi = UiKit.Yazi(
+                panel, "Depo", "", UiKit.YaziMini, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
+            UiKit.Sabitle(_depoYazi.rectTransform, 0f, 1f, 14f, -38f, 220f, 20f);
         }
 
         private void AltCubukKur(RectTransform kok)
         {
-            _tohumCubugu = UiKit.Panel(kok, "TohumCubugu", Palet.UiZemin);
-            UiKit.Sabitle(_tohumCubugu, 0.5f, 0f, 0f, 12f, 4 * 92f + 20f, 88f);
+            _tohumCubugu = UiKit.Kart(kok, "TohumCubugu", Palet.UiZemin);
+            UiKit.Sabitle(_tohumCubugu, 0.5f, 0f, 0f, 14f, 4 * 92f + 20f, 92f);
+            UiKit.GolgeEkle(_tohumCubugu, UiKit.Yaricap, 18, 6f);
 
             for (int i = 0; i < TohumSlotSayisi; i++)
             {
                 int indeks = i;
-                var slotRt = UiKit.Panel(_tohumCubugu, "Slot" + i, Palet.UiPanel);
+                var slotRt = UiKit.Kart(_tohumCubugu, "Slot" + i, Palet.UiYuzey, UiKit.YaricapKucuk);
                 UiKit.Sabitle(slotRt, 0f, 0.5f, 10f + i * 92f, 0f, 84f, 76f);
                 slotRt.pivot = new Vector2(0f, 0.5f);
 
@@ -128,16 +137,16 @@ namespace Amorland.Arayuz
                 buton.targetGraphic = slotRt.gameObject.GetComponent<Image>();
                 buton.onClick.AddListener(() => SlotSec(indeks));
 
-                var ad = UiKit.Yazi(slotRt, "Ad", "", 14, Palet.UiYazi, TextAnchor.UpperCenter);
-                UiKit.Sabitle(ad.rectTransform, 0.5f, 1f, 0f, -6f, 78f, 34f);
+                var ad = UiKit.Yazi(slotRt, "Ad", "", UiKit.YaziMini, Palet.UiYazi, TextAnchor.UpperCenter);
+                UiKit.Sabitle(ad.rectTransform, 0.5f, 1f, 0f, -8f, 76f, 34f);
 
-                var adet = UiKit.Yazi(slotRt, "Adet", "", 16, Palet.UiVurgu, TextAnchor.LowerRight);
-                UiKit.Sabitle(adet.rectTransform, 1f, 0f, -6f, 4f, 40f, 20f);
+                var adet = UiKit.Yazi(
+                    slotRt, "Adet", "", UiKit.YaziKucuk, Palet.UiVurgu, TextAnchor.LowerRight, true);
+                UiKit.Sabitle(adet.rectTransform, 1f, 0f, -8f, 6f, 40f, 20f);
 
-                var cerceveRt = UiKit.Panel(slotRt, "Cerceve", Color.clear);
-                UiKit.Doldur(cerceveRt);
-                var cerceve = cerceveRt.gameObject.GetComponent<Image>();
-                cerceve.raycastTarget = false;
+                // Secim cercevesi: dolu bir katman degil, ince halka. Dolu katman
+                // slotun icindeki yaziyi bulandiriyordu.
+                var cerceve = UiKit.Cerceve(slotRt, "Cerceve", Color.clear, UiKit.YaricapKucuk, 3);
 
                 _tohumSlotlari.Add(
                     new TohumSlotu { Kok = slotRt.gameObject, Cerceve = cerceve, Ad = ad, Adet = adet });
@@ -146,26 +155,32 @@ namespace Amorland.Arayuz
 
         private void SagAltKur(RectTransform kok)
         {
-            var panel = UiKit.Panel(kok, "SagAlt", Color.clear);
-            UiKit.Sabitle(panel, 1f, 0f, -12f, 12f, 320f, 168f);
-            UiKit.YatayDizi(panel, 8f, 0);
+            // ⚠ Panel yuksekligi butonun yuksekligidir. Onceden 168 idi ve YatayDizi
+            // childForceExpandHeight ile butonlari 168 px'e geriyordu — dev, sunger gibi
+            // butonlar arayuzun en cirkin parcasiydi.
+            var panel = UiKit.Kart(kok, "SagAlt", Palet.UiZemin);
+            UiKit.Sabitle(panel, 1f, 0f, -14f, 14f, 330f, 68f);
+            UiKit.GolgeEkle(panel, UiKit.Yaricap, 16, 5f);
+            UiKit.YatayDizi(panel, 6f, 8);
 
             void Ekle(string ad, string metin, Action tik)
             {
                 var b = UiKit.Buton(panel, ad, metin, tik);
-                UiKit.Boyut(b.gameObject, 72f, 56f);
+                UiKit.Boyut(b.gameObject, 74f, 52f);
+                b.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
             }
 
-            Ekle("Canta", "Canta", () => CantaAcildi?.Invoke());
+            Ekle("Canta", "Çanta", () => CantaAcildi?.Invoke());
             Ekle("Harita", "Harita", () => HaritaAcildi?.Invoke());
             Ekle("Defter", "Defter", () => DefterAcildi?.Invoke());
             Ekle("Ayarlar", "Ayar", () => AyarlarAcildi?.Invoke());
 
-            _cantaYazi = UiKit.Yazi(kok, "CantaSayaci", "", 14, Palet.UiYaziSolgun, TextAnchor.LowerRight);
-            UiKit.Sabitle(_cantaYazi.rectTransform, 1f, 0f, -12f, 186f, 200f, 20f);
+            _cantaYazi = UiKit.Yazi(
+                kok, "CantaSayaci", "", UiKit.YaziMini, Palet.UiYaziSolgun, TextAnchor.LowerRight);
+            UiKit.Sabitle(_cantaYazi.rectTransform, 1f, 0f, -18f, 90f, 200f, 20f);
 
-            _kovaYazi = UiKit.Yazi(kok, "KovaSayaci", "", 14, Palet.Su, TextAnchor.LowerRight);
-            UiKit.Sabitle(_kovaYazi.rectTransform, 1f, 0f, -12f, 208f, 200f, 20f);
+            _kovaYazi = UiKit.Yazi(kok, "KovaSayaci", "", UiKit.YaziMini, Palet.Su, TextAnchor.LowerRight);
+            UiKit.Sabitle(_kovaYazi.rectTransform, 1f, 0f, -18f, 112f, 200f, 20f);
         }
 
         // ------------------------------------------------------------------ tazeleme
@@ -270,8 +285,13 @@ namespace Amorland.Arayuz
                     slot.Kok.SetActive(true);
                 }
                 bool secili = slot.EsyaId != null && slot.EsyaId == SeciliTohum;
-                slot.Cerceve.color = secili ? new Color(Palet.UiVurgu.r, Palet.UiVurgu.g, Palet.UiVurgu.b, 0.28f)
-                                            : Color.clear;
+                slot.Cerceve.color = secili ? Palet.UiVurgu : Color.clear;
+                // Bos slot dolu slottan ayirt edilebilsin: bos olan cukurda durur.
+                var slotImg = slot.Kok.GetComponent<Image>();
+                if (slotImg != null)
+                {
+                    slotImg.color = slot.EsyaId == null ? Palet.UiYuzeyKoyu : Palet.UiYuzey;
+                }
             }
 
             // Secili tohum bittiyse secim dusurulur; oyuncu bos slota basmis gibi olmasin.
