@@ -345,12 +345,23 @@ namespace Amorland
             gorselGo.transform.SetParent(_karakter.transform, false);
             // Oyuncunun ACILISTA sectigi renk. Dunya durumu henuz gelmedi (WS baglanmadi),
             // o yuzden oturum paketinden tasinan deger kullanilir.
-            var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(_benimRenk), new Color(0.88f, 0.76f, 0.64f));
-            MateryalDeposu.Nesne("Govde", mesh, gorselGo.transform, Vector3.zero);
-            // Sahte golge (B.2): gercek zamanli golge yok.
-            MateryalDeposu.Nesne(
-                "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), gorselGo.transform,
-                new Vector3(0f, 0.01f, 0f));
+            // B.22 revizyonu: karakter cizim sprite'i. Sahte golge her nesnenin altinda.
+            float pitch = _denge.Yuklendi ? _denge.KameraPitch : 50f;
+            if (Gorsel.SpriteDeposu.SetVar)
+            {
+                Gorsel.SpriteDeposu.Yatik("golge", gorselGo.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
+                Gorsel.SpriteDeposu.Nesne(
+                    "karakter_" + Mathf.Clamp(_benimRenk, 0, 3), gorselGo.transform,
+                    Vector3.zero, pitch, 0.05f);
+            }
+            else
+            {
+                var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(_benimRenk), new Color(0.88f, 0.76f, 0.64f));
+                MateryalDeposu.Nesne("Govde", mesh, gorselGo.transform, Vector3.zero);
+                MateryalDeposu.Nesne(
+                    "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), gorselGo.transform,
+                    new Vector3(0f, 0.01f, 0f), saydam: true);
+            }
 
             IzgarayiKur();
             _karakter.KaroBasinaSn = _denge.YurumeKaroSn;
@@ -408,11 +419,22 @@ namespace Amorland
             {
                 Destroy(_partnerGovde.transform.GetChild(i).gameObject);
             }
-            var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(renk), new Color(0.86f, 0.72f, 0.60f));
-            MateryalDeposu.Nesne("Govde", mesh, _partnerGovde.transform, Vector3.zero);
-            MateryalDeposu.Nesne(
-                "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), _partnerGovde.transform,
-                new Vector3(0f, 0.01f, 0f));
+            float pPitch = _denge.Yuklendi ? _denge.KameraPitch : 50f;
+            if (Gorsel.SpriteDeposu.SetVar)
+            {
+                Gorsel.SpriteDeposu.Yatik("golge", _partnerGovde.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
+                Gorsel.SpriteDeposu.Nesne(
+                    "karakter_" + Mathf.Clamp(renk, 0, 3), _partnerGovde.transform,
+                    Vector3.zero, pPitch, 0.05f);
+            }
+            else
+            {
+                var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(renk), new Color(0.86f, 0.72f, 0.60f));
+                MateryalDeposu.Nesne("Govde", mesh, _partnerGovde.transform, Vector3.zero);
+                MateryalDeposu.Nesne(
+                    "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), _partnerGovde.transform,
+                    new Vector3(0f, 0.01f, 0f), saydam: true);
+            }
             _partnerRenk = renk;
         }
 

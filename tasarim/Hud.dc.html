@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif; }
+    a { color: #d6b45c; } a:hover { color: #b89a48; }
+  </style>
+</helmet>
+
+<div style="width: 1180px; background: #1d1a16; color: #efe9dc; padding: 40px; box-sizing: border-box;">
+
+  <div style="font-size: 30px; font-weight: 700; color: #e0bc60;">HUD detayı</div>
+  <div style="font-size: 16px; opacity: .7; margin-top: 6px; max-width: 820px;">
+    Arayüz dili zaten kurulmuş durumda — koyu ılık kapsül, krem yazı, altın vurgu. Burada değişen tek şey
+    <strong>dünyanın üzerinde nasıl durduğu</strong>: dünya artık görünür olduğu için HUD'ın onu kapatmaması gerekiyor.
+  </div>
+
+  <!-- ---------- KAPSULLER ---------- -->
+  <div style="margin-top: 34px; display: flex; gap: 26px; flex-wrap: wrap; align-items: flex-start;">
+
+    <div>
+      <div style="font-size:14px; opacity:.6; margin-bottom:10px">Sol üst — kimlik ve ilerleme</div>
+      <svg width="290" height="86">
+        <rect x="4" y="4" width="278" height="74" rx="20" fill="#1d1a16"/>
+        <rect x="4" y="4" width="278" height="74" rx="20" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+        <circle cx="44" cy="41" r="23" fill="#d9694a"/>
+        <circle cx="44" cy="41" r="23" fill="none" stroke="#e0d9c8" stroke-opacity=".35" stroke-width="2"/>
+        <text x="78" y="36" fill="#f5f1e6" font-size="20" font-weight="700">Sv 3</text>
+        <rect x="78" y="47" width="176" height="12" rx="6" fill="#000" opacity=".4"/>
+        <rect x="78" y="47" width="110" height="12" rx="6" fill="#e0bc60"/>
+        <text x="264" y="36" fill="#e0bc60" font-size="17" font-weight="700" text-anchor="end">128</text>
+      </svg>
+      <div style="font-size:13px; opacity:.6; max-width:290px; line-height:1.45; margin-top:8px">
+        Avatar dairesi oyuncunun seçtiği rengi taşır — partnerinkiyle aynı dilde.
+        Altın çubuk XP; sayı Sv 5'e kadar <strong>hiç görünmez</strong> (B.15).
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:14px; opacity:.6; margin-bottom:10px">Sağ üst — partner ve depo</div>
+      <svg width="300" height="86">
+        <rect x="4" y="4" width="288" height="74" rx="20" fill="#1d1a16"/>
+        <rect x="4" y="4" width="288" height="74" rx="20" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+        <circle cx="34" cy="31" r="10" fill="#5e8c55"/>
+        <text x="54" y="37" fill="#f5f1e6" font-size="17">Elif · çevrimiçi</text>
+        <text x="24" y="62" fill="#f5f1e6" fill-opacity=".6" font-size="15">Depo</text>
+        <rect x="76" y="51" width="150" height="12" rx="6" fill="#000" opacity=".4"/>
+        <rect x="76" y="51" width="46" height="12" rx="6" fill="#84b060"/>
+        <text x="282" y="62" fill="#f5f1e6" fill-opacity=".6" font-size="15" text-anchor="end">12/40</text>
+      </svg>
+      <div style="font-size:13px; opacity:.6; max-width:300px; line-height:1.45; margin-top:8px">
+        Depo çubuğu <strong>sessiz kalamaz</strong>: dolulukta yeşil → altın → kırmızı.
+        Hasadın engellenmesinin görsel karşılığı budur.
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:14px; opacity:.6; margin-bottom:10px">Öğretici şeridi</div>
+      <svg width="500" height="86">
+        <rect x="4" y="18" width="492" height="48" rx="24" fill="#1d1a16"/>
+        <rect x="4" y="18" width="492" height="48" rx="24" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+        <circle cx="34" cy="42" r="11" fill="#e0bc60"/>
+        <text x="56" y="48" fill="#f5f1e6" font-size="17">Olgun buğdayı topla — parlayan karoya dokun.</text>
+      </svg>
+      <div style="font-size:13px; opacity:.6; max-width:500px; line-height:1.45; margin-top:8px">
+        Tek satır, modal yok, akışı kesmez (B.18). Altın nokta ekrandaki parlayan karonun rengiyle aynı —
+        bağı oyuncu kendisi kurar.
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- TOHUM SLOTLARI ---------- -->
+  <div style="margin-top: 40px; font-size: 22px; font-weight: 700; color: #e0bc60;">Tohum seçici</div>
+  <div style="font-size: 15px; opacity: .7; margin-top: 6px; max-width: 780px;">
+    Bu bir <strong>alet çubuğu değil</strong> — tohum/sarf seçicisi (B.6). Dolu, seçili ve boş slot üç ayrı durumda okunmalı.
+  </div>
+  <svg width="640" height="130" style="margin-top:16px">
+    <rect x="4" y="14" width="424" height="100" rx="22" fill="#1d1a16"/>
+    <rect x="4" y="14" width="424" height="100" rx="22" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+    <rect x="20" y="28" width="90" height="72" rx="14" fill="#3e372e"/>
+    <rect x="20" y="28" width="90" height="72" rx="14" fill="none" stroke="#e0bc60" stroke-width="3"/>
+    <text x="65" y="56" fill="#f5f1e6" font-size="15" text-anchor="middle">Buğday</text>
+    <text x="100" y="92" fill="#e0bc60" font-size="17" font-weight="700" text-anchor="end">12</text>
+    <rect x="122" y="28" width="90" height="72" rx="14" fill="#3e372e"/>
+    <text x="167" y="56" fill="#f5f1e6" font-size="15" text-anchor="middle">Havuç</text>
+    <text x="202" y="92" fill="#e0bc60" font-size="17" font-weight="700" text-anchor="end">3</text>
+    <rect x="224" y="28" width="90" height="72" rx="14" fill="#252119"/>
+    <rect x="326" y="28" width="90" height="72" rx="14" fill="#252119"/>
+
+    <text x="65" y="126" fill="#e0bc60" font-size="13" text-anchor="middle">seçili · altın halka</text>
+    <text x="167" y="126" fill="#f5f1e6" fill-opacity=".6" font-size="13" text-anchor="middle">dolu</text>
+    <text x="270" y="126" fill="#f5f1e6" fill-opacity=".4" font-size="13" text-anchor="middle">boş · çukur</text>
+  </svg>
+
+  <!-- ---------- YERLESIM KURALI ---------- -->
+  <div style="margin-top: 36px; font-size: 22px; font-weight: 700; color: #e0bc60;">Yerleşim: dünyayı kapatma</div>
+  <div style="margin-top: 16px; display:flex; gap: 28px; align-items: flex-start;">
+    <svg width="420" height="240">
+      <rect x="0" y="0" width="420" height="240" rx="10" fill="#7ea85c"/>
+      <!-- guvenli oynanis alani -->
+      <rect x="16" y="42" width="388" height="130" fill="#8fbb68" opacity=".55"/>
+      <text x="210" y="112" fill="#2d3a22" font-size="15" text-anchor="middle" opacity=".75">oynanış alanı — boş kalır</text>
+      <!-- hud bantlari -->
+      <rect x="8" y="8" width="120" height="30" rx="10" fill="#1d1a16" opacity=".9"/>
+      <rect x="292" y="8" width="120" height="30" rx="10" fill="#1d1a16" opacity=".9"/>
+      <rect x="140" y="196" width="140" height="36" rx="12" fill="#1d1a16" opacity=".9"/>
+      <rect x="292" y="196" width="120" height="36" rx="12" fill="#1d1a16" opacity=".9"/>
+      <circle cx="52" cy="212" r="26" fill="#1d1a16" opacity=".55"/>
+    </svg>
+    <div style="flex:1; font-size:15px; line-height:1.6; opacity:.82; max-width:420px">
+      HUD yalnızca <strong>üst ve alt şeritte</strong> durur; ortadaki yatay bant hep boş kalır çünkü
+      tarla orada. Mevcut yerleşimde tohum çubuğu ekranın ortasına doğru taşıyordu ve ekilecek karoyu kapatıyordu.
+      <br><br>
+      Sol alt joystick yarı saydam ve <strong>küçük</strong>: parmak zaten orada, çizimin kendisi büyük olmak zorunda değil.
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -324,6 +324,112 @@ namespace Amorland.Gorsel
             return y.Kapat("yabani_" + tur);
         }
 
+        /// <summary>
+        /// Agac: govde + iki kademe yaprak konisi.
+        ///
+        /// Dekor amaclidir, uzerinde yurunmez. Sahnenin kenarlarini doldurup "bos tarla"
+        /// hissini kirar; oyuncunun nerede oldugunu anlamasi cerceve olmadan zordur.
+        /// </summary>
+        public static Mesh Agac(float olcek = 1f)
+        {
+            var y = new Yapici();
+            GovdeEkle(y, olcek);
+            KoniEkle(y, new Vector3(0f, 0.9f * olcek, 0f), 0.85f * olcek, 1.1f * olcek, 7, Palet.Yaprak);
+            KoniEkle(y, new Vector3(0f, 1.55f * olcek, 0f), 0.6f * olcek, 0.9f * olcek, 7, Palet.YaprakKoyu);
+            return y.Kapat("agac");
+        }
+
+        private static void GovdeEkle(Yapici y, float olcek)
+        {
+            SilindirEkle(y, Vector3.zero, 0.11f * olcek, 1.0f * olcek, 6, Palet.AhsapKoyu);
+        }
+
+        /// <summary>Cit parcasi: iki direk + iki yatay lata. Parsel sinirini gorunur kilar.</summary>
+        public static Mesh CitParcasi(float uzunluk)
+        {
+            var y = new Yapici();
+            // ⚠ Direkler yalnizca ucta olursa tepeden bakan kamerada cit duz bir
+            // kahverengi serit gibi okunuyor. Duzenli araliklarla direk konur ve
+            // direkler latalardan YUKSEK tutulur: ritim, seridi cit yapan seydir.
+            int direkSayisi = Mathf.Max(2, Mathf.RoundToInt(uzunluk / 1.4f) + 1);
+            for (int i = 0; i < direkSayisi; i++)
+            {
+                float t = direkSayisi == 1 ? 0.5f : i / (float)(direkSayisi - 1);
+                float x = Mathf.Lerp(-uzunluk / 2f, uzunluk / 2f, t);
+                KutuEkle(y, new Vector3(x, 0f, 0f), new Vector3(0.13f, 0.78f, 0.13f), Palet.Ahsap);
+            }
+            KutuEkle(y, new Vector3(0f, 0.52f, 0f), new Vector3(uzunluk, 0.07f, 0.06f), Palet.AhsapKoyu);
+            KutuEkle(y, new Vector3(0f, 0.28f, 0f), new Vector3(uzunluk, 0.07f, 0.06f), Palet.AhsapKoyu);
+            return y.Kapat("cit");
+        }
+
+        /// <summary>Ot tutami: birkac ince yaprak. Zemine doku hissi verir.</summary>
+        public static Mesh OtTutami(int tohum)
+        {
+            var y = new Yapici();
+            var rastgele = new System.Random(tohum);
+            int adet = 3 + rastgele.Next(3);
+            for (int i = 0; i < adet; i++)
+            {
+                float aci = (float)(rastgele.NextDouble() * Mathf.PI * 2f);
+                float mesafe = (float)rastgele.NextDouble() * 0.18f;
+                float boy = 0.16f + (float)rastgele.NextDouble() * 0.16f;
+                Vector3 dip = new Vector3(Mathf.Cos(aci) * mesafe, 0f, Mathf.Sin(aci) * mesafe);
+                Vector3 uc = dip + new Vector3(Mathf.Cos(aci) * 0.07f, boy, Mathf.Sin(aci) * 0.07f);
+                Vector3 genislik = new Vector3(-Mathf.Sin(aci), 0f, Mathf.Cos(aci)) * 0.035f;
+                y.UcgenCiftYuz(dip - genislik, dip + genislik, uc, Palet.Yaprak);
+            }
+            return y.Kapat("ot");
+        }
+
+        /// <summary>Duz yatay yama. Zemin renk cesitlemesi icin (tek ton cim olu duruyor).</summary>
+        public static Mesh Yama(float genislik, float derinlik, Color renk)
+        {
+            var y = new Yapici();
+            float gx = genislik / 2f, gz = derinlik / 2f;
+            y.DortGenYonlu(
+                new Vector3(-gx, 0, -gz), new Vector3(gx, 0, -gz),
+                new Vector3(gx, 0, gz), new Vector3(-gx, 0, gz),
+                Vector3.up, renk);
+            return y.Kapat("yama");
+        }
+
+        // Koni ve Silindir'i baska bir Yapici'ya eklemek icin (bilesik nesneler).
+        private static void KoniEkle(
+            Yapici y, Vector3 taban, float yaricap, float yukseklik, int dilim, Color renk)
+        {
+            Vector3 tepe = taban + Vector3.up * yukseklik;
+            for (int i = 0; i < dilim; i++)
+            {
+                float a0 = (i / (float)dilim) * Mathf.PI * 2f;
+                float a1 = ((i + 1) / (float)dilim) * Mathf.PI * 2f;
+                Vector3 p0 = taban + new Vector3(Mathf.Cos(a0) * yaricap, 0, Mathf.Sin(a0) * yaricap);
+                Vector3 p1 = taban + new Vector3(Mathf.Cos(a1) * yaricap, 0, Mathf.Sin(a1) * yaricap);
+                float orta = (a0 + a1) * 0.5f;
+                float golge = 0.86f + 0.14f * Mathf.Abs(Mathf.Cos(orta));
+                y.UcgenYonlu(p0, p1, tepe, new Vector3(Mathf.Cos(orta), 0f, Mathf.Sin(orta)), renk * golge);
+            }
+        }
+
+        private static void SilindirEkle(
+            Yapici y, Vector3 taban, float yaricap, float yukseklik, int dilim, Color renk)
+        {
+            for (int i = 0; i < dilim; i++)
+            {
+                float a0 = (i / (float)dilim) * Mathf.PI * 2f;
+                float a1 = ((i + 1) / (float)dilim) * Mathf.PI * 2f;
+                Vector3 p0 = taban + new Vector3(Mathf.Cos(a0) * yaricap, 0, Mathf.Sin(a0) * yaricap);
+                Vector3 p1 = taban + new Vector3(Mathf.Cos(a1) * yaricap, 0, Mathf.Sin(a1) * yaricap);
+                Vector3 u0 = p0 + Vector3.up * yukseklik;
+                Vector3 u1 = p1 + Vector3.up * yukseklik;
+                float orta = (a0 + a1) * 0.5f;
+                float golge = 0.84f + 0.16f * Mathf.Abs(Mathf.Cos(orta));
+                Vector3 disYon = new Vector3(Mathf.Cos(orta), 0f, Mathf.Sin(orta));
+                y.DortGenYonlu(p0, p1, u1, u0, disYon, renk * golge);
+                y.UcgenYonlu(u0, u1, taban + Vector3.up * yukseklik, Vector3.up, renk);
+            }
+        }
+
         /// <summary>Zemin: tek buyuk dortgen. Karo izgarasi ayri cizilir.</summary>
         public static Mesh Zemin(float genislik, float derinlik, Color renk)
         {

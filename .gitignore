@@ -53,3 +53,10 @@ araclar/cikti/
 
 # Unity oyuncu derlemesi (yerel, git'e girmez)
 istemci/Build/
+
+# sprite-uretici gecici
+araclar/sprite-uretici/__pycache__/
+
+# design kanvasi: kaynak .dc.html tutulur, yayinlanan payload tutulmaz (2 MB)
+tasarim/*.html
+!tasarim/*.dc.html

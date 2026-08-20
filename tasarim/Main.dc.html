@@ -1,0 +1,314 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif; }
+    a { color: #d6b45c; } a:hover { color: #b89a48; }
+    .etiket { font-size: 13px; letter-spacing: .09em; text-transform: uppercase; }
+  </style>
+</helmet>
+
+<div style="width: 1280px; height: 800px; background: #17140f; position: relative;">
+
+  <!-- ================= OYUN KARESI ================= -->
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="display:block">
+
+    <!-- Gokyuzu: tek duz mavi degil, ufka dogru isinan iki bant.
+         Duz tek renk gokyuzu derinlik hissini oldururuyor. -->
+    <rect x="0" y="0" width="1280" height="150" fill="#a8c6d6"/>
+    <rect x="0" y="150" width="1280" height="60" fill="#c3d9d2"/>
+
+    <!-- ---------- ZEMIN: uc deger bandi ----------
+         YON A'nin cekirdek fikri: cim TEK ton degil. Uzak bant koyu ve soguk,
+         orta bant taban rengi, on bant acik ve sicak. Ortografik kamerada
+         derinligi veren tek sey budur. -->
+    <rect x="0" y="210" width="1280" height="120" fill="#5b7d44"/>
+    <rect x="0" y="330" width="1280" height="150" fill="#6d9152"/>
+    <rect x="0" y="480" width="1280" height="240" fill="#7ea85c"/>
+
+    <!-- Bant geciskerini kiran duzensiz cim yamalari (dusuk poligon dilinde) -->
+    <polygon points="0,330 180,322 340,338 520,326 700,340 880,328 1060,338 1280,330 1280,352 0,352" fill="#658a4d" opacity=".55"/>
+    <polygon points="0,480 220,470 420,486 640,474 860,488 1080,476 1280,484 1280,506 0,506" fill="#76a057" opacity=".5"/>
+
+    <!-- ---------- ARKA AGAC SINIRI ----------
+         Sahneyi ustten kapatir. Once koyu siluet bandi, sonra tek tek agaclar:
+         "sonsuz bos tarla" hissini kesen sey bu ust sinirdir. -->
+    <rect x="0" y="196" width="1280" height="26" fill="#46764f" opacity=".5"/>
+    <g>
+      <!-- her agac: govde + iki kademe koni, isikli ve golgeli yuz ayri -->
+      <g transform="translate(60,236)">
+        <rect x="-5" y="-16" width="10" height="18" fill="#70543a"/>
+        <polygon points="0,-72 -30,-14 30,-14" fill="#5f9a4a"/>
+        <polygon points="0,-72 0,-14 30,-14" fill="#4a7c3a"/>
+        <polygon points="0,-96 -22,-50 22,-50" fill="#6aa752"/>
+        <polygon points="0,-96 0,-50 22,-50" fill="#54893f"/>
+      </g>
+      <g transform="translate(190,244)">
+        <rect x="-5" y="-16" width="10" height="18" fill="#70543a"/>
+        <polygon points="0,-64 -26,-12 26,-12" fill="#639e4c"/>
+        <polygon points="0,-64 0,-12 26,-12" fill="#4d8038"/>
+        <polygon points="0,-86 -19,-44 19,-44" fill="#6da954"/>
+        <polygon points="0,-86 0,-44 19,-44" fill="#568b41"/>
+      </g>
+      <g transform="translate(320,232)">
+        <rect x="-5" y="-16" width="10" height="18" fill="#70543a"/>
+        <polygon points="0,-78 -32,-15 32,-15" fill="#5f9a4a"/>
+        <polygon points="0,-78 0,-15 32,-15" fill="#4a7c3a"/>
+        <polygon points="0,-104 -23,-54 23,-54" fill="#6aa752"/>
+        <polygon points="0,-104 0,-54 23,-54" fill="#54893f"/>
+      </g>
+      <g transform="translate(452,246)">
+        <rect x="-5" y="-16" width="10" height="18" fill="#70543a"/>
+        <polygon points="0,-60 -24,-11 24,-11" fill="#639e4c"/>
+        <polygon points="0,-60 0,-11 24,-11" fill="#4d8038"/>
+        <polygon points="0,-80 -18,-42 18,-42" fill="#6da954"/>
+        <polygon points="0,-80 0,-42 18,-42" fill="#568b41"/>
+      </g>
+      <g transform="translate(760,240)">
+        <rect x="-5" y="-16" width="10" height="18" fill="#70543a"/>
+        <polygon points="0,-70 -28,-13 28,-13" fill="#5f9a4a"/>
+        <polygon points="0,-70 0,-13 28,-13" fill="#4a7c3a"/>
+        <polygon points="0,-94 -21,-48 21,-48" fill="#6aa752"/>
+        <polygon points="0,-94 0,-48 21,-48" fill="#54893f"/>
+      </g>
+      <g transform="translate(892,232)">
+        <rect x="-5" y="-16" width="10" height="18" fill="#70543a"/>
+        <polygon points="0,-76 -30,-14 30,-14" fill="#639e4c"/>
+        <polygon points="0,-76 0,-14 30,-14" fill="#4d8038"/>
+        <polygon points="0,-100 -22,-52 22,-52" fill="#6da954"/>
+        <polygon points="0,-100 0,-52 22,-52" fill="#568b41"/>
+      </g>
+      <g transform="translate(1030,246)">
+        <rect x="-5" y="-16" width="10" height="18" fill="#70543a"/>
+        <polygon points="0,-62 -25,-12 25,-12" fill="#5f9a4a"/>
+        <polygon points="0,-62 0,-12 25,-12" fill="#4a7c3a"/>
+        <polygon points="0,-84 -19,-44 19,-44" fill="#6aa752"/>
+        <polygon points="0,-84 0,-44 19,-44" fill="#54893f"/>
+      </g>
+      <g transform="translate(1170,236)">
+        <rect x="-5" y="-16" width="10" height="18" fill="#70543a"/>
+        <polygon points="0,-74 -29,-14 29,-14" fill="#639e4c"/>
+        <polygon points="0,-74 0,-14 29,-14" fill="#4d8038"/>
+        <polygon points="0,-98 -21,-50 21,-50" fill="#6da954"/>
+        <polygon points="0,-98 0,-50 21,-50" fill="#568b41"/>
+      </g>
+    </g>
+
+    <!-- ---------- EV ----------
+         Yon A kurali: her nesnenin ISIKLI ve GOLGELI yuzu net ayrilir.
+         Ayni rengin %86'si degil, gozle secilen bir deger farki. -->
+    <g transform="translate(470,330)">
+      <ellipse cx="6" cy="4" rx="86" ry="17" fill="#000" opacity=".16"/>
+      <!-- govde: on yuz (isikli) + yan yuz (golge) -->
+      <polygon points="-70,0 62,0 62,-56 -70,-56" fill="#a87c55"/>
+      <polygon points="62,0 84,-13 84,-69 62,-56" fill="#7d5a3c"/>
+      <!-- ust dolgu -->
+      <polygon points="-70,-56 62,-56 84,-69 -48,-69" fill="#b98a60"/>
+      <!-- cati: iki egim, biri isikli biri golge -->
+      <polygon points="-78,-56 -4,-104 70,-56" fill="#c4705a"/>
+      <polygon points="-4,-104 70,-56 92,-69 18,-117" fill="#9c5344"/>
+      <polygon points="-78,-56 -4,-104 18,-117 -56,-69" fill="#d68268"/>
+      <!-- kapi -->
+      <rect x="-16" y="-34" width="30" height="34" fill="#6b4a30"/>
+      <rect x="-16" y="-34" width="30" height="5" fill="#5a3d27"/>
+      <!-- pencere: ic isik sicakligi -->
+      <rect x="26" y="-44" width="24" height="20" fill="#e0bd6a"/>
+    </g>
+
+    <!-- ---------- KUYU ---------- -->
+    <g transform="translate(150,470)">
+      <ellipse cx="4" cy="3" rx="42" ry="11" fill="#000" opacity=".16"/>
+      <polygon points="-32,0 26,0 26,-24 -32,-24" fill="#9a9a97"/>
+      <polygon points="26,0 40,-8 40,-32 26,-24" fill="#74746f"/>
+      <polygon points="-32,-24 26,-24 40,-32 -18,-32" fill="#a9a9a5"/>
+      <ellipse cx="4" cy="-30" rx="26" ry="8" fill="#5e94b2"/>
+      <rect x="-26" y="-70" width="7" height="42" fill="#96704a"/>
+      <rect x="22" y="-70" width="7" height="42" fill="#7a5a3a"/>
+      <polygon points="-38,-70 4,-92 46,-70" fill="#c4705a"/>
+      <polygon points="4,-92 46,-70 54,-76 12,-98" fill="#9c5344"/>
+    </g>
+
+    <!-- ---------- BENIM PARSELIM ----------
+         Ped: cim degil ISLENMIS TOPRAK. "Burasi benim tarlam" bilgisi
+         renk farkindan okunmali, cite bakmadan. -->
+    <g>
+      <polygon points="326,500 634,500 634,336 326,336" fill="#8a6a4a"/>
+      <polygon points="326,336 634,336 634,346 326,346" fill="#75593d"/>
+      <!-- karo izgarasi: 3x2 dolu, kalani bos -->
+      <g>
+        <rect x="336" y="432" width="94" height="58" fill="#9c7853" stroke="#7a5c3e" stroke-width="2"/>
+        <rect x="436" y="432" width="94" height="58" fill="#6b4f36" stroke="#573f2b" stroke-width="2"/>
+        <rect x="536" y="432" width="94" height="58" fill="#9c7853" stroke="#7a5c3e" stroke-width="2"/>
+        <rect x="336" y="368" width="94" height="58" fill="#6b4f36" stroke="#573f2b" stroke-width="2"/>
+        <rect x="436" y="368" width="94" height="58" fill="#9c7853" stroke="#7a5c3e" stroke-width="2"/>
+        <rect x="536" y="368" width="94" height="58" fill="#9c7853" stroke="#7a5c3e" stroke-width="2"/>
+      </g>
+      <!-- olgun bugday: silueti uzaktan okunmali -->
+      <g>
+        <g transform="translate(483,470)">
+          <rect x="-2" y="-34" width="4" height="34" fill="#78a050"/>
+          <polygon points="0,-52 -9,-32 9,-32" fill="#d6b45c"/>
+          <polygon points="0,-52 0,-32 9,-32" fill="#b8974a"/>
+        </g>
+        <g transform="translate(383,406)">
+          <rect x="-2" y="-34" width="4" height="34" fill="#78a050"/>
+          <polygon points="0,-52 -9,-32 9,-32" fill="#d6b45c"/>
+          <polygon points="0,-52 0,-32 9,-32" fill="#b8974a"/>
+        </g>
+      </g>
+      <!-- filiz (yeni ekilmis) -->
+      <g transform="translate(583,470)">
+        <rect x="-2" y="-14" width="4" height="14" fill="#78a050"/>
+        <polygon points="-2,-14 -12,-22 -2,-20" fill="#60984a"/>
+        <polygon points="2,-14 12,-22 2,-20" fill="#4d8038"/>
+      </g>
+      <!-- CIT: direkler latalardan yuksek, ritim belirgin -->
+      <g fill="#a87c55">
+        <rect x="322" y="316" width="9" height="30"/><rect x="382" y="316" width="9" height="30"/>
+        <rect x="442" y="316" width="9" height="30"/><rect x="502" y="316" width="9" height="30"/>
+        <rect x="562" y="316" width="9" height="30"/><rect x="629" y="316" width="9" height="30"/>
+      </g>
+      <rect x="322" y="324" width="316" height="6" fill="#8a6244"/>
+      <rect x="322" y="336" width="316" height="6" fill="#8a6244"/>
+      <g fill="#a87c55">
+        <rect x="322" y="482" width="9" height="30"/><rect x="382" y="482" width="9" height="30"/>
+        <rect x="442" y="482" width="9" height="30"/><rect x="502" y="482" width="9" height="30"/>
+        <rect x="562" y="482" width="9" height="30"/><rect x="629" y="482" width="9" height="30"/>
+      </g>
+      <rect x="322" y="490" width="316" height="6" fill="#8a6244"/>
+      <rect x="322" y="502" width="316" height="6" fill="#8a6244"/>
+    </g>
+
+    <!-- ---------- PARTNER PARSELI ----------
+         Daha soguk/solgun ton: gorunur ama "seninki degil" diyor (B.7). -->
+    <g opacity=".92">
+      <polygon points="694,500 1002,500 1002,336 694,336" fill="#7d6448"/>
+      <polygon points="694,336 1002,336 1002,346 694,346" fill="#6a533a"/>
+      <g fill="#96704a">
+        <rect x="690" y="316" width="9" height="30"/><rect x="750" y="316" width="9" height="30"/>
+        <rect x="810" y="316" width="9" height="30"/><rect x="870" y="316" width="9" height="30"/>
+        <rect x="930" y="316" width="9" height="30"/><rect x="997" y="316" width="9" height="30"/>
+      </g>
+      <rect x="690" y="324" width="316" height="6" fill="#7a5a3a"/>
+      <rect x="690" y="336" width="316" height="6" fill="#7a5a3a"/>
+      <g fill="#96704a">
+        <rect x="690" y="482" width="9" height="30"/><rect x="750" y="482" width="9" height="30"/>
+        <rect x="810" y="482" width="9" height="30"/><rect x="870" y="482" width="9" height="30"/>
+        <rect x="930" y="482" width="9" height="30"/><rect x="997" y="482" width="9" height="30"/>
+      </g>
+      <rect x="690" y="490" width="316" height="6" fill="#7a5a3a"/>
+      <rect x="690" y="502" width="316" height="6" fill="#7a5a3a"/>
+      <!-- partner karakteri: uzakta, kendi renginde -->
+      <g transform="translate(846,470)">
+        <ellipse cx="3" cy="2" rx="17" ry="6" fill="#000" opacity=".18"/>
+        <rect x="-11" y="-34" width="22" height="34" fill="#5e8c55"/>
+        <rect x="-11" y="-34" width="22" height="6" fill="#4d7546"/>
+        <rect x="-9" y="-50" width="18" height="17" fill="#e0c0a0"/>
+      </g>
+    </g>
+
+    <!-- ---------- OYUNCU ----------
+         Yumusak elips golge (kati siyah leke DEGIL) ve net siluet. -->
+    <g transform="translate(410,566)">
+      <ellipse cx="4" cy="3" rx="24" ry="8" fill="#000" opacity=".22"/>
+      <rect x="-15" y="-46" width="30" height="46" fill="#d9694a"/>
+      <polygon points="15,-46 22,-50 22,-4 15,0" fill="#b1543a"/>
+      <rect x="-15" y="-46" width="30" height="7" fill="#c25c40"/>
+      <rect x="-12" y="-68" width="24" height="23" fill="#efcfae"/>
+      <polygon points="12,-68 18,-71 18,-48 12,-45" fill="#d4b291"/>
+      <rect x="-13" y="-72" width="26" height="8" fill="#6b4a30"/>
+    </g>
+
+    <!-- ================= HUD ================= -->
+    <!-- Yerlesik arayuz dili: koyu ilik kapsul + krem yazi + altin vurgu -->
+
+    <!-- sol ust: seviye + XP -->
+    <g>
+      <rect x="18" y="18" width="252" height="66" rx="18" fill="#1d1a16" opacity=".9"/>
+      <rect x="18" y="18" width="252" height="66" rx="18" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+      <circle cx="52" cy="51" r="21" fill="#d9694a"/>
+      <circle cx="52" cy="51" r="21" fill="none" stroke="#e0d9c8" stroke-opacity=".35" stroke-width="2"/>
+      <text x="82" y="45" fill="#f5f1e6" font-size="19" font-weight="700">Sv 3</text>
+      <rect x="82" y="55" width="164" height="11" rx="5.5" fill="#000" opacity=".38"/>
+      <rect x="82" y="55" width="102" height="11" rx="5.5" fill="#e0bc60"/>
+      <text x="252" y="45" fill="#e0bc60" font-size="17" font-weight="700" text-anchor="end">128</text>
+    </g>
+
+    <!-- sag ust: partner -->
+    <g>
+      <rect x="990" y="18" width="272" height="66" rx="18" fill="#1d1a16" opacity=".9"/>
+      <rect x="990" y="18" width="272" height="66" rx="18" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+      <circle cx="1022" cy="44" r="9" fill="#5e8c55"/>
+      <text x="1040" y="50" fill="#f5f1e6" font-size="16">Elif · çevrimiçi</text>
+      <text x="1012" y="72" fill="#f5f1e6" fill-opacity=".6" font-size="14">Depo 12/40</text>
+    </g>
+
+    <!-- alt orta: tohum secici -->
+    <g>
+      <rect x="452" y="612" width="388" height="92" rx="20" fill="#1d1a16" opacity=".9"/>
+      <rect x="452" y="612" width="388" height="92" rx="20" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+      <!-- secili slot: altin halka -->
+      <rect x="466" y="624" width="84" height="68" rx="13" fill="#3e372e"/>
+      <rect x="466" y="624" width="84" height="68" rx="13" fill="none" stroke="#e0bc60" stroke-width="3"/>
+      <text x="508" y="650" fill="#f5f1e6" font-size="14" text-anchor="middle">Buğday</text>
+      <text x="540" y="684" fill="#e0bc60" font-size="16" font-weight="700" text-anchor="end">12</text>
+      <rect x="560" y="624" width="84" height="68" rx="13" fill="#3e372e"/>
+      <text x="602" y="650" fill="#f5f1e6" font-size="14" text-anchor="middle">Havuç</text>
+      <text x="634" y="684" fill="#e0bc60" font-size="16" font-weight="700" text-anchor="end">3</text>
+      <rect x="654" y="624" width="84" height="68" rx="13" fill="#252119"/>
+      <rect x="748" y="624" width="84" height="68" rx="13" fill="#252119"/>
+    </g>
+
+    <!-- sag alt: eylem dugmeleri -->
+    <g>
+      <rect x="948" y="622" width="314" height="72" rx="18" fill="#1d1a16" opacity=".9"/>
+      <rect x="948" y="622" width="314" height="72" rx="18" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+      <rect x="960" y="632" width="70" height="52" rx="12" fill="#3e372e"/>
+      <text x="995" y="663" fill="#f5f1e6" font-size="15" text-anchor="middle">Çanta</text>
+      <rect x="1036" y="632" width="70" height="52" rx="12" fill="#3e372e"/>
+      <text x="1071" y="663" fill="#f5f1e6" font-size="15" text-anchor="middle">Harita</text>
+      <rect x="1112" y="632" width="70" height="52" rx="12" fill="#3e372e"/>
+      <text x="1147" y="663" fill="#f5f1e6" font-size="15" text-anchor="middle">Defter</text>
+      <rect x="1188" y="632" width="62" height="52" rx="12" fill="#3e372e"/>
+      <text x="1219" y="663" fill="#f5f1e6" font-size="15" text-anchor="middle">Ayar</text>
+    </g>
+
+    <!-- sol alt: joystick -->
+    <g opacity=".8">
+      <circle cx="130" cy="600" r="62" fill="#1d1a16" opacity=".55"/>
+      <circle cx="130" cy="600" r="62" fill="none" stroke="#e0d9c8" stroke-opacity=".25" stroke-width="2"/>
+      <circle cx="152" cy="586" r="27" fill="#e0d9c8" opacity=".85"/>
+    </g>
+
+    <!-- ogretici serit: tek satir, akisi kesmez -->
+    <g>
+      <rect x="404" y="106" width="472" height="44" rx="22" fill="#1d1a16" opacity=".88"/>
+      <circle cx="432" cy="128" r="10" fill="#e0bc60"/>
+      <text x="452" y="134" fill="#f5f1e6" font-size="16">Olgun buğdayı topla — parlayan karoya dokun.</text>
+    </g>
+  </svg>
+
+  <!-- ================= ALT SERIT: yonun adi ve tezi ================= -->
+  <div style="position:absolute; left:0; top:720px; width:1280px; height:80px; background:#17140f; display:flex; align-items:center; gap:24px; padding:0 28px; box-sizing:border-box;">
+    <div style="color:#e0bc60; font-size:26px; font-weight:700;">A · Sıcak Öğle</div>
+    <div style="color:#efe9dc; font-size:16px; line-height:1.45; max-width:820px;">
+      Çözüm <strong>değer kontrastı</strong>: çim üç banda ayrılır (uzak koyu, yakın açık), her nesnenin ışıklı ve gölgeli yüzü gözle seçilen bir farkla ayrılır. Net, okunaklı, öğle vakti.
+      <span style="opacity:.65">Bedeli: atmosfer yok, biraz “oyuncak” duruyor.</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

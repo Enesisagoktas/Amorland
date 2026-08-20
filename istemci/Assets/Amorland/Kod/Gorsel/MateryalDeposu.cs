@@ -59,6 +59,49 @@ namespace Amorland.Gorsel
             return m;
         }
 
+        private static Material _saydam;
+
+        /// <summary>
+        /// Saydamlik destekleyen kose renkli materyal. Sahte golge ve solgun vurgular icin.
+        ///
+        /// ⚠ Ayri bir materyal SART: <see cref="KoseRenkli"/> OPAKTIR ve alfayi yok sayar.
+        /// Sahte golge %38 siyah olarak yazilmisti ama opak materyalde KATI SIYAH bir leke
+        /// olarak ciziliyordu — karakterin altinda kocaman bir delik gibi duruyordu.
+        /// Butun dunyayi saydam kuyruga almak ise siralama sorunu ve performans bedeli
+        /// getirir; o yuzden yalnizca gerekli nesneler bunu kullanir.
+        /// </summary>
+        public static Material Saydam
+        {
+            get
+            {
+                if (_saydam != null) return _saydam;
+                Shader s = ShaderBul(
+                    "Universal Render Pipeline/Particles/Unlit",
+                    "Universal Render Pipeline/Unlit",
+                    "Sprites/Default");
+                _saydam = new Material(s) { name = "amorland_saydam" };
+                SaydamYap(_saydam);
+                return _saydam;
+            }
+        }
+
+        /// <summary>
+        /// Materyali alfa harmanlamaya gecirir. URP'de bu tek bir bayrak degil:
+        /// yuzey tipi, harman modu, derinlik yazimi ve kuyruk birlikte ayarlanmali.
+        /// </summary>
+        private static void SaydamYap(Material m)
+        {
+            if (m == null) return;
+            if (m.HasProperty("_Surface")) m.SetFloat("_Surface", 1f);   // 1 = Transparent
+            if (m.HasProperty("_Blend")) m.SetFloat("_Blend", 0f);       // 0 = Alpha
+            if (m.HasProperty("_SrcBlend")) m.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            if (m.HasProperty("_DstBlend")) m.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            if (m.HasProperty("_ZWrite")) m.SetFloat("_ZWrite", 0f);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.DisableKeyword("_ALPHATEST_ON");
+            m.renderQueue = (int)RenderQueue.Transparent;
+        }
+
         public static Material Ui
         {
             get
@@ -87,7 +130,8 @@ namespace Amorland.Gorsel
         /// Verilen mesh'i cizen bir GameObject kurar.
         /// Gercek zamanli golge YOK (B.2 performans hedefi) — sahte blob golge kullanilir.
         /// </summary>
-        public static GameObject Nesne(string ad, Mesh mesh, Transform ebeveyn, Vector3 konum)
+        public static GameObject Nesne(
+            string ad, Mesh mesh, Transform ebeveyn, Vector3 konum, bool saydam = false)
         {
             var go = new GameObject(ad);
             go.transform.SetParent(ebeveyn, false);
@@ -95,7 +139,7 @@ namespace Amorland.Gorsel
             var mf = go.AddComponent<MeshFilter>();
             mf.sharedMesh = mesh;
             var mr = go.AddComponent<MeshRenderer>();
-            mr.sharedMaterial = KoseRenkli;
+            mr.sharedMaterial = saydam ? Saydam : KoseRenkli;
             mr.shadowCastingMode = ShadowCastingMode.Off;
             mr.receiveShadows = false;
             return go;

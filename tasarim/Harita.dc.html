@@ -1,0 +1,375 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif; }
+    a { color: #d6b45c; } a:hover { color: #b89a48; }
+  </style>
+</helmet>
+
+<div style="width: 1280px; height: 800px; background: #17140f; position: relative;">
+  <svg width="1280" height="720" viewBox="0 0 1280 720" style="display:block">
+
+    <!-- Gokyuzu: sicak, alcak gunes. Ada bunun uzerinde yuzer. -->
+    <rect x="0" y="0" width="1280" height="720" fill="#e8d6bc"/>
+    <rect x="0" y="0" width="1280" height="300" fill="#dfcdb2"/>
+    <ellipse cx="640" cy="430" rx="660" ry="300" fill="#f0e2cb" opacity=".55"/>
+
+    <!-- ======================= ADA ======================= -->
+    <!-- Toprak kesiti: dunyanin SINIRI gorunur (yon B'nin cekirdegi) -->
+    <path d="M640,606 L1148,378 L1148,438 L640,666 L132,438 L132,378 Z" fill="#6b4f36"/>
+    <path d="M640,666 L1148,438 L1148,462 L640,690 L132,462 L132,438 Z" fill="#54402c"/>
+    <path d="M300,470 L340,452 L366,478 L326,496 Z" fill="#5c432e"/>
+    <path d="M820,478 L864,458 L890,484 L846,504 Z" fill="#5c432e"/>
+
+    <!-- Cim ustu -->
+    <path d="M640,606 L1148,378 L640,150 L132,378 Z" fill="#7ea85c"/>
+    <!-- Uzak yari daha koyu: derinlik -->
+    <path d="M640,150 L1148,378 L900,490 L640,372 L380,490 L132,378 Z" fill="#749c56" opacity=".55"/>
+    <!-- Kenar isigi -->
+    <path d="M640,606 L1148,378 L640,150 L132,378 Z" fill="none" stroke="#96c06f" stroke-width="4"/>
+
+    <!-- ======================= NEHIR ======================= -->
+    <path d="M470,240 L560,286 L540,340 L610,378 L580,432 L660,474 L640,516 L700,548
+             L680,572 L620,542 L640,500 L560,458 L590,404 L520,366 L546,312 L448,262 Z"
+          fill="#6fa8c4"/>
+    <path d="M470,240 L560,286 L540,340 L610,378 L580,432 L660,474 L640,516 L700,548"
+          fill="none" stroke="#8dc0d8" stroke-width="5"/>
+
+    <!-- ======================= ORMAN (Sv 7) ======================= -->
+    <g opacity="{{orman.op}}">
+      <!-- yukseltilmis plato -->
+      <path d="M212,378 L392,298 L500,352 L320,432 Z" fill="#6d9152"/>
+      <path d="M212,378 L320,432 L320,456 L212,402 Z" fill="#5c432e"/>
+      <path d="M320,432 L500,352 L500,376 L320,456 Z" fill="#4d3826"/>
+      <path d="M212,378 L392,298 L500,352 L320,432 Z" fill="none" stroke="#88b268" stroke-width="3"/>
+      <!-- agac kutlesi -->
+      <g>
+        <g transform="translate(268,368)"><polygon points="0,-46 -18,-8 18,-8" fill="#5f9a4a"/><polygon points="0,-46 0,-8 18,-8" fill="#416933"/><rect x="-3" y="-10" width="6" height="12" fill="#70543a"/></g>
+        <g transform="translate(310,346)"><polygon points="0,-54 -21,-9 21,-9" fill="#6aa752"/><polygon points="0,-54 0,-9 21,-9" fill="#487537"/><rect x="-3" y="-11" width="6" height="13" fill="#70543a"/></g>
+        <g transform="translate(352,326)"><polygon points="0,-44 -17,-8 17,-8" fill="#5f9a4a"/><polygon points="0,-44 0,-8 17,-8" fill="#416933"/><rect x="-3" y="-9" width="6" height="11" fill="#70543a"/></g>
+        <g transform="translate(300,398)"><polygon points="0,-50 -20,-9 20,-9" fill="#639e4c"/><polygon points="0,-50 0,-9 20,-9" fill="#446f34"/><rect x="-3" y="-10" width="6" height="12" fill="#70543a"/></g>
+        <g transform="translate(348,382)"><polygon points="0,-42 -16,-8 16,-8" fill="#6aa752"/><polygon points="0,-42 0,-8 16,-8" fill="#487537"/><rect x="-3" y="-9" width="6" height="11" fill="#70543a"/></g>
+        <g transform="translate(392,356)"><polygon points="0,-52 -20,-9 20,-9" fill="#5f9a4a"/><polygon points="0,-52 0,-9 20,-9" fill="#416933"/><rect x="-3" y="-11" width="6" height="13" fill="#70543a"/></g>
+        <g transform="translate(430,336)"><polygon points="0,-46 -18,-8 18,-8" fill="#639e4c"/><polygon points="0,-46 0,-8 18,-8" fill="#446f34"/><rect x="-3" y="-10" width="6" height="12" fill="#70543a"/></g>
+        <g transform="translate(240,392)"><polygon points="0,-40 -16,-7 16,-7" fill="#6aa752"/><polygon points="0,-40 0,-7 16,-7" fill="#487537"/><rect x="-3" y="-8" width="6" height="10" fill="#70543a"/></g>
+      </g>
+      <!-- oduncu kulubesi -->
+      <g transform="translate(400,392)">
+        <polygon points="-22,0 16,0 16,-20 -22,-20" fill="#966f4a"/>
+        <polygon points="16,0 28,-7 28,-27 16,-20" fill="#70543a"/>
+        <polygon points="-26,-20 -3,-34 24,-20" fill="#b2604e"/>
+        <polygon points="-3,-34 24,-20 34,-26 8,-40" fill="#8c4a3c"/>
+      </g>
+    </g>
+
+    <!-- ======================= MADEN OCAGI (Sv 9) ======================= -->
+    <g opacity="{{maden.op}}">
+      <!-- dag kutlesi -->
+      <path d="M820,304 L940,244 L1064,306 L944,366 Z" fill="#6d9152"/>
+      <path d="M820,304 L944,366 L944,388 L820,326 Z" fill="#5c432e"/>
+      <path d="M944,366 L1064,306 L1064,328 L944,388 Z" fill="#4d3826"/>
+      <polygon points="880,286 926,214 972,270 940,286 916,262" fill="#969694"/>
+      <polygon points="926,214 972,270 990,262 944,206" fill="#70706e"/>
+      <polygon points="926,214 944,206 932,190" fill="#cfd4d6"/>
+      <polygon points="1000,278 1036,226 1068,272 1030,292" fill="#8e8e8c"/>
+      <polygon points="1036,226 1068,272 1080,266 1048,220" fill="#6a6a68"/>
+      <!-- maden agzi -->
+      <g transform="translate(916,302)">
+        <polygon points="-20,0 20,0 20,-24 -20,-24" fill="#3a2f26"/>
+        <polygon points="-24,-24 0,-24 0,-30 -24,-30" fill="#70543a"/>
+        <polygon points="0,-24 24,-24 24,-30 0,-30" fill="#70543a"/>
+        <rect x="-24" y="-30" width="7" height="30" fill="#8a6244"/>
+        <rect x="17" y="-30" width="7" height="30" fill="#6b4a30"/>
+      </g>
+      <!-- vagon rayi -->
+      <path d="M916,306 L868,332 L820,326" fill="none" stroke="#6b4a30" stroke-width="4"/>
+    </g>
+
+    <!-- ======================= TREN GARI (Sv 5) ======================= -->
+    <g opacity="{{tren.op}}">
+      <!-- ray: adanin kenarindan cikip gider -->
+      <path d="M1148,378 L900,262 L700,206" fill="none" stroke="#5c5148" stroke-width="9"/>
+      <path d="M1148,378 L900,262 L700,206" fill="none" stroke="#7b6d60" stroke-width="3"/>
+      <g stroke="#5c432e" stroke-width="3">
+        <line x1="1112" y1="366" x2="1120" y2="348"/><line x1="1060" y1="342" x2="1068" y2="324"/>
+        <line x1="1008" y1="318" x2="1016" y2="300"/><line x1="956" y1="294" x2="964" y2="276"/>
+        <line x1="904" y1="270" x2="912" y2="252"/><line x1="846" y1="252" x2="852" y2="234"/>
+        <line x1="788" y1="236" x2="794" y2="218"/>
+      </g>
+      <!-- peron -->
+      <path d="M760,268 L860,222 L928,256 L828,302 Z" fill="#9a9a97"/>
+      <path d="M760,268 L828,302 L828,314 L760,280 Z" fill="#70706b"/>
+      <!-- gar binasi -->
+      <g transform="translate(830,254)">
+        <polygon points="-30,0 22,0 22,-30 -30,-30" fill="#a87c55"/>
+        <polygon points="22,0 38,-9 38,-39 22,-30" fill="#78563a"/>
+        <polygon points="-30,-30 22,-30 38,-39 -14,-39" fill="#b98a60"/>
+        <polygon points="-36,-30 -4,-52 28,-30" fill="#b2604e"/>
+        <polygon points="-4,-52 28,-30 44,-39 12,-61" fill="#8c4a3c"/>
+        <rect x="-8" y="-20" width="16" height="20" fill="#5a3d27"/>
+      </g>
+      <!-- vagon -->
+      <g transform="translate(966,286)">
+        <polygon points="-26,0 18,0 18,-20 -26,-20" fill="#5e8c55"/>
+        <polygon points="18,0 30,-7 30,-27 18,-20" fill="#48693f"/>
+        <polygon points="-26,-20 18,-20 30,-27 -14,-27" fill="#6da05f"/>
+      </g>
+    </g>
+
+    <!-- ======================= MARKET (Sv 6) ======================= -->
+    <g opacity="{{market.op}}">
+      <path d="M820,478 L940,418 L1040,468 L920,528 Z" fill="#7ea85c"/>
+      <path d="M820,478 L920,528 L920,550 L820,500 Z" fill="#5c432e"/>
+      <path d="M920,528 L1040,468 L1040,490 L920,550 Z" fill="#4d3826"/>
+      <path d="M820,478 L940,418 L1040,468 L920,528 Z" fill="none" stroke="#96c06f" stroke-width="3"/>
+      <!-- kasaba evleri -->
+      <g transform="translate(886,470)">
+        <polygon points="-26,0 16,0 16,-28 -26,-28" fill="#a87c55"/>
+        <polygon points="16,0 30,-8 30,-36 16,-28" fill="#78563a"/>
+        <polygon points="-32,-28 -5,-50 22,-28" fill="#b2604e"/>
+        <polygon points="-5,-50 22,-28 36,-36 9,-58" fill="#8c4a3c"/>
+        <rect x="-6" y="-18" width="14" height="18" fill="#5a3d27"/>
+      </g>
+      <g transform="translate(950,452)">
+        <polygon points="-20,0 14,0 14,-22 -20,-22" fill="#b98a60"/>
+        <polygon points="14,0 26,-7 26,-29 14,-22" fill="#8a6244"/>
+        <polygon points="-25,-22 -3,-40 19,-22" fill="#c4705a"/>
+        <polygon points="-3,-40 19,-22 31,-29 9,-47" fill="#98503f"/>
+      </g>
+      <!-- tezgah / cadir: market oldugu buradan okunur -->
+      <g transform="translate(852,502)">
+        <rect x="-24" y="-6" width="48" height="7" fill="#8a6244"/>
+        <polygon points="-30,-6 0,-24 30,-6" fill="#d9694a"/>
+        <polygon points="-30,-6 -18,-6 -12,-16 -24,-16" fill="#efe1cf"/>
+        <polygon points="-6,-6 6,-6 12,-16 0,-16" fill="#efe1cf"/>
+        <polygon points="18,-6 30,-6 24,-16 12,-16" fill="#efe1cf"/>
+      </g>
+    </g>
+
+    <!-- ======================= TARLA (Sv 1) ======================= -->
+    <g opacity="{{tarla.op}}">
+      <path d="M330,478 L470,408 L590,468 L450,538 Z" fill="#8a6a4a"/>
+      <path d="M330,478 L450,538 L450,558 L330,498 Z" fill="#5c432e"/>
+      <path d="M450,538 L590,468 L590,488 L450,558 Z" fill="#4d3826"/>
+      <!-- karo izgarasi: ekili satirlar -->
+      <g>
+        <path d="M364,478 L400,460 L424,472 L388,490 Z" fill="#9c7853" stroke="#75593d" stroke-width="2"/>
+        <path d="M410,454 L446,436 L470,448 L434,466 Z" fill="#6b4f36" stroke="#54402c" stroke-width="2"/>
+        <path d="M456,430 L492,412 L516,424 L480,442 Z" fill="#9c7853" stroke="#75593d" stroke-width="2"/>
+        <path d="M400,502 L436,484 L460,496 L424,514 Z" fill="#6b4f36" stroke="#54402c" stroke-width="2"/>
+        <path d="M446,478 L482,460 L506,472 L470,490 Z" fill="#9c7853" stroke="#75593d" stroke-width="2"/>
+        <path d="M492,454 L528,436 L552,448 L516,466 Z" fill="#9c7853" stroke="#75593d" stroke-width="2"/>
+      </g>
+      <!-- olgun bugday -->
+      <g transform="translate(406,472)"><rect x="-2" y="-16" width="4" height="16" fill="#78a050"/><polygon points="0,-26 -7,-14 7,-14" fill="#d6b45c"/><polygon points="0,-26 0,-14 7,-14" fill="#b8974a"/></g>
+      <g transform="translate(498,424)"><rect x="-2" y="-16" width="4" height="16" fill="#78a050"/><polygon points="0,-26 -7,-14 7,-14" fill="#d6b45c"/><polygon points="0,-26 0,-14 7,-14" fill="#b8974a"/></g>
+      <!-- kuyu -->
+      <g transform="translate(560,470)">
+        <polygon points="-16,0 12,0 12,-13 -16,-13" fill="#969694"/>
+        <polygon points="12,0 22,-6 22,-19 12,-13" fill="#70706e"/>
+        <ellipse cx="-2" cy="-16" rx="14" ry="5" fill="#5e94b2"/>
+        <rect x="-14" y="-38" width="5" height="24" fill="#8a6244"/>
+        <rect x="8" y="-38" width="5" height="24" fill="#6b4a30"/>
+        <polygon points="-22,-38 -1,-50 20,-38" fill="#b2604e"/>
+      </g>
+      <!-- cit -->
+      <g stroke="#8a6244" stroke-width="4" fill="none">
+        <path d="M330,478 L470,408"/><path d="M470,408 L590,468"/>
+      </g>
+    </g>
+
+    <!-- ======================= EV + DEPO (Sv 1 / Sv 2) ======================= -->
+    <g opacity="{{ev.op}}">
+      <path d="M556,538 L676,478 L790,534 L670,594 Z" fill="#7ea85c"/>
+      <path d="M556,538 L670,594 L670,616 L556,560 Z" fill="#5c432e"/>
+      <path d="M670,594 L790,534 L790,556 L670,616 Z" fill="#4d3826"/>
+      <path d="M556,538 L676,478 L790,534 L670,594 Z" fill="none" stroke="#96c06f" stroke-width="3"/>
+      <!-- ana ev: haritanin en buyuk yapisi, "burasi us" -->
+      <g transform="translate(660,536)">
+        <polygon points="-44,0 30,0 30,-44 -44,-44" fill="#b98a60"/>
+        <polygon points="30,0 52,-12 52,-56 30,-44" fill="#8a6244"/>
+        <polygon points="-44,-44 30,-44 52,-56 -22,-56" fill="#c69a6e"/>
+        <polygon points="-52,-44 -7,-78 38,-44" fill="#c4705a"/>
+        <polygon points="-7,-78 38,-44 60,-56 15,-90" fill="#98503f"/>
+        <polygon points="-52,-44 -7,-78 15,-90 -30,-56" fill="#d9836b"/>
+        <rect x="-14" y="-28" width="24" height="28" fill="#6b4a30"/>
+        <rect x="-38" y="-38" width="16" height="14" fill="#e0bd6a"/>
+        <rect x="14" y="-38" width="14" height="14" fill="#e0bd6a"/>
+        <!-- baca -->
+        <rect x="22" y="-84" width="10" height="18" fill="#9a6a52"/>
+      </g>
+      <!-- degirmen carki: evin islevlerinden biri (B.4) -->
+      <g transform="translate(730,548)">
+        <polygon points="-14,0 8,0 8,-24 -14,-24" fill="#966f4a"/>
+        <polygon points="8,0 18,-6 18,-30 8,-24" fill="#70543a"/>
+        <circle cx="-20" cy="-14" r="13" fill="none" stroke="#6b4a30" stroke-width="4"/>
+        <line x1="-33" y1="-14" x2="-7" y2="-14" stroke="#6b4a30" stroke-width="3"/>
+        <line x1="-20" y1="-27" x2="-20" y2="-1" stroke="#6b4a30" stroke-width="3"/>
+      </g>
+    </g>
+
+    <!-- DEPO: ayri kilit seviyesi (Sv 2), evin hemen yaninda -->
+    <g opacity="{{depo.op}}">
+      <g transform="translate(586,566)">
+        <polygon points="-26,0 18,0 18,-24 -26,-24" fill="#8a6244"/>
+        <polygon points="18,0 32,-8 32,-32 18,-24" fill="#66492f"/>
+        <polygon points="-26,-24 18,-24 32,-32 -12,-32" fill="#9a7048"/>
+        <polygon points="-30,-24 -4,-40 22,-24" fill="#5e8c55"/>
+        <polygon points="-4,-40 22,-24 36,-32 10,-48" fill="#456b3e"/>
+        <!-- iki renkli kilit: ciftin ortak sandigi -->
+        <rect x="-14" y="-18" width="10" height="18" fill="#d9694a"/>
+        <rect x="-2" y="-18" width="10" height="18" fill="#4a7fb5"/>
+      </g>
+    </g>
+
+    <!-- ======================= YOLLAR ======================= -->
+    <g stroke="#c9a878" stroke-width="7" fill="none" opacity=".85" stroke-linecap="round">
+      <path d="M636,552 L560,504 L470,466"/>
+      <path d="M690,528 L780,486 L860,478"/>
+      <path d="M660,506 L730,398 L830,300"/>
+      <path d="M600,530 L500,440 L400,380"/>
+      <path d="M700,548 L820,530 L900,492"/>
+    </g>
+
+    <!-- ======================= ETIKETLER ======================= -->
+    <!-- Referanstaki dil: koyu yuvarlak kapsul + asagi bakan ucgen -->
+    <g>
+      <!-- EV -->
+      <g>
+        <rect x="586" y="404" width="150" height="42" rx="14" fill="#241f1a" opacity=".93"/>
+        <polygon points="654,446 668,446 661,458" fill="#241f1a" opacity=".93"/>
+        <text x="661" y="431" fill="#f5f1e6" font-size="19" font-weight="700" text-anchor="middle">Ev</text>
+      </g>
+      <!-- TARLA -->
+      <g>
+        <rect x="286" y="336" width="150" height="42" rx="14" fill="#241f1a" opacity=".93"/>
+        <polygon points="354,378 368,378 361,390" fill="#241f1a" opacity=".93"/>
+        <text x="361" y="363" fill="#f5f1e6" font-size="19" font-weight="700" text-anchor="middle">Tarla</text>
+      </g>
+      <!-- DEPO -->
+      <g opacity="{{depo.etiket}}">
+        <rect x="446" y="580" width="184" height="42" rx="14" fill="#241f1a" opacity=".93"/>
+        <polygon points="552,622 566,622 559,634" fill="#241f1a" opacity=".93"/>
+        <text x="524" y="607" fill="#f5f1e6" font-size="19" font-weight="700" text-anchor="middle">Depo</text>
+        <circle cx="600" cy="601" r="13" fill="{{depo.rozet}}"/>
+        <text x="600" y="607" fill="#241f1a" font-size="13" font-weight="700" text-anchor="middle">{{depo.sv}}</text>
+      </g>
+      <!-- TREN GARI -->
+      <g opacity="{{tren.etiket}}">
+        <rect x="742" y="146" width="228" height="42" rx="14" fill="#241f1a" opacity=".93"/>
+        <polygon points="842,188 856,188 849,200" fill="#241f1a" opacity=".93"/>
+        <text x="836" y="173" fill="#f5f1e6" font-size="19" font-weight="700" text-anchor="middle">Tren garı</text>
+        <circle cx="940" cy="167" r="13" fill="{{tren.rozet}}"/>
+        <text x="940" y="173" fill="#241f1a" font-size="13" font-weight="700" text-anchor="middle">{{tren.sv}}</text>
+      </g>
+      <!-- MARKET -->
+      <g opacity="{{market.etiket}}">
+        <rect x="878" y="576" width="192" height="42" rx="14" fill="#241f1a" opacity=".93"/>
+        <polygon points="960,576 974,576 967,564" fill="#241f1a" opacity=".93"/>
+        <text x="950" y="603" fill="#f5f1e6" font-size="19" font-weight="700" text-anchor="middle">Market</text>
+        <circle cx="1040" cy="597" r="13" fill="{{market.rozet}}"/>
+        <text x="1040" y="603" fill="#241f1a" font-size="13" font-weight="700" text-anchor="middle">{{market.sv}}</text>
+      </g>
+      <!-- ORMAN -->
+      <g opacity="{{orman.etiket}}">
+        <rect x="136" y="264" width="188" height="42" rx="14" fill="#241f1a" opacity=".93"/>
+        <polygon points="236,306 250,306 243,318" fill="#241f1a" opacity=".93"/>
+        <text x="212" y="291" fill="#f5f1e6" font-size="19" font-weight="700" text-anchor="middle">Orman</text>
+        <circle cx="294" cy="285" r="13" fill="{{orman.rozet}}"/>
+        <text x="294" y="291" fill="#241f1a" font-size="13" font-weight="700" text-anchor="middle">{{orman.sv}}</text>
+      </g>
+      <!-- MADEN -->
+      <g opacity="{{maden.etiket}}">
+        <rect x="1000" y="196" width="248" height="42" rx="14" fill="#241f1a" opacity=".93"/>
+        <polygon points="1050,238 1064,238 1057,250" fill="#241f1a" opacity=".93"/>
+        <text x="1102" y="223" fill="#f5f1e6" font-size="19" font-weight="700" text-anchor="middle">Maden ocağı</text>
+        <circle cx="1218" cy="217" r="13" fill="{{maden.rozet}}"/>
+        <text x="1218" y="223" fill="#241f1a" font-size="13" font-weight="700" text-anchor="middle">{{maden.sv}}</text>
+      </g>
+    </g>
+
+    <!-- ======================= HUD ======================= -->
+    <g>
+      <rect x="18" y="18" width="252" height="66" rx="18" fill="#1d1a16" opacity=".92"/>
+      <rect x="18" y="18" width="252" height="66" rx="18" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+      <circle cx="52" cy="51" r="21" fill="#d9694a"/>
+      <text x="82" y="45" fill="#f5f1e6" font-size="19" font-weight="700">Sv {{seviye}}</text>
+      <rect x="82" y="55" width="164" height="11" rx="5.5" fill="#000" opacity=".38"/>
+      <rect x="82" y="55" width="{{xpEn}}" height="11" rx="5.5" fill="#e0bc60"/>
+    </g>
+    <g>
+      <rect x="990" y="18" width="272" height="66" rx="18" fill="#1d1a16" opacity=".92"/>
+      <rect x="990" y="18" width="272" height="66" rx="18" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+      <circle cx="1022" cy="44" r="9" fill="#5e8c55"/>
+      <text x="1040" y="50" fill="#f5f1e6" font-size="16">Elif · çevrimiçi</text>
+      <text x="1012" y="72" fill="#f5f1e6" fill-opacity=".6" font-size="14">Depo 12/40</text>
+    </g>
+
+    <!-- Harita basligi -->
+    <g>
+      <rect x="516" y="640" width="248" height="52" rx="26" fill="#1d1a16" opacity=".92"/>
+      <rect x="516" y="640" width="248" height="52" rx="26" fill="none" stroke="#e0d9c8" stroke-opacity=".16" stroke-width="2"/>
+      <text x="640" y="673" fill="#e0bc60" font-size="20" font-weight="700" text-anchor="middle">Vadi haritası</text>
+    </g>
+
+    <!-- Ogretici seridi: yalnizca Sv 1'de -->
+    <g opacity="{{ogretici}}">
+      <rect x="404" y="104" width="472" height="44" rx="22" fill="#1d1a16" opacity=".9"/>
+      <circle cx="432" cy="126" r="10" fill="#e0bc60"/>
+      <text x="452" y="132" fill="#f5f1e6" font-size="16">Eve gir — masadaki defter seni bekliyor.</text>
+    </g>
+  </svg>
+
+  <div style="position:absolute; left:0; top:720px; width:1280px; height:80px; background:#17140f; display:flex; align-items:center; gap:22px; padding:0 28px; box-sizing:border-box;">
+    <div style="color:#e0bc60; font-size:24px; font-weight:700; white-space:nowrap;">Vadi haritası</div>
+    <div style="color:#efe9dc; font-size:15px; line-height:1.45;">
+      Spec B.4'teki <strong>7 bölge</strong>. Bölgeye dokun → o sahneye gir → orada 2.5D oyna.
+      Kilitli bölge silik durur ve seviye rozeti taşır; spec'in 0:30 anı (“sadece Ev aktif, diğer 6 silik”) üstteki
+      <strong>seviye</strong> ayarını 1 yaparak görülür.
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"seviye":{"editor":"range","default":9,"min":1,"max":12,"step":1,"section":"Durum"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const sv = this.props.seviye ?? 9;
+
+    // Spec B.4: her bolgenin kendi acilis seviyesi var. Kilitliyse silik
+    // durur ve rozetinde gereken seviye yazar — "neden giremiyorum" sorusu
+    // haritada cevaplanir, red mesajinda degil.
+    const bolge = (gereken) => {
+      const acik = sv >= gereken;
+      return {
+        op: acik ? 1 : 0.32,
+        etiket: acik ? 1 : 0.75,
+        rozet: acik ? '#84b060' : '#e0bc60',
+        sv: acik ? '✓' : String(gereken)
+      };
+    };
+
+    return {
+      seviye: sv,
+      xpEn: 40 + (sv % 5) * 24,
+      ogretici: sv <= 1 ? 1 : 0,
+      ev: bolge(1),
+      tarla: bolge(1),
+      depo: bolge(2),
+      tren: bolge(5),
+      market: bolge(6),
+      orman: bolge(7),
+      maden: bolge(9)
+    };
+  }
+}
+</script>
+</body>
+</html>

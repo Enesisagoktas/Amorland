@@ -1,0 +1,37 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "Vadi haritası" },
+    { "id": "page-2", "name": "Yön seçimi" },
+    { "id": "page-3", "name": "Arayüz dili" }
+  ],
+  "artboards": [
+    { "file": "Harita.dc.html", "title": "Vadi haritası · 7 bölge", "page": "page-1", "x": 0, "y": 0, "w": 1280, "h": 800 },
+    { "file": "Akis.dc.html", "title": "Bölge geçişi", "page": "page-1", "x": 1380, "y": 0, "w": 1420, "h": 760 },
+
+    { "file": "Main.dc.html", "title": "A · Sıcak Öğle", "page": "page-2", "x": 0, "y": 0, "w": 1280, "h": 800 },
+    { "file": "YonB.dc.html", "title": "B · Diorama — SEÇİLDİ", "page": "page-2", "x": 1380, "y": 0, "w": 1280, "h": 800 },
+    { "file": "YonC.dc.html", "title": "C · Akşam Güneşi", "page": "page-2", "x": 2760, "y": 0, "w": 1280, "h": 800 },
+
+    { "file": "Hud.dc.html", "title": "HUD detayı", "page": "page-3", "x": 0, "y": 0, "w": 1180, "h": 1000 },
+    { "file": "Palet.dc.html", "title": "Palet ve şekil dili", "page": "page-3", "x": 1280, "y": 0, "w": 1180, "h": 1160 }
+  ],
+  "annotations": [
+    {
+      "id": "harita-not",
+      "page": "page-1",
+      "x": 0,
+      "y": -210,
+      "w": 900,
+      "text": "Spec B.4'ün 7 bölgesi — içerik uydurma değil, tablodan geldi.\nEv · Tarla (Sv1) · Depo (Sv2) · Tren garı (Sv5) · Market (Sv6) · Orman (Sv7) · Maden ocağı (Sv9)\n\nHaritanın üstündeki \"seviye\" ayarını 1 yap: spec'in 0:30 anını görürsün — sadece Ev aktif, diğer 6 silik.\n\nReferansındaki Balıkçı İskelesi / Deniz / Meyve Bahçesi Amorland'de yok; dokuyu aldım, içeriği spec'ten koydum."
+    },
+    {
+      "id": "yon-not",
+      "page": "page-2",
+      "x": 1380,
+      "y": -150,
+      "w": 760,
+      "text": "B · Diorama seçildi. Dünyanın sınırlı bir ada olması \"neredeyim\" sorusunu kökten çözüyor ve harita ekranıyla aynı dili konuşuyor.\n\nA ve C kayıt için duruyor: C'nin tek yönlü ışığı ileride B'nin üstüne eklenebilir."
+    }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

@@ -29,6 +29,9 @@ namespace Amorland.Gorsel
         private readonly Dictionary<int, Mesh> _urunMeshOnbellegi = new Dictionary<int, Mesh>();
 
         private GameObject _vurgu;
+        private float _pitch = 50f;
+        private Transform _parselKok;
+        private string _cizilenParselSiniri;
         private Mesh _karoMeshKuru;
         private Mesh _karoMeshSulu;
         private Mesh _karoMeshBos;
@@ -53,6 +56,7 @@ namespace Amorland.Gorsel
         {
             _durum = durum;
             _denge = denge;
+            _pitch = denge != null && denge.Yuklendi ? denge.KameraPitch : 50f;
 
             _kok = new GameObject("Tarla").transform;
             _kok.SetParent(transform, false);
@@ -61,9 +65,11 @@ namespace Amorland.Gorsel
             _dugumKok = new GameObject("Dugumler").transform;
             _dugumKok.SetParent(_kok, false);
 
-            _karoMeshBos = MeshUretici.TarlaKarosu(Palet.CimKoyu);
-            _karoMeshKuru = MeshUretici.TarlaKarosu(Palet.Toprak);
-            _karoMeshSulu = MeshUretici.TarlaKarosu(Palet.TopraIslak);
+            // Karo tonlari pedin UZERINDE okunmali: bos > kuru > sulu sirasiyla koyulasir
+            // ama ucu de pedden acik kalir. Sulanmis karo "yanmis" degil "nemli" gorunur.
+            _karoMeshBos = MeshUretici.TarlaKarosu(Color.Lerp(Palet.CimKoyu, Palet.Cim, 0.35f));
+            _karoMeshKuru = MeshUretici.TarlaKarosu(Color.Lerp(Palet.Toprak, new Color(0.78f, 0.62f, 0.44f), 0.5f));
+            _karoMeshSulu = MeshUretici.TarlaKarosu(Color.Lerp(Palet.Toprak, Palet.Su, 0.22f));
 
             ZeminKur();
             KuyuKur();
@@ -77,16 +83,270 @@ namespace Amorland.Gorsel
             Tazele();
         }
 
+        /// <summary>Bir parselin en fazla buyuyecegi olcu (D: tarla.karoKademeleri son kademe 24 karo).</summary>
+        private const int ParselEn = 6;
+        private const int ParselBoy = 4;
+
+        /// <summary>Partner parseli bu kadar saga kayar (KaroKonumu ile ayni deger).</summary>
+        private const float ParselAraligi = 8f;
+
         private void ZeminKur()
         {
+            // ⚠ Tek dev yesil dikdortgen YETMEZ. Oyuncu "neredeyim, sinirim nerede"
+            // sorusuna gorsel cevap alamiyordu: ekran bostu, olculek yoktu, parselin
+            // nerede bittigi belli degildi. Zemin artik katmanli kuruluyor.
             var zemin = MateryalDeposu.Nesne(
-                "Zemin", MeshUretici.Zemin(40f, 40f, Palet.Cim), _kok, new Vector3(4f, -0.01f, 2f));
-            zemin.transform.localPosition = new Vector3(4f, -0.01f, 2f);
+                "Zemin", MeshUretici.Yama(70f, 70f, Palet.Cim), _kok, new Vector3(4f, -0.03f, 2f));
+            zemin.transform.localPosition = new Vector3(4f, -0.03f, 2f);
+
+            CimYamalariKur();
+            // ⚠ Ped rengi CIM TONU OLAMAZ: cimden ayirt edilemiyordu ve "burasi benim
+            // tarlam" bilgisi gorunmuyordu. Islenmis toprak tonu, ekilmemis karolarla da
+            // ayni ailede kalir ama zeminden net ayrilir.
+            // ⚠ Ped, cizim sprite'lariyla AYNI doygunlukta olmali. Ilk deneme cim ile
+            // toprak arasinda yikanmis bir bej veriyordu ve zengin sprite'larin yaninda
+            // "bos alan" gibi duruyordu. Toprak tarafina cekildi.
+            _parselKok = new GameObject("Parseller").transform;
+            _parselKok.SetParent(_kok, false);
+            EvKur();
+            DekorKur();
+        }
+
+        /// <summary>
+        /// Zemine renk cesitlemesi. Tek ton cim, ortografik kamerada olu bir yuzey
+        /// gibi duruyor ve mesafe hissi vermiyordu; hafif ton farklari yuzeyi okunur yapar.
+        /// </summary>
+        private void CimYamalariKur()
+        {
+            var rastgele = new System.Random(20260820);
+            for (int i = 0; i < 14; i++)
+            {
+                float x = -14f + (float)rastgele.NextDouble() * 40f;
+                float z = -10f + (float)rastgele.NextDouble() * 26f;
+                // Parsellerin uzerine yama atma: karo okunurlugunu bozar.
+                if (ParseleYakin(x, z)) continue;
+
+                // ⚠ Dikdortgen yama KULLANILMAZ: keskin kosesi ortografik kamerada
+                // "doku" degil "hata" gibi okunuyordu — cimin ustunde duran acik yesil
+                // kutular gibi duruyordu. Yuvarlak yama kenari belli etmez.
+                float yaricap = 1.8f + (float)rastgele.NextDouble() * 3.2f;
+                float ton = 0.97f + (float)rastgele.NextDouble() * 0.05f;
+                var yama = MeshUretici.Disk(yaricap, 12, Palet.Cim * ton);
+                MateryalDeposu.Nesne("CimYama" + i, yama, _kok, new Vector3(x, -0.02f, z));
+            }
+        }
+
+        private static bool ParseleYakin(float x, float z)
+        {
+            bool zAralikta = z > -2f && z < ParselBoy + 1f;
+            bool benim = x > -2f && x < ParselEn + 1f;
+            bool partner = x > ParselAraligi - 2f && x < ParselAraligi + ParselEn + 1f;
+            return zAralikta && (benim || partner);
+        }
+
+        /// <summary>
+        /// Parsel pedi + cit. Cit dekor degil OKUNABILIRLIK araci: "burasi benim tarlam,
+        /// surasi partnerin" bilgisi baska turlu gorunmuyordu (B.7 dokunulamazlik kurali
+        /// gorsel bir karsilik olmadan sadece bir red mesajidir).
+        /// </summary>
+        private void ParselPediKur(string ad, float x0, float x1, float z0, float z1, Color renk)
+        {
+            float merkezX = (x0 + x1) / 2f;
+            float merkezZ = (z0 + z1) / 2f;
+            float en = (x1 - x0) + 1.7f;
+            float boy = (z1 - z0) + 1.7f;
+
+            var ped = MeshUretici.Yama(en, boy, renk);
+            MateryalDeposu.Nesne(ad + "Ped", ped, _parselKok, new Vector3(merkezX, -0.01f, merkezZ));
+
+            CitSirasi(ad + "CitOn", new Vector3(merkezX, 0f, merkezZ - boy / 2f), en, false);
+            CitSirasi(ad + "CitArka", new Vector3(merkezX, 0f, merkezZ + boy / 2f), en, false);
+            CitSirasi(ad + "CitSol", new Vector3(merkezX - en / 2f, 0f, merkezZ), boy, true);
+            CitSirasi(ad + "CitSag", new Vector3(merkezX + en / 2f, 0f, merkezZ), boy, true);
+        }
+
+        /// <summary>
+        /// Parsel pedini ve citini GERCEK karolara gore kurar.
+        ///
+        /// ⚠ Once ped sabit 6x4 (en fazla buyuyecek olcu) ciziliyordu. Sv 1'de oyuncunun
+        /// 4 karosu var; geri kalan alan kocaman bos bir kahverengi dikdortgen olarak
+        /// duruyor ve parsel "yarim kalmis" gorunuyordu. Ped artik karolarla birlikte
+        /// buyur — tarla acildikca cit de disari kayar, bu da ilerlemenin gorsel karsiligi.
+        /// </summary>
+        private void ParselleriTazele()
+        {
+            if (_durum == null || _parselKok == null) return;
+
+            bool benimVar = false, partnerVar = false;
+            float bx0 = 0, bx1 = 0, bz0 = 0, bz1 = 0;
+            float px0 = 0, px1 = 0, pz0 = 0, pz1 = 0;
+
+            foreach (var karo in _durum.Karolar.Values)
+            {
+                bool benim = karo.ParselSahibi == _durum.BenimId;
+                Vector3 k = KaroKonumu(karo, benim);
+                if (benim)
+                {
+                    if (!benimVar) { bx0 = bx1 = k.x; bz0 = bz1 = k.z; benimVar = true; }
+                    bx0 = Mathf.Min(bx0, k.x); bx1 = Mathf.Max(bx1, k.x);
+                    bz0 = Mathf.Min(bz0, k.z); bz1 = Mathf.Max(bz1, k.z);
+                }
+                else
+                {
+                    if (!partnerVar) { px0 = px1 = k.x; pz0 = pz1 = k.z; partnerVar = true; }
+                    px0 = Mathf.Min(px0, k.x); px1 = Mathf.Max(px1, k.x);
+                    pz0 = Mathf.Min(pz0, k.z); pz1 = Mathf.Max(pz1, k.z);
+                }
+            }
+            if (!benimVar) return;
+
+            string imza = $"{bx0},{bx1},{bz0},{bz1}|{partnerVar},{px0},{px1},{pz0},{pz1}";
+            if (imza == _cizilenParselSiniri) return;
+            _cizilenParselSiniri = imza;
+
+            for (int i = _parselKok.childCount - 1; i >= 0; i--)
+            {
+                UnityEngine.Object.Destroy(_parselKok.GetChild(i).gameObject);
+            }
+
+            // Ped karolardan KOYU: karo, pedin uzerinde yukselen acik bir yama gibi okunur.
+            ParselPediKur("BenimParsel", bx0, bx1, bz0, bz1,
+                          Color.Lerp(Palet.TopraKoyu, Palet.TopraIslak, 0.45f));
+            if (partnerVar)
+            {
+                ParselPediKur("PartnerParsel", px0, px1, pz0, pz1,
+                              Color.Lerp(Palet.TopraIslak, Palet.TopraKoyu, 0.25f));
+            }
+        }
+
+        /// <summary>
+        /// Cit siras. ⚠ Sprite kolu YATAY kenarlarda kullanilir; dikey kenarda bilboard
+        /// sprite yandan bakildiginda kagit gibi incelir, orada mesh kalir. Yaw kilitli
+        /// oldugu icin bu ayrim sabittir ve karede tutarsizlik uretmez.
+        /// </summary>
+        private void CitSirasi(string ad, Vector3 merkez, float uzunluk, bool dikey)
+        {
+            if (SpriteDeposu.SetVar && !dikey)
+            {
+                // Cit parcasi 2 birim genis; kenari dolduracak kadar tekrarlanir.
+                int adet = Mathf.Max(1, Mathf.RoundToInt(uzunluk / 2f));
+                float adim = uzunluk / adet;
+                for (int i = 0; i < adet; i++)
+                {
+                    float x = merkez.x - uzunluk / 2f + adim * (i + 0.5f);
+                    SpriteDeposu.Nesne(
+                        "cit", _kok, new Vector3(x, 0f, merkez.z), _pitch, 0.09f, null, adim / 2f);
+                }
+                return;
+            }
+
+            var mesh = MeshUretici.CitParcasi(uzunluk);
+            var go = MateryalDeposu.Nesne(ad, mesh, _kok, merkez);
+            if (dikey) go.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+        }
+
+        /// <summary>
+        /// Ev. ⚠ Mesh zaten yaziliydi ama sahneye HIC konmamisti — olu koddu. Ev,
+        /// defterin ve ogreticinin gonderdigi yer; gorunmeyince "eve git" yonergesi
+        /// anlamsiz kaliyordu.
+        /// </summary>
+        private void EvKur()
+        {
+            var konum = new Vector3(2.5f, 0f, 7.2f);
+            if (SpriteDeposu.SetVar)
+            {
+                SpriteDeposu.Yatik("golge", _kok, konum + new Vector3(0f, 0.02f, -0.1f), null, 2.4f);
+                SpriteDeposu.Nesne("ev", _kok, konum, _pitch, 0.05f, null, 2.2f);
+                return;
+            }
+            MateryalDeposu.Nesne("Ev", MeshUretici.Ev(), _kok, konum);
+        }
+
+        /// <summary>Kenarlari dolduran dekor: agac siniri, tas ve ot tutamlari.</summary>
+        /// <summary>
+        /// Kenarlari dolduran dekor: agac siniri, kaya ve ot tutamlari.
+        ///
+        /// B.22 revizyonundan sonra bunlar CIZIM SPRITE'idir; prosedurel mesh yalnizca
+        /// sprite seti diskte yoksa yedek olarak kullanilir.
+        /// </summary>
+        private void DekorKur()
+        {
+            var rastgele = new System.Random(999);
+            bool sprite = SpriteDeposu.SetVar;
+
+            void Agac(string ad, Vector3 konum, float olcek, int cesit)
+            {
+                if (sprite)
+                {
+                    SpriteDeposu.Yatik("golge", _kok, konum + new Vector3(0f, 0.02f, -0.05f), null, olcek * 0.85f);
+                    SpriteDeposu.Nesne("agac_" + cesit, _kok, konum, _pitch, 0.04f, null, olcek * 1.9f);
+                }
+                else
+                {
+                    MateryalDeposu.Nesne(ad, MeshUretici.Agac(olcek), _kok, konum);
+                }
+            }
+
+            // Arka agac siniri: sahneye ust sinir verir, "sonsuz bos tarla" hissini keser.
+            for (int i = 0; i < 16; i++)
+            {
+                float x = -12f + i * 2.2f + (float)rastgele.NextDouble() * 0.8f;
+                float z = 10.5f + (float)rastgele.NextDouble() * 2.5f;
+                float olcek = 0.85f + (float)rastgele.NextDouble() * 0.5f;
+                Agac("Agac" + i, new Vector3(x, 0f, z), olcek, i % 3);
+            }
+
+            // Yan agaclar: sol ve sag cerceve.
+            for (int i = 0; i < 6; i++)
+            {
+                float z = -6f + i * 2.8f;
+                float olcek = 0.8f + (float)rastgele.NextDouble() * 0.4f;
+                Agac("AgacSol" + i, new Vector3(-10f - (float)rastgele.NextDouble() * 2f, 0f, z), olcek, (i + 1) % 3);
+                Agac("AgacSag" + i, new Vector3(19f + (float)rastgele.NextDouble() * 2f, 0f, z), olcek, (i + 2) % 3);
+            }
+
+            // Ot tutamlari: bos alanlari doldurur, olcek hissi verir.
+            for (int i = 0; i < 40; i++)
+            {
+                float x = -11f + (float)rastgele.NextDouble() * 32f;
+                float z = -7f + (float)rastgele.NextDouble() * 18f;
+                if (ParseleYakin(x, z)) continue;
+                var konum = new Vector3(x, 0f, z);
+                if (sprite) SpriteDeposu.Nesne("ot_" + (i % 3), _kok, konum, _pitch, 0.08f, null, 0.7f);
+                else MateryalDeposu.Nesne("Ot" + i, MeshUretici.OtTutami(i), _kok, konum);
+            }
+
+            // Birkac tas ve cali.
+            for (int i = 0; i < 7; i++)
+            {
+                float x = -9f + (float)rastgele.NextDouble() * 28f;
+                float z = -6f + (float)rastgele.NextDouble() * 15f;
+                if (ParseleYakin(x, z)) continue;
+                var konum = new Vector3(x, 0f, z);
+                if (sprite)
+                {
+                    SpriteDeposu.Nesne(i % 3 == 0 ? "cali" : "kaya_" + (i % 2), _kok, konum,
+                                       _pitch, 0.1f, null, 0.9f);
+                }
+                else
+                {
+                    float b = 0.3f + (float)rastgele.NextDouble() * 0.35f;
+                    MateryalDeposu.Nesne(
+                        "Tas" + i, MeshUretici.Kutu(new Vector3(b, b * 0.6f, b * 0.85f), Palet.Tas),
+                        _kok, konum);
+                }
+            }
         }
 
         private void KuyuKur()
         {
             // Kuyu tarla sahnesinin ICINDE (B.11): su almak icin sahne degistirmek yok.
+            if (SpriteDeposu.SetVar)
+            {
+                SpriteDeposu.Yatik("golge", _kok, KuyuKonumu + new Vector3(0f, 0.02f, -0.05f), null, 1.2f);
+                SpriteDeposu.Nesne("kuyu", _kok, KuyuKonumu, _pitch, 0.06f, null, 1.3f);
+                return;
+            }
             MateryalDeposu.Nesne("Kuyu", MeshUretici.Kuyu(), _kok, KuyuKonumu);
         }
 
@@ -98,6 +358,8 @@ namespace Amorland.Gorsel
         public void Tazele()
         {
             if (_durum == null) return;
+
+            ParselleriTazele();
 
             foreach (var karo in _durum.Karolar.Values)
             {
@@ -139,13 +401,26 @@ namespace Amorland.Gorsel
                 }
                 if (!karo.Bos)
                 {
-                    var urunBilgi = _denge.Urun(karo.UrunId);
-                    Color renk = Palet.UrunRengi(asama, _denge.BuyumeAsamaSayisi);
-                    if (urunBilgi != null && urunBilgi.Id == "bugday") renk = Palet.Bugday;
-                    Mesh mesh = MeshUretici.Urun(asama, _denge.BuyumeAsamaSayisi, renk);
                     bool benim = karo.ParselSahibi == _durum.BenimId;
-                    g.Urun = MateryalDeposu.Nesne(
-                        "Urun", mesh, _karoKok, KaroKonumu(karo, benim) + Vector3.up * 0.06f);
+                    Vector3 yer = KaroKonumu(karo, benim) + Vector3.up * 0.06f;
+
+                    // B.22 revizyonu: urun artik cizim sprite'i. Sprite yoksa (uret.py
+                    // hic calismadiysa) eski prosedurel mesh'e duser — oyun her halde acilir.
+                    string spriteAdi = "urun_" + karo.UrunId + "_" + asama;
+                    if (SpriteDeposu.SetVar && SpriteDeposu.Al(spriteAdi) != null)
+                    {
+                        // ⚠ Olcek 1.35: 64x96 px sprite tam boyutta karonun yaninda
+                        // kayboluyordu. Urun, uzerinde durdugu karodan uzun gorunmeli.
+                        g.Urun = SpriteDeposu.Nesne(spriteAdi, _karoKok, yer, _pitch, 0.06f, null, 1.35f);
+                    }
+                    else
+                    {
+                        var urunBilgi = _denge.Urun(karo.UrunId);
+                        Color renk = Palet.UrunRengi(asama, _denge.BuyumeAsamaSayisi);
+                        if (urunBilgi != null && urunBilgi.Id == "bugday") renk = Palet.Bugday;
+                        Mesh mesh = MeshUretici.Urun(asama, _denge.BuyumeAsamaSayisi, renk);
+                        g.Urun = MateryalDeposu.Nesne("Urun", mesh, _karoKok, yer);
+                    }
                 }
                 g.CizilenUrun = karo.UrunId;
                 g.CizilenAsama = asama;
