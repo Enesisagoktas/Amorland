@@ -26,7 +26,7 @@ public class HataYakalayici {
         switch (e.kod()) {
           case YETKISIZ, BASKA_CIHAZ -> HttpStatus.UNAUTHORIZED;
           case HIZ_SINIRI -> HttpStatus.TOO_MANY_REQUESTS;
-          case SEVIYE_YETERSIZ, BASKA_PARSEL, KILITLI -> HttpStatus.FORBIDDEN;
+          case SEVIYE_YETERSIZ, BASKA_PARSEL, KILITLI, UYE_DEGIL -> HttpStatus.FORBIDDEN;
           default -> HttpStatus.CONFLICT;
         };
     return ResponseEntity.status(durum).body(Map.of("kod", e.kod().name(), "mesaj", e.getMessage()));

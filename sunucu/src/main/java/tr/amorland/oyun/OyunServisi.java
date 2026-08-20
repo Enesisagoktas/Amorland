@@ -89,7 +89,7 @@ public class OyunServisi {
             .bulKilitli(vadiId)
             .orElseThrow(() -> new OyunHatasi(RedKodu.BILINMEYEN, "Vadi yok."));
     if (!vadi.uyeMi(oyuncuId)) {
-      throw new OyunHatasi(RedKodu.YETKISIZ, "Bu vadinin uyesi degilsin.");
+      throw new OyunHatasi(RedKodu.UYE_DEGIL, "Bu vadinin uyesi degilsin.");
     }
     Oyuncu oyuncu = oyuncular.bul(oyuncuId).orElseThrow();
     Instant simdi = saat.simdi();

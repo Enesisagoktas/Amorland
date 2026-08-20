@@ -75,7 +75,7 @@ public class VadiUcu {
     Vadi vadi =
         vadiler.bul(vadiId).orElseThrow(() -> new OyunHatasi(RedKodu.BILINMEYEN, "Vadi yok."));
     if (!vadi.uyeMi(IstekBaglami.oyuncuId())) {
-      throw new OyunHatasi(RedKodu.YETKISIZ, "Bu vadinin uyesi degilsin.");
+      throw new OyunHatasi(RedKodu.UYE_DEGIL, "Bu vadinin uyesi degilsin.");
     }
     return oyun.anlikGoruntu(vadi, kayitci.cevrimiciler(vadiId));
   }

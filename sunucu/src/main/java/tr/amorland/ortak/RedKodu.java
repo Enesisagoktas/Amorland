@@ -35,8 +35,14 @@ public enum RedKodu {
   HIZ_SINIRI,
   /** Hesap baska cihazda acildi, bu oturum dusuruldu (C.5). */
   BASKA_CIHAZ,
-  /** JWT gecersiz veya suresi dolmus. */
+  /** JWT gecersiz veya suresi dolmus. Istemci jetonu yenilemeli. */
   YETKISIZ,
+  /**
+   * Kimlik gecerli ama bu vadinin uyesi degil.
+   * YETKISIZ'den AYRI tutulur: istemci bunu gorunce jetonu yenilemeye calismamali,
+   * yoksa gecerli bir jetonla sonsuz yenileme dongusune girer.
+   */
+  UYE_DEGIL,
   /** Siniflandirilamayan hata. */
   BILINMEYEN
 }
