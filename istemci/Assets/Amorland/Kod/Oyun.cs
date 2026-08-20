@@ -64,6 +64,8 @@ namespace Amorland
         private OgreticiAkisi _ogretici;
 
         private string _yenilemeJetonu;
+        private int _benimRenk;
+        private int _partnerRenk = 1;
         private string _aktifBolge = "tarla";
         private float _sonrakiKonumYayini;
 
@@ -289,6 +291,7 @@ namespace Amorland
             PlayerPrefs.Save();
 
             _durum.BenimId = paket.OyuncuId;
+            _benimRenk = paket.Renk;
             _giris.Kapat();
             _yukleme.Goster("Vadi aciliyor...");
 
@@ -338,8 +341,9 @@ namespace Amorland
             // Karakter gorseli: renk oyuncunun sectigi renkten gelir.
             var gorselGo = new GameObject("KarakterGorsel");
             gorselGo.transform.SetParent(_karakter.transform, false);
-            int benimRenk = 0;
-            var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(benimRenk), new Color(0.88f, 0.76f, 0.64f));
+            // Oyuncunun ACILISTA sectigi renk. Dunya durumu henuz gelmedi (WS baglanmadi),
+            // o yuzden oturum paketinden tasinan deger kullanilir.
+            var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(_benimRenk), new Color(0.88f, 0.76f, 0.64f));
             MateryalDeposu.Nesne("Govde", mesh, gorselGo.transform, Vector3.zero);
             // Sahte golge (B.2): gercek zamanli golge yok.
             MateryalDeposu.Nesne(
@@ -361,6 +365,7 @@ namespace Amorland
             HudKur();
 
             _etkilesim.Kur(_durum, _denge, _baglanti, _kameraYoneticisi, _karakter, _tarla, _ses);
+            _etkilesim.JoystickAktif = () => _joystick != null && _joystick.Aktif;
             _etkilesim.Bildirim += mesaj => _bildirimler.Goster(mesaj);
             _etkilesim.UzunBasildi += DaireselMenu;
 
@@ -383,11 +388,30 @@ namespace Amorland
             var go = new GameObject("PartnerGorsel");
             go.transform.SetParent(transform, false);
             _partnerGorsel = go.transform;
-            var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(1), new Color(0.86f, 0.72f, 0.60f));
-            MateryalDeposu.Nesne("Govde", mesh, go.transform, Vector3.zero);
-            MateryalDeposu.Nesne(
-                "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), go.transform, new Vector3(0f, 0.01f, 0f));
+            _partnerGovde = go;
+            PartnerGorseliniBoya(_partnerRenk);
             go.SetActive(false);
+        }
+
+        private GameObject _partnerGovde;
+
+        /// <summary>
+        /// Partner avatarini kendi rengiyle cizer. Renk yalnizca partner katildiginda
+        /// bilinir; iki oyuncunun ayirt edilebilirligi tamamen renge bagli (B.7).
+        /// </summary>
+        private void PartnerGorseliniBoya(int renk)
+        {
+            if (_partnerGovde == null) return;
+            for (int i = _partnerGovde.transform.childCount - 1; i >= 0; i--)
+            {
+                Destroy(_partnerGovde.transform.GetChild(i).gameObject);
+            }
+            var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(renk), new Color(0.86f, 0.72f, 0.60f));
+            MateryalDeposu.Nesne("Govde", mesh, _partnerGovde.transform, Vector3.zero);
+            MateryalDeposu.Nesne(
+                "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), _partnerGovde.transform,
+                new Vector3(0f, 0.01f, 0f));
+            _partnerRenk = renk;
         }
 
         private void HudKur()
@@ -608,6 +632,7 @@ namespace Amorland
         private void PartnerKonumunuUygula()
         {
             var partner = _durum.Partner;
+            if (partner != null && partner.Renk != _partnerRenk) PartnerGorseliniBoya(partner.Renk);
             if (partner == null || _partnerGorsel == null)
             {
                 if (_partnerGorsel != null) _partnerGorsel.gameObject.SetActive(false);

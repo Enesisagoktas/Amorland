@@ -43,8 +43,12 @@ namespace Amorland.Oynanis
         private bool _boyamaModu;
         private Vector2 _basmaNoktasi;
         private float _basmaAni;
+        private bool _uzunBasTetiklendi;
         private Vector2Int _sonBoyananKaro;
         private bool _kuyrukIsleniyor;
+
+        /// <summary>Joystick aktifken karo etkilesimi calismaz: tek dokunus iki is yapmasin.</summary>
+        public System.Func<bool> JoystickAktif;
 
         private const float BoyamaEsigiPiksel = 24f;
         private const float UzunBasSn = 0.5f;
@@ -96,11 +100,17 @@ namespace Amorland.Oynanis
             var t = temaslar[0];
             if (Girdi.Girdi.UiUzerinde(t.Konum)) return;
 
+            // Sol ucte bir joystick bolgesi. Orada baslayan dokunus yurume girdisidir,
+            // karo etkilesimi degil — ikisi ayni parmakla cakismamali.
+            if (JoystickAktif != null && JoystickAktif()) return;
+            if (t.Basladi && Arayuz.Joystick.JoystickBolgesi(t.Konum)) return;
+
             if (t.Basladi)
             {
                 _basmaNoktasi = t.Konum;
                 _basmaAni = Time.unscaledTime;
                 _boyamaModu = false;
+                _uzunBasTetiklendi = false;
 
                 // Kuyrukta is varken herhangi bir yere dokunmak IPTAL eder (B.6).
                 if (_kuyruk.Count > 0)
@@ -121,12 +131,13 @@ namespace Amorland.Oynanis
                 if (_boyamaModu) BoyamaSurukle(t.Konum);
 
                 // Uzun bas: belirsiz karolarda dairesel menu (B.6).
-                if (!_boyamaModu && Time.unscaledTime - _basmaAni > UzunBasSn && kayma < BoyamaEsigiPiksel)
+                if (!_boyamaModu && !_uzunBasTetiklendi
+                    && Time.unscaledTime - _basmaAni > UzunBasSn && kayma < BoyamaEsigiPiksel)
                 {
                     if (KaroBul(t.Konum, out Vector2Int karo))
                     {
+                        _uzunBasTetiklendi = true;
                         UzunBasildi?.Invoke(karo);
-                        _basmaAni = float.MaxValue; // bir kez tetiklensin
                     }
                 }
             }
@@ -138,7 +149,8 @@ namespace Amorland.Oynanis
                     KuyrugoBaslat();
                     return;
                 }
-                if (Time.unscaledTime == float.MaxValue) return;
+                // Uzun bas menusu acildiysa birakma ayrica bir eylem tetiklemez.
+                if (_uzunBasTetiklendi) return;
                 if (KaroBul(t.Konum, out Vector2Int karo)) DokunmaHedefi(karo);
             }
         }
@@ -158,6 +170,14 @@ namespace Amorland.Oynanis
 
         private void DokunmaHedefi(Vector2Int karo)
         {
+            // Partnerin parseli GORUNUR ama dokunulamaz (B.7). Sessizce hicbir sey
+            // yapmamak "oyun beni dinlemiyor" hissi verir; sebebi soylenir.
+            if (PartnerParseliMi(karo))
+            {
+                Bildirim?.Invoke("Bu parsel partnerin. Dokunamazsin.");
+                return;
+            }
+
             Eylem eylem = EylemBelirle(karo);
             if (eylem == Eylem.Yok)
             {
@@ -263,6 +283,19 @@ namespace Amorland.Oynanis
             }
 
             _baglanti.NiyetGonder(niyet);
+        }
+
+        /// <summary>
+        /// Karo partnerin parselinde mi? Partner parseli dunyada +8 kaydirilmis cizilir
+        /// (bkz. <see cref="TarlaGorunumu.KaroKonumu"/>), o yuzden kaydirma geri alinir.
+        /// </summary>
+        private bool PartnerParseliMi(Vector2Int hedef)
+        {
+            var partner = _durum.Partner;
+            if (partner == null) return false;
+            const int Kaydirma = 8;
+            if (hedef.x < Kaydirma) return false;
+            return _durum.Karo(hedef.x - Kaydirma, hedef.y, partner.Id) != null;
         }
 
         private Dugum DugumBul(Vector2Int hedef)
