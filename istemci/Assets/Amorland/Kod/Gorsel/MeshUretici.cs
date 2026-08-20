@@ -42,6 +42,44 @@ namespace Amorland.Gorsel
                 Ucgen(a, c, d, renk);
             }
 
+            /// <summary>
+            /// Ucgeni, verilen DIS yone bakacak sekilde ekler.
+            ///
+            /// ⚠ Sarim yonunu elle tutturmak bu dosyada zaten bir kez patladi: zemin,
+            /// karo, kuyu, ev ve karakterin ust yuzleri ters sariliydi ve Unity arka
+            /// yuzu kirptigi icin dunya SESSIZCE gorunmuyordu — hata da uyari da yok,
+            /// sadece bos ekran. Burada niyet yazilir ("bu yuz yukari baksin"), sarimi
+            /// kod ayarlar. Ayni hata bir daha sessizce olamaz.
+            /// </summary>
+            public void UcgenYonlu(Vector3 a, Vector3 b, Vector3 c, Vector3 disYon, Color renk)
+            {
+                if (Vector3.Dot(Vector3.Cross(b - a, c - a), disYon) < 0f)
+                {
+                    Vector3 gecici = b;
+                    b = c;
+                    c = gecici;
+                }
+                Ucgen(a, b, c, renk);
+            }
+
+            /// <summary>Dortgeni verilen dis yone bakacak sekilde ekler.</summary>
+            public void DortGenYonlu(
+                Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 disYon, Color renk)
+            {
+                UcgenYonlu(a, b, c, disYon, renk);
+                UcgenYonlu(a, c, d, disYon, renk);
+            }
+
+            /// <summary>
+            /// Iki yuzlu (cift tarafli) ucgen. Ince yaprak gibi tek duzlemli parcalar
+            /// icin: hangi taraftan bakilirsa bakilsin gorunur.
+            /// </summary>
+            public void UcgenCiftYuz(Vector3 a, Vector3 b, Vector3 c, Color renk)
+            {
+                Ucgen(a, b, c, renk);
+                Ucgen(a, c, b, renk);
+            }
+
             public Mesh Kapat(string ad)
             {
                 var mesh = new Mesh { name = ad };
@@ -82,10 +120,10 @@ namespace Amorland.Gorsel
             Vector3 u2 = a2 + Vector3.up * yy;
             Vector3 u3 = a3 + Vector3.up * yy;
 
-            y.DortGen(u0, u1, u2, u3, ust);          // ust
-            y.DortGen(a1, a0, u0, u1, on);           // on (-z, kameraya bakan)
-            y.DortGen(a0, a3, u3, u0, yan);          // sol
-            y.DortGen(a2, a1, u1, u2, yan);          // sag
+            y.DortGenYonlu(u0, u1, u2, u3, Vector3.up, ust);       // ust
+            y.DortGenYonlu(a1, a0, u0, u1, Vector3.back, on);      // on (-z, kameraya bakan)
+            y.DortGenYonlu(a0, a3, u3, u0, Vector3.left, yan);     // sol
+            y.DortGenYonlu(a2, a1, u1, u2, Vector3.right, yan);    // sag
             // Arka yuz uretilmez: yaw kilitli oldugu icin asla gorunmez.
         }
 
@@ -100,7 +138,7 @@ namespace Amorland.Gorsel
                 float a1 = ((i + 1) / (float)dilim) * Mathf.PI * 2f;
                 Vector3 p0 = new Vector3(Mathf.Cos(a0) * yaricap, 0, Mathf.Sin(a0) * yaricap);
                 Vector3 p1 = new Vector3(Mathf.Cos(a1) * yaricap, 0, Mathf.Sin(a1) * yaricap);
-                y.Ucgen(merkez, p1, p0, renk);
+                y.UcgenYonlu(merkez, p0, p1, Vector3.up, renk);
             }
             return y.Kapat(ad);
         }
@@ -116,8 +154,10 @@ namespace Amorland.Gorsel
                 float a1 = ((i + 1) / (float)dilim) * Mathf.PI * 2f;
                 Vector3 p0 = new Vector3(Mathf.Cos(a0) * yaricap, 0, Mathf.Sin(a0) * yaricap);
                 Vector3 p1 = new Vector3(Mathf.Cos(a1) * yaricap, 0, Mathf.Sin(a1) * yaricap);
-                float golge = 0.86f + 0.14f * Mathf.Abs(Mathf.Cos((a0 + a1) * 0.5f));
-                y.Ucgen(p0, p1, tepe, renk * golge);
+                float orta = (a0 + a1) * 0.5f;
+                float golge = 0.86f + 0.14f * Mathf.Abs(Mathf.Cos(orta));
+                Vector3 disYon = new Vector3(Mathf.Cos(orta), 0f, Mathf.Sin(orta));
+                y.UcgenYonlu(p0, p1, tepe, disYon, renk * golge);
             }
             return y.Kapat(ad);
         }
@@ -133,9 +173,11 @@ namespace Amorland.Gorsel
                 Vector3 p1 = new Vector3(Mathf.Cos(a1) * yaricap, 0, Mathf.Sin(a1) * yaricap);
                 Vector3 u0 = p0 + Vector3.up * yukseklik;
                 Vector3 u1 = p1 + Vector3.up * yukseklik;
-                float golge = 0.84f + 0.16f * Mathf.Abs(Mathf.Cos((a0 + a1) * 0.5f));
-                y.DortGen(p0, p1, u1, u0, renk * golge);
-                y.Ucgen(u0, u1, Vector3.up * yukseklik, renk);
+                float orta = (a0 + a1) * 0.5f;
+                float golge = 0.84f + 0.16f * Mathf.Abs(Mathf.Cos(orta));
+                Vector3 disYon = new Vector3(Mathf.Cos(orta), 0f, Mathf.Sin(orta));
+                y.DortGenYonlu(p0, p1, u1, u0, disYon, renk * golge);
+                y.UcgenYonlu(u0, u1, Vector3.up * yukseklik, Vector3.up, renk);
             }
             return y.Kapat(ad);
         }
@@ -159,10 +201,10 @@ namespace Amorland.Gorsel
             Vector3 a2 = new Vector3(k, 0, k);
             Vector3 a3 = new Vector3(-k, 0, k);
 
-            y.DortGen(u0, u1, u2, u3, renk);
-            y.DortGen(a1, a0, u0, u1, renk * 0.88f);
-            y.DortGen(a0, a3, u3, u0, renk * 0.82f);
-            y.DortGen(a2, a1, u1, u2, renk * 0.82f);
+            y.DortGenYonlu(u0, u1, u2, u3, Vector3.up, renk);
+            y.DortGenYonlu(a1, a0, u0, u1, Vector3.back, renk * 0.88f);
+            y.DortGenYonlu(a0, a3, u3, u0, Vector3.left, renk * 0.82f);
+            y.DortGenYonlu(a2, a1, u1, u2, Vector3.right, renk * 0.82f);
             return y.Kapat("tarla_karosu");
         }
 
@@ -193,7 +235,7 @@ namespace Amorland.Gorsel
                                                  Mathf.Sin(aci + 0.5f) * yaricap * 0.35f);
                 Vector3 yanB = kok + new Vector3(Mathf.Cos(aci - 0.5f) * yaricap * 0.35f, 0,
                                                  Mathf.Sin(aci - 0.5f) * yaricap * 0.35f);
-                y.Ucgen(yanA, yanB, uc, renk);
+                y.UcgenCiftYuz(yanA, yanB, uc, renk);
             }
 
             // Olgun asamada tepede meyve/basak: "hasada hazir" isareti
@@ -243,10 +285,11 @@ namespace Amorland.Gorsel
             Vector3 t0 = new Vector3(-gx, tabani + tepe, 0);
             Vector3 t1 = new Vector3(gx, tabani + tepe, 0);
 
-            y.DortGen(o0, o1, t1, t0, Palet.Cati);
-            y.DortGen(a1, a0, t0, t1, Palet.Cati * 0.88f);
-            y.Ucgen(o0, t0, a0, Palet.Cati * 0.8f);
-            y.Ucgen(o1, a1, t1, Palet.Cati * 0.8f);
+            // Cati egimleri yukari + disa bakar; alinliklar yanlara.
+            y.DortGenYonlu(o0, o1, t1, t0, new Vector3(0f, 1f, -1f), Palet.Cati);
+            y.DortGenYonlu(a1, a0, t0, t1, new Vector3(0f, 1f, 1f), Palet.Cati * 0.88f);
+            y.UcgenYonlu(o0, t0, a0, Vector3.left, Palet.Cati * 0.8f);
+            y.UcgenYonlu(o1, a1, t1, Vector3.right, Palet.Cati * 0.8f);
 
             KutuEkle(y, new Vector3(0, 0, -1.21f), new Vector3(0.7f, 1.2f, 0.05f), Palet.AhsapKoyu);
             return y.Kapat("ev");
@@ -286,11 +329,12 @@ namespace Amorland.Gorsel
         {
             var y = new Yapici();
             float gx = genislik / 2f, gz = derinlik / 2f;
-            y.DortGen(
+            y.DortGenYonlu(
                 new Vector3(-gx, 0, -gz),
                 new Vector3(gx, 0, -gz),
                 new Vector3(gx, 0, gz),
                 new Vector3(-gx, 0, gz),
+                Vector3.up,
                 renk);
             return y.Kapat("zemin");
         }
@@ -303,7 +347,8 @@ namespace Amorland.Gorsel
             float i = d - kalinlik;
             const float h = 0.02f;
 
-            void Serit(Vector3 a, Vector3 b, Vector3 c, Vector3 dd) => y.DortGen(a, b, c, dd, renk);
+            void Serit(Vector3 a, Vector3 b, Vector3 c, Vector3 dd) =>
+                y.DortGenYonlu(a, b, c, dd, Vector3.up, renk);
 
             Serit(new Vector3(-d, h, -d), new Vector3(d, h, -d), new Vector3(d, h, -i), new Vector3(-d, h, -i));
             Serit(new Vector3(-d, h, i), new Vector3(d, h, i), new Vector3(d, h, d), new Vector3(-d, h, d));
