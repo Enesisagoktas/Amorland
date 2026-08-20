@@ -17,7 +17,11 @@ namespace Amorland.Arayuz
     ///
     /// ⚠ Bildirim ekranin akisini KESMEZ: kirmizi dolu bir serit oyuncuyu durdurur,
     /// oysa buradaki mesajlarin cogu "sonra bak" seviyesindedir. Bu yuzden zemin her
-    /// zaman koyudur; uyari, ince bir halka ve yazi rengiyle ayrisir.
+    /// zaman koyudur; uyari yalnizca CERCEVE ve IKON rengiyle ayrisir.
+    ///
+    /// ⚠ Toast dunyanin uzerinde yuzer, bu yuzden B.22'nin HUD KAPSUL dilini kullanir:
+    /// koyu govde + acik krem cerceve + beyaz konturlu yazi. Parsomen (krem govde)
+    /// yalnizca oyuncunun actigi modallar icindir.
     /// </summary>
     public class Bildirimler : MonoBehaviour
     {
@@ -31,9 +35,10 @@ namespace Amorland.Arayuz
         public void Kur(Transform kanvas)
         {
             _kok = UiKit.Panel(kanvas, "Bildirimler", Color.clear);
-            // HUD'un sol/sag ust seritleri -14'ten baslayip 66 px iniyor; -92 onlarin
-            // hemen altina denk gelir ve ustlerine binmez.
-            UiKit.Sabitle(_kok, 0.5f, 1f, 0f, -92f, SeritGenislik, 240f);
+            // Ust seride sigacak sira: HUD kapsulleri (-12'den 96 px), sonra ogretici
+            // ipucu seridi (-70'ten 48 px, alt kenari -118). -140 hepsinin altina
+            // duser ve golge payini da (bulanik 14) temiz birakir.
+            UiKit.Sabitle(_kok, 0.5f, 1f, 0f, -140f, SeritGenislik, 240f);
             // Aralik golge payindan (bulanik 14) genis olmali, yoksa ust uste binen
             // serit golgeleri listeyi kirli gosterir.
             UiKit.DikeyDizi(_kok, 16f, 0);
@@ -56,19 +61,40 @@ namespace Amorland.Arayuz
             var kabuk = UiKit.Panel(_kok, "BildirimKabuk", Color.clear);
             UiKit.Boyut(kabuk.gameObject, 0f, SeritYukseklik);
 
-            var kart = UiKit.Kart(kabuk, "Bildirim", Palet.UiZemin, UiKit.YaricapKucuk);
+            // Cercevesiz koyu serit, cimin koyu bolgelerinde kayboluyordu: okunurlugu
+            // saglayan sey kapsulun kendisi degil, etrafindaki acik hattir.
+            // ⚠ Uyari dolu kirmizi zemin degil KIRMIZI CERCEVE: goze carpar ama bagirmaz.
+            // ⚠ Icerik "ic" yuzeyine girer; dis cerceveye eklenirse cercevenin uzerine tasar.
+            RectTransform ic;
+            var kart = UiKit.CerceveliKart(
+                kabuk, "Bildirim", Palet.KapsulZemin,
+                uyari ? Palet.UiKirmizi : Palet.KapsulCerceve, out ic, 20, uyari ? 4f : 3f);
             UiKit.Doldur(kart);
             // Toast dokunmayi yutarsa altindaki tarlaya basilamaz.
             kart.gameObject.GetComponent<Image>().raycastTarget = false;
-            UiKit.GolgeEkle(kart, UiKit.YaricapKucuk, 14, 4f);
+            UiKit.GolgeEkle(kart, 20, 14, 4f);
 
-            // Uyari dolu kirmizi zemin degil ince halka: goze carpar ama bagirmaz.
-            if (uyari) UiKit.Cerceve(kart, "UyariHalkasi", Palet.UiUyari, UiKit.YaricapKucuk, 2);
+            // Her oge ikon tasir: sekil, rengi ayirt edemeyen oyuncuda da bilgi/uyari
+            // ayrimini korur.
+            // ⚠ YER TUTUCU sekil — gercek ikonlar 2B varlik olarak sonra gelecek.
+            var ikon = UiKit.Panel(ic, "Ikon", uyari ? Palet.UiKirmizi : Palet.UiAltin);
+            var ikonImg = ikon.gameObject.GetComponent<Image>();
+            ikonImg.sprite = uyari ? Sekil.Simsek() : Sekil.Yildiz();
+            ikonImg.raycastTarget = false;
+            UiKit.Sabitle(ikon, 0f, 0.5f, 12f, 0f, 22f, 22f);
 
-            var yazi = UiKit.Yazi(
-                kart, "Yazi", mesaj, UiKit.YaziGovde,
-                uyari ? Palet.UiUyari : Palet.UiYazi, TextAnchor.MiddleCenter, true);
-            UiKit.Doldur(yazi.rectTransform, 18f);
+            // Koyu kapsulde yazi BEYAZ ve KONTURLU: uyari seridi digerlerinden yazi
+            // rengiyle degil cerceve ve ikonla ayrisir, boylece her mesaj ayni
+            // okunurlukta kalir.
+            var yazi = UiKit.KonturluYazi(
+                ic, "Yazi", mesaj, UiKit.YaziGovde, Color.white, TextAnchor.MiddleCenter, true, 1.3f);
+            var yaziRt = yazi.rectTransform;
+            yaziRt.anchorMin = Vector2.zero;
+            yaziRt.anchorMax = Vector2.one;
+            // Soldaki bosluk ikonun yeridir; Doldur ile esit kenar verilirse yazi ikonun
+            // ustune binerdi.
+            yaziRt.offsetMin = new Vector2(42f, 6f);
+            yaziRt.offsetMax = new Vector2(-16f, -6f);
 
             _aktifler.Add(kabuk.gameObject);
             StartCoroutine(Soldur(kabuk.gameObject, sure));
@@ -109,26 +135,43 @@ namespace Amorland.Arayuz
 
             // Mesaj bosluga asili yaziyken "oyun coktu" gibi duruyordu; kart onu
             // bilincli bir duraklama haline getiriyor.
-            var kart = UiKit.Kart(_kok, "Kart", Palet.UiPanel, 20);
+            // ⚠ Kart dunyanin uzerinde yuzer -> HUD KAPSUL dili (B.22): koyu govde +
+            // krem cerceve. Parsomen degil; parsomen oyuncunun actigi modallarindir.
+            // ⚠ Icerik "ic" yuzeyine girer, dis cerceveye degil.
+            RectTransform ic;
+            var kart = UiKit.CerceveliKart(
+                _kok, "Kart", Palet.KapsulZemin, Palet.KapsulCerceve, out ic, 24, 4f);
             UiKit.Sabitle(kart, 0.5f, 0.5f, 0f, 0f, KartGenislik, KartYukseklik);
-            UiKit.GolgeEkle(kart, 20, 26, 10f);
+            UiKit.GolgeEkle(kart, 24, 26, 10f);
 
-            var baslik = UiKit.Yazi(
-                kart, "Baslik", "Bağlantı yok", UiKit.YaziBuyuk, Palet.UiYazi, TextAnchor.MiddleCenter, true);
-            UiKit.Sabitle(baslik.rectTransform, 0.5f, 1f, 0f, -24f, KartGenislik - 56f, 38f);
+            // Rozet kartin ust kenarindan disari tasar — HUD'daki avatar halkasiyla ayni
+            // dil; kesilen baglantiyi yazidan once bu isaret anlatir. Bilincli olarak
+            // DIS cerceveye eklenir, yoksa tasma kirpilmis gibi durur.
+            // ⚠ Simsek YER TUTUCU sekil — gercek ikon 2B varlik olarak sonra gelecek.
+            var halka = UiKit.Panel(kart, "IkonHalka", Palet.KapsulCerceve);
+            halka.gameObject.GetComponent<Image>().sprite = Sekil.Daire();
+            UiKit.Sabitle(halka, 0.5f, 1f, 0f, 34f, 58f, 58f);
+            var ikon = UiKit.Panel(halka, "Ikon", Palet.UiKirmizi);
+            ikon.gameObject.GetComponent<Image>().sprite = Sekil.Simsek();
+            UiKit.Doldur(ikon, 14f);
 
-            var cizgi = UiKit.Ayirac(kart);
-            UiKit.Sabitle(cizgi, 0.5f, 1f, 0f, -72f, KartGenislik - 56f, 1f);
+            var baslik = UiKit.KonturluYazi(
+                ic, "Baslik", "Bağlantı yok", UiKit.YaziBuyuk, Color.white, TextAnchor.MiddleCenter);
+            UiKit.Sabitle(baslik.rectTransform, 0.5f, 1f, 0f, -22f, KartGenislik - 56f, 38f);
+
+            var cizgi = UiKit.Ayirac(ic);
+            UiKit.Sabitle(cizgi, 0.5f, 1f, 0f, -70f, KartGenislik - 56f, 1f);
 
             _durumYazi = UiKit.Yazi(
-                kart, "Durum", "Yeniden bağlanıyor...", UiKit.YaziGovde, Palet.UiYaziSolgun,
+                ic, "Durum", "Yeniden bağlanıyor...", UiKit.YaziGovde, Palet.UiYaziSolgun,
                 TextAnchor.MiddleCenter);
-            UiKit.Sabitle(_durumYazi.rectTransform, 0.5f, 1f, 0f, -88f, KartGenislik - 56f, 30f);
+            UiKit.Sabitle(_durumYazi.rectTransform, 0.5f, 1f, 0f, -86f, KartGenislik - 56f, 30f);
 
-            // Kuyruk sayisi vurgu renginde: "islerin kayboldu" korkusunu bu satir dagitir.
-            _kuyrukYazi = UiKit.Yazi(
-                kart, "Kuyruk", "", UiKit.YaziKucuk, Palet.UiVurgu, TextAnchor.MiddleCenter);
-            UiKit.Sabitle(_kuyrukYazi.rectTransform, 0.5f, 1f, 0f, -126f, KartGenislik - 56f, 44f);
+            // Kuyruk sayisi altin: "islerin kayboldu" korkusunu bu satir dagitir. Konturlu,
+            // cunku altin yazi koyu kapsulde tek basina kenarini kaybediyor.
+            _kuyrukYazi = UiKit.KonturluYazi(
+                ic, "Kuyruk", "", UiKit.YaziKucuk, Palet.UiAltin, TextAnchor.MiddleCenter, true, 1.2f);
+            UiKit.Sabitle(_kuyrukYazi.rectTransform, 0.5f, 1f, 0f, -124f, KartGenislik - 56f, 44f);
 
             _kok.gameObject.SetActive(false);
         }
@@ -169,27 +212,47 @@ namespace Amorland.Arayuz
             // Kutlama oyunu DURDURMAZ: perde tiklamayi yutmaz, oyuncu calismaya devam eder.
             _kok.gameObject.GetComponent<Image>().raycastTarget = false;
 
-            var kart = UiKit.Kart(_kok, "Kart", Palet.UiPanel, 20);
+            // Kapsul dili + ALTIN cerceve: altin bu arayuzde "onemli/secili" demektir
+            // (B.22). Kutlama kartinin krem cerceveli sayaclardan ayrildigi yer burasi.
+            // ⚠ Icerik "ic" yuzeyine girer, dis cerceveye degil.
+            RectTransform ic;
+            var kart = UiKit.CerceveliKart(
+                _kok, "Kart", Palet.KapsulZemin, Palet.KapsulAltin, out ic, 24, 5f);
             UiKit.Sabitle(kart, 0.5f, 0.5f, 0f, 0f, KartGenislik, KartYukseklik);
-            UiKit.GolgeEkle(kart, 20, 28, 10f);
+            UiKit.GolgeEkle(kart, 24, 28, 10f);
             kart.gameObject.GetComponent<Image>().raycastTarget = false;
 
+            // Yildiz rozeti kartin ust kenarindan tasar: kutlamanin ilk okunan isareti
+            // sayi degil, bu rozettir.
+            // ⚠ YER TUTUCU sekil — gercek ikon 2B varlik olarak sonra gelecek.
+            var halka = UiKit.Panel(kart, "YildizHalka", Palet.KapsulAltin);
+            var halkaImg = halka.gameObject.GetComponent<Image>();
+            halkaImg.sprite = Sekil.Daire();
+            halkaImg.raycastTarget = false;
+            UiKit.Sabitle(halka, 0.5f, 1f, 0f, 36f, 58f, 58f);
+            var yildiz = UiKit.Panel(halka, "Yildiz", Color.white);
+            var yildizImg = yildiz.gameObject.GetComponent<Image>();
+            yildizImg.sprite = Sekil.Yildiz();
+            yildizImg.raycastTarget = false;
+            UiKit.Doldur(yildiz, 12f);
+
             var etiket = UiKit.Yazi(
-                kart, "Etiket", "seviye atladın", UiKit.YaziKucuk, Palet.UiYaziSolgun,
+                ic, "Etiket", "seviye atladın", UiKit.YaziKucuk, Palet.UiYaziSolgun,
                 TextAnchor.MiddleCenter);
-            UiKit.Sabitle(etiket.rectTransform, 0.5f, 1f, 0f, -22f, KartGenislik - 56f, 24f);
+            UiKit.Sabitle(etiket.rectTransform, 0.5f, 1f, 0f, -20f, KartGenislik - 56f, 24f);
 
-            // Sayinin kendisi odak: kutlamanin tek iri ogesi bu satir olmali.
-            _yazi = UiKit.Yazi(
-                kart, "Yazi", "", UiKit.YaziDev, Palet.UiVurgu, TextAnchor.MiddleCenter, true);
-            UiKit.Sabitle(_yazi.rectTransform, 0.5f, 1f, 0f, -48f, KartGenislik - 56f, 66f);
+            // Sayinin kendisi odak: kutlamanin tek iri ogesi bu satir olmali. Kontur
+            // kalin, cunku 54 px altin yazi koyu zeminde kenarsiz kalinca eriyor.
+            _yazi = UiKit.KonturluYazi(
+                ic, "Yazi", "", UiKit.YaziDev, Palet.UiAltin, TextAnchor.MiddleCenter, true, 2.5f);
+            UiKit.Sabitle(_yazi.rectTransform, 0.5f, 1f, 0f, -44f, KartGenislik - 56f, 66f);
 
-            var cizgi = UiKit.Ayirac(kart);
-            UiKit.Sabitle(cizgi, 0.5f, 1f, 0f, -126f, KartGenislik - 96f, 1f);
+            var cizgi = UiKit.Ayirac(ic);
+            UiKit.Sabitle(cizgi, 0.5f, 1f, 0f, -122f, KartGenislik - 96f, 1f);
 
-            _acilanYazi = UiKit.Yazi(
-                kart, "Acilan", "", UiKit.YaziGovde, Palet.UiYazi, TextAnchor.UpperCenter);
-            UiKit.Sabitle(_acilanYazi.rectTransform, 0.5f, 1f, 0f, -142f, KartGenislik - 56f, 58f);
+            _acilanYazi = UiKit.KonturluYazi(
+                ic, "Acilan", "", UiKit.YaziGovde, Color.white, TextAnchor.UpperCenter, false, 1.2f);
+            UiKit.Sabitle(_acilanYazi.rectTransform, 0.5f, 1f, 0f, -138f, KartGenislik - 56f, 58f);
 
             _kok.gameObject.SetActive(false);
         }
@@ -225,14 +288,31 @@ namespace Amorland.Arayuz
             UiKit.Doldur(_kok);
 
             // Yazi bos ekranda yuzerken yukleme "donmus" gibi duruyordu; hap seklindeki
-            // zemin ona bir yer veriyor.
-            var hap = UiKit.Kart(_kok, "Hap", Palet.UiZemin, UiKit.YaricapKucuk);
+            // zemin ona bir yer veriyor. Hap, HUD kapsul dilinin kucuk hali: koyu govde +
+            // krem cerceve (B.22). Icerik "ic" yuzeyine girer.
+            RectTransform ic;
+            var hap = UiKit.Hap(_kok, "Hap", Palet.KapsulZemin, Palet.KapsulCerceve, out ic);
             UiKit.Sabitle(hap, 0.5f, 0.5f, 0f, 0f, 420f, 64f);
-            UiKit.GolgeEkle(hap, UiKit.YaricapKucuk, 18, 6f);
+            UiKit.GolgeEkle(hap, 22, 18, 6f);
 
-            _yazi = UiKit.Yazi(
-                hap, "Yazi", "Yükleniyor...", UiKit.YaziGovde, Palet.UiYazi, TextAnchor.MiddleCenter, true);
-            UiKit.Doldur(_yazi.rectTransform, 18f);
+            // Ikon hapin solunda sabit durur — donen bir gosterge YOK: bekleme suresi
+            // 0.5-1 sn (B.4), donen carkin farkedilecek zamani bile olmuyor.
+            // ⚠ YER TUTUCU sekil — gercek ikon 2B varlik olarak sonra gelecek.
+            var ikon = UiKit.Panel(ic, "Ikon", Palet.UiAltin);
+            var ikonImg = ikon.gameObject.GetComponent<Image>();
+            ikonImg.sprite = Sekil.Yildiz();
+            ikonImg.raycastTarget = false;
+            UiKit.Sabitle(ikon, 0f, 0.5f, 16f, 0f, 26f, 26f);
+
+            _yazi = UiKit.KonturluYazi(
+                ic, "Yazi", "Yükleniyor...", UiKit.YaziGovde, Color.white, TextAnchor.MiddleCenter,
+                true, 1.3f);
+            var yaziRt = _yazi.rectTransform;
+            yaziRt.anchorMin = Vector2.zero;
+            yaziRt.anchorMax = Vector2.one;
+            // Soldaki bosluk ikonun yeri; esit kenarli Doldur yaziyi ikonun ustune bindirirdi.
+            yaziRt.offsetMin = new Vector2(50f, 8f);
+            yaziRt.offsetMax = new Vector2(-18f, -8f);
         }
 
         public void Goster(string metin)

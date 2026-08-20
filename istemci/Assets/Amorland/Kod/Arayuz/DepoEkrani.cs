@@ -16,12 +16,17 @@ namespace Amorland.Arayuz
     /// Asenkron ortak oynanisin kalbi.
     ///
     /// Bu yuzden her yiginda <b>koyanin renk rozeti</b> vardir ve kim ne biraktigi gorunur.
-    /// Rozet HUD'dakinden iri, adin altinda da yazili: "kim koydu" burada bir detay degil,
-    /// satirin kimligidir.
+    /// Rozet HUD'dakinden iri — kahve halka icinde renkli disk, yani bir "muhur" — ve adin
+    /// altinda da yazili: "kim koydu" burada bir detay degil, satirin kimligidir.
     ///
     /// ⚠ Depo kisiti toplam MIKTARDIR, slot degil (B.10). Cubuk bunu gosterir; doluluk
     /// arttikca renk degisir. Dolu depo hasati engeller — bu SESSIZ kalamaz, o yuzden
-    /// doluluk kendi golgeli kartinda ekranin en ustunde durur.
+    /// doluluk kendi cerceveli kartinda ekranin en ustunde durur.
+    ///
+    /// ⚠ Kabuk B.22 arayuz stil sozlesmesine uyar: modal govdesi KREM PARSOMEN oldugu icin
+    /// buradaki her yazi KOYU'dur (<see cref="Palet.UiKoyuYazi"/>). Acik yazi krem zeminde
+    /// gorunmez — bu ekranin en kolay bozulan yeri budur. Satirlar parsomen + kalin kahve
+    /// cerceve, kilitli yigin ise cercevesinden ALTIN (benim) / KIRMIZI (partnerin) okunur.
     /// </summary>
     public class DepoEkrani
     {
@@ -38,9 +43,17 @@ namespace Amorland.Arayuz
         // satirlara sikistirilmis liste "kim ne birakti" bilgisini okunmaz yapiyordu.
         private const float PanelGenislik = 860f;
         private const float PanelYukseklik = 560f;
-        private const float KartGenislik = PanelGenislik - 40f;
+
+        // ⚠ Panel govdesi cerceve kadar (6 px x 2) daralir, Icerik ayrica 16 px x 2 iceri
+        // cekilir. 820 genislikte kartlar govdenin cercevesine biniyordu; 800 nefes birakir.
+        private const float KartGenislik = PanelGenislik - 60f;
         private const float CubukGenislik = KartGenislik - 36f;
-        private const float SatirYuksekligi = 58f;
+
+        /// <summary>Cubuk dolgusunun gercek genisligi: cerceve (3 px x 2) disarida kalir.</summary>
+        private const float CubukIcGenislik = CubukGenislik - 6f;
+
+        private const float OzetYukseklik = 92f;
+        private const float SatirYuksekligi = 62f;
 
         public event Action<string, int> DepodanAl;
         public event Action<string> KilitDegistir;
@@ -57,23 +70,48 @@ namespace Amorland.Arayuz
 
         private void Kur()
         {
-            // Doluluk kendi yuzeyinde ve golgeli: hasat engellenmesinin tek gorsel
-            // uyarisi bu kart, listenin arasinda kaybolmamali.
-            var ozetKart = UiKit.Kart(_panel.Icerik, "OzetKart", Palet.UiYuzey);
-            UiKit.Sabitle(ozetKart, 0.5f, 1f, 0f, 0f, KartGenislik, 86f);
-            UiKit.GolgeEkle(ozetKart, UiKit.Yaricap, 14, 4f);
+            // Doluluk kendi cerceveli kartinda ve golgeli: hasat engellenmesinin tek gorsel
+            // uyarisi bu kart, listenin arasinda kaybolmamali. Govde parsomen oldugu icin
+            // kart bir ton KOYU parsomen alir — ayni tonda kart zeminden ayrilmaz.
+            RectTransform ozetIc;
+            var ozetKart = UiKit.CerceveliKart(
+                _panel.Icerik, "OzetKart", Palet.ParsomenKoyu, Palet.UiCerceve, out ozetIc, 20, 4f);
+            UiKit.Sabitle(ozetKart, 0.5f, 1f, 0f, 0f, KartGenislik, OzetYukseklik);
+            UiKit.GolgeEkle(ozetKart, 20, 14, 4f);
+
+            // Ikon YER TUTUCU: gercek depo ikonu 2B varlik olarak sonra gelecek. Simdilik
+            // HUD'daki depo kapsulu ile ayni sekli kullanir — iki gosterge ayni sey demeli.
+            var ozetIkon = UiKit.Panel(ozetIc, "Ikon", Palet.UiCerceve);
+            var ozetIkonImg = ozetIkon.gameObject.GetComponent<Image>();
+            ozetIkonImg.sprite = Sekil.Elmas();
+            ozetIkonImg.raycastTarget = false;
+            UiKit.Sabitle(ozetIkon, 0f, 1f, 14f, -10f, 28f, 28f);
 
             _ozet = UiKit.Yazi(
-                ozetKart, "Ozet", "", UiKit.YaziBaslik, Palet.UiYazi, TextAnchor.UpperLeft, true);
-            UiKit.Sabitle(_ozet.rectTransform, 0f, 1f, 18f, -14f, 380f, 28f);
+                ozetIc, "Ozet", "", UiKit.YaziBaslik, Palet.UiKoyuYazi, TextAnchor.UpperLeft, true);
+            UiKit.Sabitle(_ozet.rectTransform, 0f, 1f, 50f, -10f, 340f, 30f);
 
             _uyari = UiKit.Yazi(
-                ozetKart, "Uyari", "", UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.UpperRight, true);
-            UiKit.Sabitle(_uyari.rectTransform, 1f, 1f, -18f, -16f, 380f, 24f);
+                ozetIc, "Uyari", "", UiKit.YaziKucuk, Palet.UiKoyuYaziSolgun, TextAnchor.UpperRight, true);
+            UiKit.Sabitle(_uyari.rectTransform, 1f, 1f, -16f, -12f, 380f, 26f);
 
-            // Cubuk zemini cukur ton: dolgunun nerede bittigi ancak boyle okunuyor.
-            var arka = UiKit.Cubuk(ozetKart, "Doluluk", Palet.UiYuzeyKoyu, Palet.UiOnay, out _dolulukDolgu);
-            UiKit.Sabitle(arka.rectTransform, 0f, 1f, 18f, -52f, CubukGenislik, 14f);
+            // Cubuk zemini CUKUR parsomen: dolgunun nerede bittigi ancak boyle okunuyor.
+            // Cerceve cubuga da gerekli — cercevesiz cubuk parsomen uzerinde bir leke gibi durur.
+            RectTransform cubukIc;
+            var cubuk = UiKit.CerceveliKart(
+                ozetIc, "Doluluk", Palet.UiKagitCukur, Palet.UiCerceve, out cubukIc, 10, 3f);
+            UiKit.Sabitle(cubuk, 0f, 1f, 14f, -48f, CubukGenislik, 20f);
+
+            // ⚠ Dolgu genisligi kodla surulur (pivot 0, anchorMax.x = 0), o yuzden
+            // yerlesim grubuna degil ciplak rect'e dayanir.
+            var dolgu = UiKit.Kart(cubukIc, "Dolgu", Palet.UiYesil, 7);
+            dolgu.anchorMin = Vector2.zero;
+            dolgu.anchorMax = new Vector2(0f, 1f);
+            dolgu.pivot = new Vector2(0f, 0.5f);
+            dolgu.offsetMin = Vector2.zero;
+            dolgu.offsetMax = Vector2.zero;
+            _dolulukDolgu = dolgu.gameObject.GetComponent<Image>();
+            _dolulukDolgu.raycastTarget = false;
 
             _liste = UiKit.KaydirmaListesi(_panel.Icerik, "Liste", out _);
             var disRt = _liste.parent.parent as RectTransform;
@@ -81,9 +119,9 @@ namespace Amorland.Arayuz
             {
                 disRt.anchorMin = Vector2.zero;
                 disRt.anchorMax = Vector2.one;
-                // Ust: ozet karti (86) + nefes payi. Alt: alt serit (52) + nefes payi.
-                disRt.offsetMin = new Vector2(0f, 68f);
-                disRt.offsetMax = new Vector2(0f, -98f);
+                // Ust: ozet karti (92) + nefes payi. Alt: alt serit (52) + nefes payi.
+                disRt.offsetMin = new Vector2(0f, 66f);
+                disRt.offsetMax = new Vector2(0f, -102f);
             }
 
             var altBar = UiKit.Panel(_panel.Icerik, "AltBar", Color.clear);
@@ -93,13 +131,15 @@ namespace Amorland.Arayuz
             altDizi.childAlignment = TextAnchor.MiddleLeft;
 
             // ⚠ "Depoya bosalt" tek butonu ZORUNLU (B.10): bu buton olmadan oyun mobilde
-            // iskence. Ekranin ana eylemi bu — vurgu zemini yalnizca o hak ediyor.
-            var bosalt = UiKit.AnaButon(altBar, "Bosalt", "Çantayı depoya boşalt", () => DepoyaBosalt?.Invoke());
-            UiKit.Boyut(bosalt.gameObject, 268f, 48f);
+            // iskence. Ekranin ana eylemi bu — ekrandaki TEK yesil buton odur; satir
+            // butonlari ahsap kalir ki goz once buraya dussun.
+            var bosalt = UiKit.YesilButon(altBar, "Bosalt", "Çantayı depoya boşalt",
+                () => DepoyaBosalt?.Invoke());
+            UiKit.Boyut(bosalt.gameObject, 288f, 50f);
 
             var not = UiKit.Yazi(altBar, "Not",
                 "Kilitli yığını partner alamaz · en fazla 3 yığın",
-                UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.MiddleRight);
+                UiKit.YaziKucuk, Palet.UiKoyuYaziSolgun, TextAnchor.MiddleRight);
             UiKit.Boyut(not.gameObject, 380f, 44f).flexibleWidth = 1f;
         }
 
@@ -119,34 +159,36 @@ namespace Amorland.Arayuz
             if (vadi.DepoKapasitesi <= 0)
             {
                 _ozet.text = "Depo Sv 2'de açılır.";
-                _ozet.color = Palet.UiYaziSolgun;
+                _ozet.color = Palet.UiKoyuYaziSolgun;
                 _uyari.text = "";
-                UiKit.CubukAyarla(_dolulukDolgu, 0f, CubukGenislik);
+                UiKit.CubukAyarla(_dolulukDolgu, 0f, CubukIcGenislik);
                 return;
             }
 
             float oran = vadi.DepoDolu / (float)vadi.DepoKapasitesi;
             _ozet.text = vadi.DepoDolu + " / " + vadi.DepoKapasitesi + " birim";
-            _ozet.color = oran >= 1f ? Palet.UiUyari : Palet.UiYazi;
-            UiKit.CubukAyarla(_dolulukDolgu, oran, CubukGenislik);
+            _ozet.color = oran >= 1f ? Palet.UiKirmiziKoyu : Palet.UiKoyuYazi;
+            UiKit.CubukAyarla(_dolulukDolgu, oran, CubukIcGenislik);
 
             // Kritik doluluk uc kademede okunur: renk, yazi ve cubuk ayni anda doner.
+            // ⚠ Cubuk DOLGUSU doygun renk alir (uzak mesafeden okunan sey odur), yazi ise
+            // ayni ailenin KOYU tonunu — krem zeminde acik altin/kirmizi yazi silinir.
             if (oran >= 1f)
             {
-                _dolulukDolgu.color = Palet.UiUyari;
-                _uyari.color = Palet.UiUyari;
+                _dolulukDolgu.color = Palet.UiKirmizi;
+                _uyari.color = Palet.UiKirmiziKoyu;
                 _uyari.text = "DOLU · hasat engellenir, ürün tarlada bekler";
             }
             else if (oran > 0.85f)
             {
-                _dolulukDolgu.color = Palet.UiVurgu;
-                _uyari.color = Palet.UiVurgu;
+                _dolulukDolgu.color = Palet.UiAltin;
+                _uyari.color = Palet.UiAltinKoyu;
                 _uyari.text = "dolmak üzere · %" + Mathf.RoundToInt(oran * 100f);
             }
             else
             {
-                _dolulukDolgu.color = Palet.UiOnay;
-                _uyari.color = Palet.UiYaziSolgun;
+                _dolulukDolgu.color = Palet.UiYesil;
+                _uyari.color = Palet.UiKoyuYaziSolgun;
                 _uyari.text = "%" + Mathf.RoundToInt(oran * 100f);
             }
 
@@ -186,13 +228,50 @@ namespace Amorland.Arayuz
             }
         }
 
+        /// <summary>
+        /// Kategori ikonu — YER TUTUCU. Gercek esya ikonlari 2B varlik olarak sonra gelecek;
+        /// simdilik <see cref="Sekil"/> poligonlari yigini kategorisinden ayirmaya yetiyor.
+        /// </summary>
+        private static Sprite KategoriIkonu(string kategori)
+        {
+            switch (kategori)
+            {
+                case "tohum": return Sekil.Damla();
+                case "urun": return Sekil.Yildiz();
+                case "cevher": return Sekil.Elmas();
+                case "islenmis": return Sekil.Simsek();
+                default: return Sekil.Daire();
+            }
+        }
+
+        /// <summary>Ikon rengi de kategoriyi tasir: sekil kucukken once renk okunuyor.</summary>
+        private static Color KategoriRengi(string kategori)
+        {
+            switch (kategori)
+            {
+                case "tohum": return Palet.Yaprak;
+                case "urun": return Palet.Bugday;
+                case "cevher": return Palet.Su;
+                case "odun": return Palet.Ahsap;
+                case "islenmis": return Palet.Cati;
+                default: return Palet.UiKoyuYaziSolgun;
+            }
+        }
+
         /// <summary>Bos depo, bos kutu gibi gorunmemeli: ne yapilacagini soyleyen tek satir.</summary>
         private void BosDurumEkle()
         {
+            // Cukur yuzey = bos slot dili (B.22). Bos depo boyle "henuz doldurulmamis bir
+            // sandik" gibi durur; ciplak yazi sadece eksiklik gibi duruyordu.
+            RectTransform ic;
+            var kart = UiKit.CerceveliKart(
+                _liste, "Bos", Palet.UiKagitCukur, Palet.UiCerceve, out ic, 14, 3f);
+            UiKit.Boyut(kart.gameObject, 0f, 104f);
+
             var yazi = UiKit.Yazi(
-                _liste, "Bos", "Depo boş. Çantandaki fazlalığı buraya bırak — partnerin de alabilir.",
-                UiKit.YaziGovde, Palet.UiYaziSolgun, TextAnchor.MiddleCenter);
-            UiKit.Boyut(yazi.gameObject, 0f, 96f);
+                ic, "Yazi", "Depo boş. Çantandaki fazlalığı buraya bırak — partnerin de alabilir.",
+                UiKit.YaziGovde, Palet.UiKoyuYaziSolgun, TextAnchor.MiddleCenter);
+            UiKit.Doldur(yazi.rectTransform, 18f);
         }
 
         private void SatirEkle(DepoSatiri s)
@@ -200,19 +279,38 @@ namespace Amorland.Arayuz
             bool benimKilidim = s.Kilitli && s.Kilitleyen == _durum.BenimId;
             bool baskasininKilidi = s.Kilitli && !benimKilidim;
 
+            // ⚠ Kilit satirin ZEMININI degil CERCEVESINI boyar: renkli dolgu altindaki
+            // yaziyi bulandiriyordu (ayni ders Hud tohum slotunda alindi). Altin halka
+            // "benim kilidim", kirmizi halka "partnerin kilidi, dokunamazsin" demektir.
+            Color cerceveRengi = benimKilidim ? Palet.KapsulAltin
+                : baskasininKilidi ? Palet.UiKirmizi
+                : Palet.UiCerceve;
+            // Kilitli satirin cercevesi kalinlasir: renk korlugunde de fark edilsin.
+            float kalinlik = s.Kilitli ? 4f : 3f;
             // Baskasinin kilidi = dokunulamaz yigin. Cukur yuzey bunu tiklamadan once soyler.
-            var satir = UiKit.Kart(
-                _liste, "Satir_" + s.EsyaId,
-                baskasininKilidi ? Palet.UiYuzeyKoyu : Palet.UiYuzey, UiKit.YaricapKucuk);
+            Color dolguRengi = baskasininKilidi ? Palet.UiKagitCukur : Palet.ParsomenKoyu;
+
+            RectTransform ic;
+            var satir = UiKit.CerceveliKart(
+                _liste, "Satir_" + s.EsyaId, dolguRengi, cerceveRengi, out ic, 14, kalinlik);
             UiKit.Boyut(satir.gameObject, 0f, SatirYuksekligi);
 
-            var dizi = UiKit.YatayDizi(satir, 10f, 10);
+            // ⚠ Yerlesim IC yuzeye kurulur; dis cerceveye kurulsa icerik cercevenin
+            // uzerine tasar ve halkanin okunurlugu biterdi.
+            var dizi = UiKit.YatayDizi(ic, 10f, 8);
             // ⚠ Varsayilan childForceExpandHeight butonlari satir boyuna gerer — sunger
             // butonlar arayuzun en cirkin parcasiydi (bkz. Hud SagAlt).
             dizi.childForceExpandHeight = false;
             dizi.childAlignment = TextAnchor.MiddleLeft;
 
-            Color rozetRengi = Palet.UiYaziSolgun;
+            string kategori = _denge.EsyaKategorisi(s.EsyaId);
+            var ikon = UiKit.Panel(ic, "Ikon", KategoriRengi(kategori));
+            var ikonImg = ikon.gameObject.GetComponent<Image>();
+            ikonImg.sprite = KategoriIkonu(kategori);
+            ikonImg.raycastTarget = false;
+            UiKit.Boyut(ikon.gameObject, 30f, 30f);
+
+            Color rozetRengi = Palet.UiKoyuYaziSolgun;
             string koyanMetni = "kaynağı bilinmiyor";
             if (s.Koyan != null && _durum.Oyuncular.TryGetValue(s.Koyan, out OyuncuOzeti koyan))
             {
@@ -220,55 +318,65 @@ namespace Amorland.Arayuz
                 koyanMetni = s.Koyan == _durum.BenimId ? "sen bıraktın" : koyan.Ad + " bıraktı";
             }
 
-            // Rozet HUD'daki 14'ten iri: depoda "kim koydu" satirin kimligi (B.10).
-            UiKit.Rozet(satir, rozetRengi, 18f);
+            KoyanRozeti(ic, rozetRengi);
 
-            var adKutu = UiKit.Panel(satir, "AdKutu", Color.clear);
-            UiKit.Boyut(adKutu.gameObject, 240f, 38f).flexibleWidth = 1f;
+            var adKutu = UiKit.Panel(ic, "AdKutu", Color.clear);
+            UiKit.Boyut(adKutu.gameObject, 220f, 38f).flexibleWidth = 1f;
             var adDizi = UiKit.DikeyDizi(adKutu, 0f, 0);
             adDizi.childAlignment = TextAnchor.MiddleLeft;
 
             var ad = UiKit.Yazi(
                 adKutu, "Ad", _denge.EsyaAdi(s.EsyaId), UiKit.YaziGovde,
-                Palet.UiYazi, TextAnchor.LowerLeft, true);
+                Palet.UiKoyuYazi, TextAnchor.LowerLeft, true);
             UiKit.Boyut(ad.gameObject, 0f, 22f);
 
             // Rozet rengi tek basina hangi imzanin kim oldugunu ogretmiyor; ad da yazili.
             var koyanYazi = UiKit.Yazi(
-                adKutu, "Koyan", koyanMetni, UiKit.YaziMini, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
+                adKutu, "Koyan", koyanMetni, UiKit.YaziMini, Palet.UiKoyuYaziSolgun, TextAnchor.UpperLeft);
             UiKit.Boyut(koyanYazi.gameObject, 0f, 16f);
 
+            // Adet krem zeminde KOYU altin: acik altin (UiAltin) parsomen uzerinde erir.
             var adet = UiKit.Yazi(
-                satir, "Adet", s.Adet.ToString(), UiKit.YaziBaslik,
-                Palet.UiVurgu, TextAnchor.MiddleRight, true);
-            UiKit.Boyut(adet.gameObject, 80f, 30f);
+                ic, "Adet", s.Adet.ToString(), UiKit.YaziBaslik,
+                Palet.UiAltinKoyu, TextAnchor.MiddleRight, true);
+            UiKit.Boyut(adet.gameObject, 74f, 30f);
 
             string esyaId = s.EsyaId;
 
-            var al = UiKit.Buton(satir, "Al", baskasininKilidi ? "Kilitli" : "Al", () =>
+            // Satir eylemleri IKINCIL: ahsap. Ekranin tek yesili alttaki "bosalt" butonu.
+            var al = UiKit.AhsapButon(ic, "Al", baskasininKilidi ? "Kilitli" : "Al", () =>
             {
                 if (!baskasininKilidi) DepodanAl?.Invoke(esyaId, s.Adet);
             });
             al.interactable = !baskasininKilidi;
-            UiKit.Boyut(al.gameObject, 84f, 36f);
+            UiKit.Boyut(al.gameObject, 84f, 42f);
             al.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
 
-            var kilit = UiKit.Buton(satir, "Kilit", s.Kilitli ? "Aç" : "Kilitle",
+            var kilit = UiKit.AhsapButon(ic, "Kilit", s.Kilitli ? "Aç" : "Kilitle",
                 () => KilitDegistir?.Invoke(esyaId));
             kilit.interactable = !baskasininKilidi;
-            UiKit.Boyut(kilit.gameObject, 96f, 36f);
+            UiKit.Boyut(kilit.gameObject, 96f, 42f);
             kilit.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
+        }
 
-            if (s.Kilitli)
-            {
-                // Kilit satirin ZEMININI degil cercevesini boyar: renkli dolgu altindaki
-                // yaziyi bulandiriyordu (ayni ders Hud tohum slotunda alindi).
-                var halka = UiKit.Cerceve(
-                    satir, "KilitCerceve", benimKilidim ? Palet.UiVurgu : Palet.UiUyari,
-                    UiKit.YaricapKucuk, 2);
-                // Cerceve satirin tamamini kaplar; yerlesim onu bir sutun sanmamali.
-                halka.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-            }
+        /// <summary>
+        /// "Kim koydu" muhru: kahve halka icinde oyuncunun rengi. Ciplak renkli disk
+        /// parsomen uzerinde bir leke gibi duruyordu; halka onu bir jetona cevirir ve
+        /// depodaki en onemli ikinci bilgiyi (B.10) satirin basinda tutar.
+        /// </summary>
+        private static void KoyanRozeti(Transform ebeveyn, Color renk)
+        {
+            var halka = UiKit.Panel(ebeveyn, "KoyanRozet", Palet.UiCerceve);
+            var halkaImg = halka.gameObject.GetComponent<Image>();
+            halkaImg.sprite = Sekil.Daire();
+            halkaImg.raycastTarget = false;
+            UiKit.Boyut(halka.gameObject, 26f, 26f);
+
+            var disk = UiKit.Panel(halka, "Renk", renk);
+            var diskImg = disk.gameObject.GetComponent<Image>();
+            diskImg.sprite = Sekil.Daire();
+            diskImg.raycastTarget = false;
+            UiKit.Doldur(disk, 3f);
         }
     }
 }

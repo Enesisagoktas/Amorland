@@ -17,8 +17,13 @@ namespace Amorland.Arayuz
     ///
     /// ⚠ Butun yuzeyler <see cref="Sekil"/> uzerinden YUVARLAK KOSELI sprite kullanir.
     /// Sprite'siz <c>Image</c> keskin dikdortgen cizer; arayuzun ucuz gorunmesinin
-    /// sebebi tek basina buydu. Yeni yuzey eklerken <see cref="Kart"/> kullan,
-    /// <see cref="Panel"/> yalnizca gorunmez kapsayicilar icindir.
+    /// sebebi tek basina buydu.
+    ///
+    /// ⚠ Gorunur yuzey icin <see cref="Kart"/> ARTIK YETMEZ (B.22): cercevesizdir ve
+    /// zengin dunyanin uzerinde kaybolur. Yeni yuzey <see cref="CerceveliKart"/> ile
+    /// kurulur; <see cref="Kart"/> yalnizca cubuk dolgusu gibi cerceve ISTEMEYEN
+    /// parcalar icin, <see cref="Panel"/> ise yalnizca gorunmez kapsayicilar ve
+    /// sprite tasiyan ikon/daire katmanlari icindir.
     /// </summary>
     public static class UiKit
     {
@@ -179,15 +184,27 @@ namespace Amorland.Arayuz
             return yazi;
         }
 
-        /// <summary>Basliklar icin: kalin, acik renk, iri.</summary>
+        /// <summary>
+        /// Basliklar icin: kalin, acik renk, iri.
+        ///
+        /// ⚠ KOYU zemin varsayar (<see cref="Palet.UiYazi"/> acik kremdir). Krem
+        /// parsomen uzerinde gorunmez kalir — orada <see cref="Yazi"/> ile
+        /// <see cref="Palet.UiKoyuYazi"/> kullan.
+        /// </summary>
         public static Text Baslik(Transform ebeveyn, string ad, string metin, int boyut = YaziBaslik)
         {
             return Yazi(ebeveyn, ad, metin, boyut, Palet.UiYazi, TextAnchor.UpperLeft, true);
         }
 
         // ------------------------------------------------------------------ butonlar
+        //
+        // ⚠ ESKI KOYU PANEL DILI. Bu bes buton (Buton/AnaButon/UyariButon/DuzButon/
+        // DaireButon) koyu yuzey + acik yazi varsayar ve modal govdesi KREM PARSOMEN'e
+        // donunce (B.22) hepsi krem uzerinde krem kalir. Ekranlarin hicbiri artik
+        // bunlari kullanmiyor; yeni buton icin asagidaki YesilButon / AhsapButon /
+        // KirmiziButon uclusu kullanilir. Imzalar kaldirilmadi ki dis kod kirilmasin.
 
-        /// <summary>Ikincil buton: koyu yuzey, acik yazi. Varsayilan.</summary>
+        /// <summary>Ikincil buton: koyu yuzey, acik yazi. ⚠ Yalnizca KOYU zeminde.</summary>
         public static Button Buton(Transform ebeveyn, string ad, string metin, Action tiklama)
         {
             return ButonKur(ebeveyn, ad, metin, tiklama, Palet.UiYuzey, Palet.UiYazi, YaricapKucuk, false);
@@ -318,7 +335,10 @@ namespace Amorland.Arayuz
             yuzRt.offsetMax = new Vector2(-3f, -3f);
             yuzRt.gameObject.GetComponent<Image>().raycastTarget = false;
 
-            var pah = Kart(yuzRt, "Pah", new Color(1f, 1f, 1f, 0.26f), 10);
+            // ⚠ Pah rengi ham yazilmaz: joystick topuzu da ayni isigi kullanir ve iki
+            // yerde farkli alfa tutulunca pahli ogeler ayni ekranda ayri malzemeden
+            // gorunuyordu. Tek kaynak Palet.UiPah.
+            var pah = Kart(yuzRt, "Pah", Palet.UiPah, 10);
             pah.anchorMin = new Vector2(0f, 0.45f);
             pah.anchorMax = new Vector2(1f, 1f);
             pah.offsetMin = new Vector2(6f, 0f);
@@ -367,7 +387,14 @@ namespace Amorland.Arayuz
 
         // ------------------------------------------------------------------ giris
 
-        /// <summary>Yuvarlak koseli metin giris kutusu. Ipucu yazisi bos alanda soluk gorunur.</summary>
+        /// <summary>
+        /// Yuvarlak koseli metin giris kutusu. Ipucu yazisi bos alanda soluk gorunur.
+        ///
+        /// ⚠ KOYU panel icin kuruludur: koyu kutu, acik yazi, acik altin imlec. Krem
+        /// parsomen uzerinde kutu kara bir leke, yazi ve imlec ise gorunmez olur.
+        /// Parsomen kart icinde kurulduktan SONRA renkleri cevrilmeli (bkz.
+        /// <c>EkranParcasi.KagitGiris</c> ve <c>GirisEkrani.GirisiParsomeneUyarla</c>).
+        /// </summary>
         public static InputField Giris(
             Transform ebeveyn, string ad, string ipucu, int karakterSiniri,
             TextAnchor hiza = TextAnchor.MiddleLeft)

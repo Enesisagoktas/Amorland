@@ -36,30 +36,41 @@ namespace Amorland.Arayuz
             arkaButon.transition = Selectable.Transition.None;
             arkaButon.onClick.AddListener(Kapat);
 
-            var cerceve = UiKit.Kart(Kok, "Cerceve", Palet.UiPanel, 22);
+            // Parsomen govde + KALIN kahve cerceve (B.22 arayuz stil sozlesmesi).
+            // Koyu cercevesiz panel zengin dunyanin uzerinde kaybolur ve arayuzu
+            // "sistem menusu" gibi gosterir; okunurlugu saglayan sey kalin hattir.
+            RectTransform govde;
+            var cerceve = UiKit.CerceveliKart(Kok, "Cerceve", Palet.Parsomen, Palet.UiCerceve,
+                out govde, 26, 6f);
             UiKit.Sabitle(cerceve, 0.5f, 0.5f, 0f, 0f, genislik, yukseklik);
-            UiKit.GolgeEkle(cerceve, 22, 28, 10f);
+            UiKit.GolgeEkle(cerceve, 26, 28, 10f);
             // Cerceveye dokunmak kapatmasin diye kendi butonu var ama hicbir sey yapmaz.
             var yutucu = cerceve.gameObject.AddComponent<Button>();
             yutucu.targetGraphic = cerceve.gameObject.GetComponent<Image>();
             yutucu.transition = Selectable.Transition.None;
 
+            // Baslik seridi: govdenin ustunde koyu bir bant. Basligi icerikten ayirir
+            // ve modale "levha" gorunumu verir.
+            RectTransform seritIc;
+            var serit = UiKit.CerceveliKart(govde, "BaslikSeridi", Palet.ParsomenKoyu,
+                Palet.UiCerceve, out seritIc, 18, 3f);
+            UiKit.Sabitle(serit, 0.5f, 1f, 0f, -8f, genislik - 40f, 52f);
+
             Baslik = UiKit.Yazi(
-                cerceve, "Baslik", baslik, UiKit.YaziBuyuk, Palet.UiYazi, TextAnchor.MiddleLeft, true);
-            UiKit.Sabitle(Baslik.rectTransform, 0f, 1f, 24f, -18f, genislik - 110f, 38f);
+                seritIc, "Baslik", baslik, UiKit.YaziBuyuk, Palet.UiKoyuYazi, TextAnchor.MiddleLeft, true);
+            UiKit.Sabitle(Baslik.rectTransform, 0f, 0.5f, 18f, 0f, genislik - 150f, 34f);
 
-            // Baslik ile icerigi ayiran ince cizgi: modalin iki bolgesi net ayrilsin.
-            var cizgi = UiKit.Ayirac(cerceve);
-            UiKit.Sabitle(cizgi, 0f, 1f, 24f, -64f, genislik - 48f, 1f);
+            // Kapatma: kirmizi yuvarlak — referansta da kapatma tek kirmizi ogedir.
+            var kapat = UiKit.KirmiziButon(govde, "Kapat", "×", Kapat);
+            var kapatRt = kapat.GetComponent<RectTransform>();
+            UiKit.Sabitle(kapatRt, 1f, 1f, -14f, -10f, 48f, 48f);
+            kapat.GetComponentInChildren<Text>().fontSize = UiKit.YaziBuyuk;
 
-            var kapat = UiKit.DaireButon(cerceve, "Kapat", "×", Kapat);
-            UiKit.Sabitle(kapat.GetComponent<RectTransform>(), 1f, 1f, -18f, -16f, 40f, 40f);
-
-            Icerik = UiKit.Panel(cerceve, "Icerik", Color.clear);
+            Icerik = UiKit.Panel(govde, "Icerik", Color.clear);
             Icerik.anchorMin = Vector2.zero;
             Icerik.anchorMax = Vector2.one;
-            Icerik.offsetMin = new Vector2(20f, 20f);
-            Icerik.offsetMax = new Vector2(-20f, -76f);
+            Icerik.offsetMin = new Vector2(16f, 16f);
+            Icerik.offsetMax = new Vector2(-16f, -70f);
 
             Kok.gameObject.SetActive(false);
         }

@@ -16,6 +16,10 @@ namespace Amorland.Arayuz
     /// Tarladaki surukle-boyama farkli bir jesttir ve bununla celismez.
     ///
     /// ⚠ Canta kisiti esya CESIDIDIR (slot), miktar degil. Yigin 99'da dolar.
+    ///
+    /// ⚠ Kabuk B.22 arayuz stil sozlesmesine uyar: <see cref="Panel"/> govdesi KREM
+    /// PARSOMEN oldugu icin buradaki her yazi KOYU olmak zorunda. Acik yazi krem
+    /// zeminde gorunmez — bu ekranin en sik kirilan kurali budur.
     /// </summary>
     public class CantaEkrani
     {
@@ -31,10 +35,15 @@ namespace Amorland.Arayuz
         private const float SeritYukseklik = 40f;
         private const float AltBarYukseklik = 48f;
 
-        // Satir yuksekligi = ic oge yuksekligi + kenar bosluk (2x8). Fazlasi satiri
-        // sunger gibi sisirir ve liste birkac satirda tukenir.
-        private const float SatirYukseklik = 52f;
-        private const float SatirIcYukseklik = 32f;
+        // Satir yuksekligi = cerceve (2x3) + kenar bosluk (2x8) + ic oge yuksekligi.
+        // Fazlasi satiri sunger gibi sisirir ve liste birkac satirda tukenir.
+        // ⚠ Cerceveli karta gecince 52 px yetmedi: 3 px'lik kahve hat iki yandan
+        // yiyor ve rozet ile buton ic alana sigmiyordu.
+        private const float SatirYukseklik = 64f;
+        private const float SatirIcYukseklik = 34f;
+
+        /// <summary>Kategori ve adet rozetlerinin capi. Ikisi ayni boy — satir simetrik durur.</summary>
+        private const float RozetBoyut = 36f;
 
         /// <summary>Dokun-sec ile secilen esya. Ikinci dokunus hedefi belirler.</summary>
         public string SecilenEsya { get; private set; }
@@ -55,23 +64,34 @@ namespace Amorland.Arayuz
         {
             // Doluluk ve secim ipucu ayni ice cokuk seritte durur: ikisi de listeye ait
             // degil, listenin DURUMUNU anlatir. Ayri zemin bu farki yaziya gerek kalmadan soyler.
-            var serit = UiKit.Kart(_panel.Icerik, "Serit", Palet.UiYuzeyKoyu, UiKit.YaricapKucuk);
+            // ⚠ Parsomen govdenin uzerinde "cukur" KAGIT CUKUR tonuyla anlatilir (B.22);
+            // koyu yuzey burada krem levhada delik gibi durur.
+            RectTransform seritIc;
+            var serit = UiKit.CerceveliKart(
+                _panel.Icerik, "Serit", Palet.UiKagitCukur, Palet.UiCerceve, out seritIc, 14, 3f);
             serit.anchorMin = new Vector2(0f, 1f);
             serit.anchorMax = new Vector2(1f, 1f);
             serit.pivot = new Vector2(0.5f, 1f);
             serit.anchoredPosition = Vector2.zero;
             serit.sizeDelta = new Vector2(0f, SeritYukseklik);
 
+            // Sayacin ikonu. ⚠ YER TUTUCU: gercek canta ikonu 2B varlik olarak sonra gelecek.
+            var seritIkon = UiKit.Panel(seritIc, "Ikon", Palet.UiCerceve).gameObject.GetComponent<Image>();
+            seritIkon.sprite = Sekil.Elmas();
+            seritIkon.raycastTarget = false;
+            UiKit.Sabitle(seritIkon.rectTransform, 0f, 0.5f, 12f, 0f, 20f, 20f);
+
             _ozet = UiKit.Yazi(
-                serit, "Ozet", "", UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.MiddleLeft, true);
+                seritIc, "Ozet", "", UiKit.YaziKucuk, Palet.UiKoyuYaziSolgun, TextAnchor.MiddleLeft, true);
             var ozetRt = _ozet.rectTransform;
             ozetRt.anchorMin = new Vector2(0f, 0f);
             ozetRt.anchorMax = new Vector2(0.5f, 1f);
-            ozetRt.offsetMin = new Vector2(14f, 0f);
+            ozetRt.offsetMin = new Vector2(40f, 0f);
             ozetRt.offsetMax = Vector2.zero;
 
+            // Secim ipucu altin ama KOYU altin: acik altin (UiVurgu) krem seritte erir.
             _secimYazi = UiKit.Yazi(
-                serit, "Secim", "", UiKit.YaziKucuk, Palet.UiVurgu, TextAnchor.MiddleRight, true);
+                seritIc, "Secim", "", UiKit.YaziKucuk, Palet.UiAltinKoyu, TextAnchor.MiddleRight, true);
             var secimRt = _secimYazi.rectTransform;
             secimRt.anchorMin = new Vector2(0.38f, 0f);
             secimRt.anchorMax = new Vector2(1f, 1f);
@@ -103,14 +123,16 @@ namespace Amorland.Arayuz
             altDizi.childForceExpandHeight = false;
             altDizi.childAlignment = TextAnchor.MiddleLeft;
 
-            var bosalt = UiKit.AnaButon(
+            // Ekranin TEK yesil butonu bu: toplu bosaltma cantanin ana eylemi (B.22).
+            // Satirlardaki tekil eylemler ahsap kalir, yoksa yesil anlamini yitirir.
+            var bosalt = UiKit.YesilButon(
                 altBar, "DepoyaBosalt", "Depoya boşalt", () => DepoyaGonder?.Invoke(null));
-            UiKit.Boyut(bosalt.gameObject, 200f, 42f);
+            UiKit.Boyut(bosalt.gameObject, 210f, 46f);
 
             // ⚠ "Depodan al" TOPLU butonu YOKTUR (B.10). Kolaylik tek yonludur:
             // kazara bosaltma geri alinabilir, kazara toplu alma depoyu bosaltir.
             var not = UiKit.Yazi(altBar, "Not", "Depodan toplu alma yok — tek tek seçilir.",
-                UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.MiddleLeft);
+                UiKit.YaziKucuk, Palet.UiKoyuYaziSolgun, TextAnchor.MiddleLeft);
             UiKit.Boyut(not.gameObject, 300f, 42f).flexibleWidth = 1f;
         }
 
@@ -135,7 +157,9 @@ namespace Amorland.Arayuz
             foreach (var e in satirlar) kullanilan += Mathf.CeilToInt(e.Adet / (float)yigin);
 
             _ozet.text = kullanilan + " / " + ben.CantaSlot + " slot   (yığın " + yigin + ")";
-            _ozet.color = kullanilan >= ben.CantaSlot ? Palet.UiUyari : Palet.UiYaziSolgun;
+            // Dolu canta uyarisi KOYU kirmizi: acik kirmizi krem seritte solgun kaliyor
+            // ve "dikkat" tonunu kaybediyordu.
+            _ozet.color = kullanilan >= ben.CantaSlot ? Palet.UiKirmiziKoyu : Palet.UiKoyuYaziSolgun;
             _secimYazi.text = SecilenEsya != null
                 ? "Seçili: " + _denge.EsyaAdi(SecilenEsya) + " — hedefe dokun"
                 : "";
@@ -148,9 +172,16 @@ namespace Amorland.Arayuz
             // Bos liste sessiz kalmamali: oyuncu ekranin yuklenmedigini sanmasin.
             if (satirlar.Count == 0)
             {
+                // Bos durum da cukur bir kart: ciplak yazi parsomen govdede "yuklenmemis"
+                // gibi duruyordu, cukur yuzey ise "burasi bos" der.
+                RectTransform bosIc;
+                var bosKart = UiKit.CerceveliKart(
+                    _liste, "Bos", Palet.UiKagitCukur, Palet.UiCerceve, out bosIc, 14, 3f);
+                UiKit.Boyut(bosKart.gameObject, 0f, 72f);
                 var bos = UiKit.Yazi(
-                    _liste, "Bos", "Çanta boş.", UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.MiddleCenter);
-                UiKit.Boyut(bos.gameObject, 0f, 60f);
+                    bosIc, "Yazi", "Çanta boş.", UiKit.YaziGovde, Palet.UiKoyuYaziSolgun,
+                    TextAnchor.MiddleCenter);
+                UiKit.Doldur(bos.rectTransform);
                 return;
             }
 
@@ -193,10 +224,36 @@ namespace Amorland.Arayuz
                 case "urun": return Palet.Yaprak;
                 case "cevher": return Palet.Tas;
                 case "odun": return Palet.Ahsap;
-                case "islenmis": return Palet.Bugday;
+                // ⚠ Bugday degil KOYU ALTIN: rozetin icindeki krem sekil acik bugday
+                // zeminde kayboluyordu. Ton ayni aileden, okunurluk kazaniliyor.
+                case "islenmis": return Palet.UiAltinKoyu;
                 case "sarf": return Palet.Su;
                 case "alet": return Palet.TasKoyu;
-                default: return Palet.UiYaziSolgun;
+                // ⚠ Bilinmeyen kategori de GORUNUR kalmali: acik gri rozet krem
+                // satirda tamamen kayboluyordu.
+                default: return Palet.UiKoyuYaziSolgun;
+            }
+        }
+
+        /// <summary>
+        /// Kategori simgesi — rozetin icindeki sekil. Renk tek basina yetmiyor:
+        /// yan yana iki yesil ton (tohum/urun) goz taramasinda ayirt edilmiyor.
+        ///
+        /// ⚠ YER TUTUCU: gercek esya ikonlari 2B varlik olarak sonra gelecek.
+        /// </summary>
+        private static Sprite KategoriSekli(string kategori)
+        {
+            switch (kategori)
+            {
+                case "tohum": return Sekil.Damla();
+                case "urun": return Sekil.Daire();
+                case "cevher": return Sekil.Elmas();
+                // Yuvarlak kose = kutuk/tahta; tek dikdortgen sekil bu ailede o.
+                case "odun": return Sekil.Yuvarlak(8);
+                case "islenmis": return Sekil.Yildiz();
+                case "sarf": return Sekil.Simsek();
+                case "alet": return Sekil.Arti();
+                default: return Sekil.Daire();
             }
         }
 
@@ -204,48 +261,73 @@ namespace Amorland.Arayuz
         {
             string esyaId = e.EsyaId;
             string kategori = _denge.EsyaKategorisi(esyaId);
+            bool secili = esyaId == SecilenEsya;
 
-            var satir = UiKit.Kart(_liste, "Satir_" + esyaId, Palet.UiYuzey, UiKit.YaricapKucuk);
+            // Satir = kahve cerceveli parsomen kart. Secim DOLU KATMANLA degil, dis
+            // cercevenin altina donmesi ve kalinlasmasiyla anlatilir (B.22): dolu vurgu
+            // satirin yazisini bulandiriyordu, altin cerceve ise Hud tohum slotuyla
+            // ayni dili konusuyor.
+            RectTransform ic;
+            var satir = UiKit.CerceveliKart(
+                _liste, "Satir_" + esyaId, Palet.ParsomenKoyu,
+                secili ? Palet.KapsulAltin : Palet.UiCerceve, out ic, 14, secili ? 5f : 3f);
             UiKit.Boyut(satir.gameObject, 0f, SatirYukseklik);
 
-            var dizi = UiKit.YatayDizi(satir, 10f, 8);
-            // ⚠ Gerilme kapali: acik kalirsa rozet satir yuksekligine cekilip elips olur.
+            var disImg = satir.gameObject.GetComponent<Image>();
+            var buton = satir.gameObject.AddComponent<Button>();
+            buton.targetGraphic = disImg;
+            buton.onClick.AddListener(() => Sec(esyaId));
+
+            // ⚠ Yatay dizi IC yuzeye kurulur. Dis cerceveye kurulursa ogeler kahve
+            // hattin uzerine tasar ve cerceve kesilmis gorunur.
+            var dizi = UiKit.YatayDizi(ic, 10f, 8);
+            // ⚠ Gerilme kapali: acik kalirsa rozetler satir yuksekligine cekilip elips olur.
             dizi.childForceExpandHeight = false;
             dizi.childAlignment = TextAnchor.MiddleLeft;
 
-            var buton = satir.gameObject.AddComponent<Button>();
-            buton.targetGraphic = satir.gameObject.GetComponent<Image>();
-            buton.onClick.AddListener(() => Sec(esyaId));
+            // Kategori rozeti: kahve halka + kategori renginde daire + icinde sekil.
+            // Halka olmadan renkli daire krem satirda "boya lekesi" gibi duruyordu.
+            var rozet = UiKit.Rozet(ic, Palet.UiCerceve, RozetBoyut);
+            var rozetIc = UiKit.Panel(rozet.rectTransform, "Ic", KategoriRengi(kategori))
+                .gameObject.GetComponent<Image>();
+            rozetIc.sprite = Sekil.Daire();
+            rozetIc.raycastTarget = false;
+            UiKit.Doldur(rozetIc.rectTransform, 3f);
 
-            UiKit.Rozet(satir, KategoriRengi(kategori), 16f);
+            var ikon = UiKit.Panel(rozetIc.rectTransform, "Ikon", Palet.Parsomen)
+                .gameObject.GetComponent<Image>();
+            ikon.sprite = KategoriSekli(kategori);
+            ikon.raycastTarget = false;
+            UiKit.Doldur(ikon.rectTransform, 7f);
 
             var ad = UiKit.Yazi(
-                satir, "Ad", _denge.EsyaAdi(esyaId), UiKit.YaziGovde, Palet.UiYazi, TextAnchor.MiddleLeft, true);
+                ic, "Ad", _denge.EsyaAdi(esyaId), UiKit.YaziGovde, Palet.UiKoyuYazi,
+                TextAnchor.MiddleLeft, true);
             UiKit.Boyut(ad.gameObject, 240f, SatirIcYukseklik).flexibleWidth = 1f;
 
             var kat = UiKit.Yazi(
-                satir, "Kategori", kategori, UiKit.YaziMini, Palet.UiYaziSolgun, TextAnchor.MiddleLeft);
+                ic, "Kategori", kategori, UiKit.YaziMini, Palet.UiKoyuYaziSolgun, TextAnchor.MiddleLeft);
             UiKit.Boyut(kat.gameObject, 96f, SatirIcYukseklik);
 
-            // Adet satirin tek sayisal bilgisi; vurgu rengi ve kalinlik onu goz taramasinda one alir.
+            // Adet satirin tek sayisal bilgisi: KOYU DAIRE rozetinde, beyaz yaziyla.
+            // Krem satirdaki tek koyu leke odur ve goz taramasinda onu one alir —
+            // Hud'daki adet rozetiyle ayni dil.
+            var adetRozet = UiKit.Rozet(ic, Palet.KapsulZemin, RozetBoyut);
             var adet = UiKit.Yazi(
-                satir, "Adet", e.Adet.ToString(), UiKit.YaziGovde, Palet.UiVurgu, TextAnchor.MiddleRight, true);
-            UiKit.Boyut(adet.gameObject, 72f, SatirIcYukseklik);
+                adetRozet.rectTransform, "Adet", e.Adet.ToString(), UiKit.YaziKucuk, Color.white,
+                TextAnchor.MiddleCenter, true);
+            UiKit.Doldur(adet.rectTransform);
+            // ⚠ Uc haneli adet daireye sigmaz; sarma satiri ikiye bolup rozetten tasar,
+            // tasma ise sayiyi tek satirda ortali tutar.
+            adet.horizontalOverflow = HorizontalWrapMode.Overflow;
 
+            // Satir eylemi AHSAP: yesil ekranda tek olmali ve o alt bardaki toplu
+            // bosaltmadir (B.22).
             var eylem = kategori == "tohum"
-                ? UiKit.Buton(satir, "Sec", "Çubuğa al", () => TohumSec?.Invoke(esyaId))
-                : UiKit.Buton(satir, "Depoya", "Depoya", () => DepoyaGonder?.Invoke(esyaId));
-            UiKit.Boyut(eylem.gameObject, 118f, 34f);
+                ? UiKit.AhsapButon(ic, "Sec", "Çubuğa al", () => TohumSec?.Invoke(esyaId))
+                : UiKit.AhsapButon(ic, "Depoya", "Depoya", () => DepoyaGonder?.Invoke(esyaId));
+            UiKit.Boyut(eylem.gameObject, 118f, 40f);
             eylem.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
-
-            if (esyaId == SecilenEsya)
-            {
-                // Dolu bir vurgu katmani satirin yazisini bulandiriyordu; ince halka
-                // secimi Hud tohum slotlariyla ayni dilde anlatir.
-                var cerceve = UiKit.Cerceve(satir, "Cerceve", Palet.UiVurgu, UiKit.YaricapKucuk, 3);
-                // Halka satirin tamamini sarar, yatay dizinin bir ogesi degildir.
-                cerceve.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-            }
         }
 
         /// <summary>Dokun-sec: ilk dokunus secer, ikincisi ayni esyaya dokunursa secimi birakir.</summary>

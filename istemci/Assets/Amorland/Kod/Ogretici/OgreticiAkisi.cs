@@ -31,6 +31,14 @@ namespace Amorland.Ogretici
 
         private const string TamamlandiAnahtari = "amorland.ogretici.bitti";
 
+        /// <summary>
+        /// Ipucu seridinin olculeri. Genislik 760'tan 620'ye indi: 760 px'lik serit
+        /// sol ust oyuncu kapsulunun (x 14..310) uzerine biniyordu.
+        /// </summary>
+        private const float SeritGenislik = 620f;
+
+        private const float SeritYukseklik = 48f;
+
         private class Adim
         {
             public string Metin;
@@ -59,12 +67,48 @@ namespace Amorland.Ogretici
 
         private void SeritKur(Transform kanvas)
         {
-            _serit = UiKit.Panel(kanvas, "OgreticiSerit", Palet.UiZemin);
-            UiKit.Sabitle(_serit, 0.5f, 1f, 0f, -16f, 760f, 48f);
-            _serit.gameObject.GetComponent<Image>().raycastTarget = false;
+            // ⚠ Ipucu dunyanin UZERINDE yuzer, oyuncunun actigi bir modal degildir:
+            // dolayisiyla parsomen degil HUD KAPSUL dilini konusur (B.22) — koyu govde,
+            // acik krem cerceve, beyaz konturlu yazi. Cercevesiz duz serit tarlanin koyu
+            // bolgelerinde kayboluyordu; okunurlugu tasiyan sey govde degil, o acik hat.
+            //
+            // ⚠ Kapsul GORUNMEZ bir kabugun icinde durur ve gizlenen sey kabuktur:
+            // GolgeEkle golgeyi KARDES olarak birakir, yani kapsulu tek basina kapatmak
+            // ogretici bittikten sonra ekranda asili bir kara leke birakirdi.
+            //
+            // ⚠ Serit ust HUD siranin ALTINA konur: -16'da 760 px genisliginde dururken
+            // ust orta altin kapsulunu (0.5, 1, -14, 150x46) tamamen ortuyordu ve
+            // ogretici kanvasi (sira 50) HUD'un (sira 10) uzerine cizildigi icin sayac
+            // gorunmuyordu. -70 altin kapsulun alt kenarinin (-60) altinda kalir.
+            _serit = UiKit.Panel(kanvas, "OgreticiSeritKabuk", Color.clear);
+            UiKit.Sabitle(_serit, 0.5f, 1f, 0f, -70f, SeritGenislik, SeritYukseklik);
 
-            _yazi = UiKit.Yazi(_serit, "Yazi", "", 19, Palet.UiYazi, TextAnchor.MiddleCenter);
-            UiKit.Doldur(_yazi.rectTransform, 10f);
+            RectTransform ic;
+            var kapsul = UiKit.CerceveliKart(
+                _serit, "OgreticiSerit", Palet.KapsulZemin, Palet.KapsulCerceve, out ic, 20, 3f);
+            UiKit.Doldur(kapsul);
+            UiKit.GolgeEkle(kapsul, 20, 14, 4f);
+            // Ipucu tiklamayi yutarsa altindaki karoya basilamaz.
+            kapsul.gameObject.GetComponent<Image>().raycastTarget = false;
+
+            // Her kapsul bir ikon tasir (B.22). ⚠ YER TUTUCU sekil — gercek ikon 2B
+            // varlik olarak sonra gelecek.
+            var ikon = UiKit.Panel(ic, "Ikon", Palet.UiAltin);
+            var ikonImg = ikon.gameObject.GetComponent<Image>();
+            ikonImg.sprite = Sekil.Yildiz();
+            ikonImg.raycastTarget = false;
+            UiKit.Sabitle(ikon, 0f, 0.5f, 12f, 0f, 24f, 24f);
+
+            // Koyu kapsulde yazi BEYAZ ve KONTURLU: kontursuz acik yazi kapsulun yari
+            // saydam govdesinden gecen parlak cim uzerinde kenarini kaybediyordu.
+            _yazi = UiKit.KonturluYazi(
+                ic, "Yazi", "", UiKit.YaziGovde, Color.white, TextAnchor.MiddleCenter, true, 1.3f);
+            var yaziRt = _yazi.rectTransform;
+            yaziRt.anchorMin = Vector2.zero;
+            yaziRt.anchorMax = Vector2.one;
+            // Soldaki bosluk ikonun yeri; esit kenarli Doldur yaziyi ikonun ustune bindirirdi.
+            yaziRt.offsetMin = new Vector2(44f, 6f);
+            yaziRt.offsetMax = new Vector2(-16f, -6f);
         }
 
         private void AdimlariKur()

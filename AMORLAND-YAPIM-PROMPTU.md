@@ -878,21 +878,54 @@ Kayıp değil, davet. Sonradan eş davet edilirse o satır dolar.
 
 ## B.22. Sanat yönü
 
-**Low-poly 3D, ortografik kilitli kamera.**
+**Elle çizilmiş 2B illüstrasyon sprite, ortografik 2.5D yerleşim.**
+
+> ⚠️ **Bu bölüm 20.08.2026'da değişti.** Önceki karar "low-poly 3D, düz renk, gradyan yok"
+> idi. Referans görseller üzerinden yön değiştirildi: hedef, dokulu ve gradyanlı el çizimi
+> illüstrasyon görünümü. Kamera kararı (2.5D ortografik, yaw kilidi) **aynen geçerli**;
+> değişen yalnızca varlıkların nasıl üretildiği ve nasıl göründüğü.
+>
+> Eski karara ait "düz renk / gradyan yok / 12-16 renk / üçgen bütçesi" maddeleri
+> **geçersizdir.** Kodda `Gorsel/Palet.cs` hâlâ 16 renkli dünya paletini taşıyor; o palet
+> artık *zorunlu sözleşme* değil, sprite'lar gelene kadarki yer tutucudur.
 
 ### Stil sözleşmesi
-- Düz renk, doku yok veya tek atlas. **Gradyan yok, PBR yok.**
-- **12-16 renkli sabit palet**, tüm varlıklar bu paletten
-- Kenar yumuşatma yok, sert normal
-- Ürün 150-400 üçgen · ağaç 400-900 · karakter 1.200-2.000
-- Sahte gölge (blob decal)
+- **2B sprite**, ortografik 2.5D ızgaraya oturur. Derinlik sıralaması y eksenine göre.
+- Dokulu ve gradyanlı — el çizimi hissi hedeflenir, düz renk kısıtı **yoktur**
+- Sıcak, doygun, masalsı ton. Kozy = keskin kontrast yok, ama **soluk da değil**
+- Aynı ürünün 4 büyüme aşaması **aynı siluet ailesinden** olmalı (tutarlılık riski burada)
+- Sahte gölge sprite'ı her nesnenin altında
+
+### Arayüz stil sözleşmesi
+Arayüz kabuğu iki dilden oluşur — ikisi karışmaz:
+
+| Katman | Görünüm | Nerede |
+|---|---|---|
+| **HUD kapsülü** | Koyu yarı saydam gövde + **açık krem çerçeve** (2-3 px) | Seviye, kaynak sayaçları, ikon butonları, zaman |
+| **Parşömen panel** | Krem gövde + **kalın kahve çerçeve** (4-7 px) | Modal ekranlar, görev kartı, alet çubuğu, liste satırları |
+
+- Seçili öge **altın çerçeve** alır (kalınlık artar, renk değişir)
+- Koyu zeminde yazı **beyaz + kontur**; krem zeminde **koyu kahve**, kontursuz
+- Ana eylem doygun **yeşil**, ikincil **ahşap**, yıkıcı **kırmızı** — hepsi pahlı ve alt tabanlı
+- Her sayaç ve her alet **ikon taşır**; yalnızca yazı etiketi yetmez
+
+⚠️ Koyu, çerçevesiz, düz panel **yasaktır.** Zengin bir dünyanın üzerinde kaybolur ve
+arayüzü "sistem menüsü" gibi gösterir. Okunurluğu sağlayan şey kapsülün kendisi değil,
+etrafındaki açık hattır.
 
 ### Kaynak stratejisi (bütçe 0 TL)
-1. **CC0 paketler** (Kenney, Quaternius, KayKit, Poly Pizza) — karakter, yapı, prop. İhtiyacın ~%70'i.
-2. **Parametrik Blender script'i** — 16 ürün × 4 aşama = 64 model gibi *tutarlılık gerektiren* setler. Tek script, garantili aynı stil.
-3. **Saf Python** (Pillow/SVG) — UI ikonları, zemin dokuları, ortografik sprite render.
+1. **AI 2B sprite üretimi** — dünya nesneleri, ürünler, ikonlar. Tek üslup tarifiyle toplu
+   üretim, sonra elle rötuş ve palet birleştirme.
+2. **CC0 2B paketler** (Kenney, Game-icons.net) — arayüz ikonları ve doldurucu prop.
+3. **Saf Python** (Pillow/SVG) — atlas paketleme, palet normalize, aşama varyantı türetme.
 
-⚠️ **AI 3D üretimi bu proje için yanlış araçtır.** Her çalıştırmada farklı siluet, oran, palet ve bozuk topoloji üretir; "aynı havucun %40 büyümüşü" diyemezsin. Script diyebilir.
+⚠️ **Tutarlılık asıl risktir.** AI üretimi her çalıştırmada farklı üslup, oran ve palet
+verir. Önlem: (a) tek ve sabit üslup tarifi, (b) her set **tek oturumda** üretilir,
+(c) üretim sonrası ortak palete normalize edilir, (d) "aynı havucun %40 büyüğü" gibi
+seriler **aynı taban görselden türetilir**, sıfırdan üretilmez.
+
+⚠️ AI **3B** üretimi hâlâ yanlış araçtır (bozuk topoloji, tutarsız siluet). Bu bölümdeki
+karar 2B içindir; ikisi karıştırılmamalı.
 
 ---
 
