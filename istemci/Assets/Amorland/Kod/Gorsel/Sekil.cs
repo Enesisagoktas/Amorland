@@ -200,6 +200,138 @@ namespace Amorland.Gorsel
             return sprite;
         }
 
+        // ------------------------------------------------------------------ ikonlar
+        //
+        // ⚠ Bunlar YER TUTUCUDUR. Referans gorseldeki gibi elle cizilmis, dokulu
+        // ikonlar kod ile uretilemez — onlar varlik isidir. Buradaki basit siluetler
+        // arayuzun YAPISINI dogru kurmak icindir: nereye ikon gelecegi, hangi
+        // olcude ve hangi renkte oldugu. Gercek ikonlar geldiginde yalnizca
+        // sprite degisir, yerlesim aynen kalir.
+
+        private static readonly Dictionary<string, Sprite> _ikon = new Dictionary<string, Sprite>();
+
+        /// <summary>Bes koseli yildiz — seviye rozeti.</summary>
+        public static Sprite Yildiz() => Poligon("yildiz", YildizNoktalari(5, 0.46f));
+
+        /// <summary>Elmas — premium para.</summary>
+        public static Sprite Elmas() => Poligon("elmas", new[]
+        {
+            new Vector2(0.5f, 0.06f), new Vector2(0.94f, 0.42f),
+            new Vector2(0.5f, 0.94f), new Vector2(0.06f, 0.42f),
+        });
+
+        /// <summary>Arti — "ekle" dugmesi.</summary>
+        public static Sprite Arti() => Poligon("arti", new[]
+        {
+            new Vector2(0.40f, 0.10f), new Vector2(0.60f, 0.10f), new Vector2(0.60f, 0.40f),
+            new Vector2(0.90f, 0.40f), new Vector2(0.90f, 0.60f), new Vector2(0.60f, 0.60f),
+            new Vector2(0.60f, 0.90f), new Vector2(0.40f, 0.90f), new Vector2(0.40f, 0.60f),
+            new Vector2(0.10f, 0.60f), new Vector2(0.10f, 0.40f), new Vector2(0.40f, 0.40f),
+        });
+
+        /// <summary>Simsek — enerji.</summary>
+        public static Sprite Simsek() => Poligon("simsek", new[]
+        {
+            new Vector2(0.58f, 0.04f), new Vector2(0.24f, 0.54f), new Vector2(0.46f, 0.54f),
+            new Vector2(0.38f, 0.96f), new Vector2(0.78f, 0.44f), new Vector2(0.54f, 0.44f),
+        });
+
+        /// <summary>Su damlasi — sulama.</summary>
+        public static Sprite Damla()
+        {
+            var n = new List<Vector2> { new Vector2(0.5f, 0.02f) };
+            // Govde: alt yariyi cember, ust yariyi sivri uc olarak birlestir.
+            for (int i = 0; i <= 24; i++)
+            {
+                float a = Mathf.PI * (0.5f + i / 24f * 1.5f) + Mathf.PI * 0.25f;
+                n.Add(new Vector2(0.5f + Mathf.Cos(a) * 0.36f, 0.62f + Mathf.Sin(a) * 0.36f));
+            }
+            return Poligon("damla", n.ToArray());
+        }
+
+        /// <summary>Kalp — partner gostergesi.</summary>
+        public static Sprite Kalp()
+        {
+            var n = new List<Vector2>();
+            for (int i = 0; i <= 48; i++)
+            {
+                float t = i / 48f * Mathf.PI * 2f;
+                float x = 16f * Mathf.Pow(Mathf.Sin(t), 3f);
+                float y = 13f * Mathf.Cos(t) - 5f * Mathf.Cos(2f * t)
+                          - 2f * Mathf.Cos(3f * t) - Mathf.Cos(4f * t);
+                n.Add(new Vector2(0.5f + x / 40f, 0.5f - y / 36f));
+            }
+            return Poligon("kalp", n.ToArray());
+        }
+
+        private static Vector2[] YildizNoktalari(int kol, float disYaricap)
+        {
+            var n = new Vector2[kol * 2];
+            float ic = disYaricap * 0.44f;
+            for (int i = 0; i < kol * 2; i++)
+            {
+                float r = (i % 2 == 0) ? disYaricap : ic;
+                float a = -Mathf.PI / 2f + i * Mathf.PI / kol;
+                n[i] = new Vector2(0.5f + Mathf.Cos(a) * r, 0.5f + Mathf.Sin(a) * r);
+            }
+            return n;
+        }
+
+        /// <summary>
+        /// Birim karedeki (0..1) poligonu sprite'a rasterize eder.
+        /// Kenar yumusatma icin piksel basina 3x3 ornekleme yapilir — tek ornekte
+        /// egik kenarlar merdiven gibi ciktigi icin ikonlar ucuz gorunuyordu.
+        /// </summary>
+        public static Sprite Poligon(string ad, Vector2[] noktalar, int boy = 64)
+        {
+            if (_ikon.TryGetValue(ad, out var mevcut) && mevcut != null) return mevcut;
+
+            var tex = YeniTexture(boy);
+            var px = new Color32[boy * boy];
+            const int orn = 3;
+
+            for (int y = 0; y < boy; y++)
+            {
+                for (int x = 0; x < boy; x++)
+                {
+                    int icerde = 0;
+                    for (int sy = 0; sy < orn; sy++)
+                    {
+                        for (int sx = 0; sx < orn; sx++)
+                        {
+                            float px01 = (x + (sx + 0.5f) / orn) / boy;
+                            float py01 = 1f - (y + (sy + 0.5f) / orn) / boy;
+                            if (Icinde(noktalar, px01, py01)) icerde++;
+                        }
+                    }
+                    float a = icerde / (float)(orn * orn);
+                    px[y * boy + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(a * 255f));
+                }
+            }
+
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            var sprite = Sprite.Create(tex, new Rect(0f, 0f, boy, boy), new Vector2(0.5f, 0.5f));
+            sprite.name = "Ikon_" + ad;
+            _ikon[ad] = sprite;
+            return sprite;
+        }
+
+        /// <summary>Isin atma yontemi: noktadan saga cizilen isin kenarlari tek sayida keserse icerdedir.</summary>
+        private static bool Icinde(Vector2[] p, float x, float y)
+        {
+            bool ic = false;
+            for (int i = 0, j = p.Length - 1; i < p.Length; j = i++)
+            {
+                if ((p[i].y > y) != (p[j].y > y) &&
+                    x < (p[j].x - p[i].x) * (y - p[i].y) / (p[j].y - p[i].y) + p[i].x)
+                {
+                    ic = !ic;
+                }
+            }
+            return ic;
+        }
+
         /// <summary>Play modu bitiminde onbellegi bosaltir (yok edilmis texture kullanmamak icin).</summary>
         public static void Unut()
         {
@@ -208,6 +340,7 @@ namespace Amorland.Gorsel
             _halka.Clear();
             _daire = null;
             _hale = null;
+            _ikon.Clear();
         }
 
         // ------------------------------------------------------------------ ic hesaplar

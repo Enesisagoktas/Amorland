@@ -272,6 +272,99 @@ namespace Amorland.Arayuz
             return renkler;
         }
 
+        // ------------------------------------------------------------------ parlak kabuk
+        //
+        // Kozy ciftlik arayuzunun imzasi KALIN CERCEVE + PAH'tir. Ince cizgili duz
+        // yuzey "uygulama" gibi durur; kalin kahve cerceveli krem panel "oyuncak"
+        // gibi durur. Fark tek basina bu iki seyden geliyor.
+
+        /// <summary>
+        /// Kalin cerceveli panel. Icerik <paramref name="ic"/> yuzeyine eklenir —
+        /// dis cerceveye eklenirse cercevenin uzerine tasar.
+        /// </summary>
+        public static RectTransform CerceveliKart(
+            Transform ebeveyn, string ad, Color dolgu, Color cerceve, out RectTransform ic,
+            int yaricap = 24, float kalinlik = 6f)
+        {
+            var dis = Kart(ebeveyn, ad, cerceve, yaricap);
+            ic = Kart(dis, "Ic", dolgu, Mathf.Max(2, yaricap - Mathf.RoundToInt(kalinlik)));
+            Doldur(ic, kalinlik);
+            ic.gameObject.GetComponent<Image>().raycastTarget = false;
+            return dis;
+        }
+
+        /// <summary>
+        /// Kalin, pahli buton: altta koyu serit (kalinlik hissi), ustte acik pah (isik).
+        /// Yazi konturludur — doygun zemin uzerinde beyaz yazi kontursuz erir.
+        /// </summary>
+        public static Button KalinButon(
+            Transform ebeveyn, string ad, string metin, Action tiklama,
+            Color yuz, Color taban, Color yaziRengi, int boyut = YaziGovde)
+        {
+            var dis = Kart(ebeveyn, ad, taban, 16);
+            var img = dis.gameObject.GetComponent<Image>();
+            img.raycastTarget = true;
+
+            var buton = dis.gameObject.AddComponent<Button>();
+            buton.targetGraphic = img;
+            buton.colors = ButonRenkleri();
+            if (tiklama != null) buton.onClick.AddListener(() => tiklama());
+
+            // Yuz, tabandan 6 px yukarida durur: alttaki koyu serit butonun kalinligidir.
+            var yuzRt = Kart(dis, "Yuz", yuz, 14);
+            yuzRt.anchorMin = Vector2.zero;
+            yuzRt.anchorMax = Vector2.one;
+            yuzRt.offsetMin = new Vector2(3f, 7f);
+            yuzRt.offsetMax = new Vector2(-3f, -3f);
+            yuzRt.gameObject.GetComponent<Image>().raycastTarget = false;
+
+            var pah = Kart(yuzRt, "Pah", new Color(1f, 1f, 1f, 0.26f), 10);
+            pah.anchorMin = new Vector2(0f, 0.45f);
+            pah.anchorMax = new Vector2(1f, 1f);
+            pah.offsetMin = new Vector2(6f, 0f);
+            pah.offsetMax = new Vector2(-6f, -5f);
+            pah.gameObject.GetComponent<Image>().raycastTarget = false;
+
+            var yazi = KonturluYazi(yuzRt, "Yazi", metin, boyut, yaziRengi, TextAnchor.MiddleCenter);
+            Doldur(yazi.rectTransform, 8f);
+            return buton;
+        }
+
+        /// <summary>Onay/ana eylem: doygun yesil.</summary>
+        public static Button YesilButon(Transform ebeveyn, string ad, string metin, Action tiklama) =>
+            KalinButon(ebeveyn, ad, metin, tiklama, Palet.UiYesil, Palet.UiYesilKoyu, Color.white);
+
+        /// <summary>Ikincil eylem: ahsap.</summary>
+        public static Button AhsapButon(Transform ebeveyn, string ad, string metin, Action tiklama) =>
+            KalinButon(ebeveyn, ad, metin, tiklama, Palet.UiAhsapButon, Palet.UiAhsapButonKoyu, Color.white);
+
+        /// <summary>Iptal/yikici eylem: kirmizi.</summary>
+        public static Button KirmiziButon(Transform ebeveyn, string ad, string metin, Action tiklama) =>
+            KalinButon(ebeveyn, ad, metin, tiklama, Palet.UiKirmizi, Palet.UiKirmiziKoyu, Color.white);
+
+        /// <summary>
+        /// Konturlu yazi. Doygun renk ustunde okunurlugu tasiyan sey konturdur;
+        /// golge tek basina yetmez cunku ayni tonda zeminde kaybolur.
+        /// </summary>
+        public static Text KonturluYazi(
+            Transform ebeveyn, string ad, string metin, int boyut, Color renk, TextAnchor hiza,
+            bool kalin = true, float konturKalinlik = 2f)
+        {
+            var yazi = Yazi(ebeveyn, ad, metin, boyut, renk, hiza, kalin);
+            var kontur = yazi.gameObject.AddComponent<Outline>();
+            kontur.effectColor = Palet.UiKontur;
+            kontur.effectDistance = new Vector2(konturKalinlik, -konturKalinlik);
+            kontur.useGraphicAlpha = false;
+            return yazi;
+        }
+
+        /// <summary>Yuvarlak, cerceveli rozet — sayac ve para gostergeleri icin.</summary>
+        public static RectTransform Hap(
+            Transform ebeveyn, string ad, Color dolgu, Color cerceve, out RectTransform ic)
+        {
+            return CerceveliKart(ebeveyn, ad, dolgu, cerceve, out ic, 22, 4f);
+        }
+
         // ------------------------------------------------------------------ giris
 
         /// <summary>Yuvarlak koseli metin giris kutusu. Ipucu yazisi bos alanda soluk gorunur.</summary>

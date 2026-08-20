@@ -66,6 +66,75 @@ namespace Amorland.Gorsel
         public static readonly Color UiOnay = H(132, 176, 96);
         public static readonly Color Golge = new Color(0f, 0f, 0f, 0.38f);
 
+        // ---------------------------------------------------------------- parlak arayuz
+        //
+        // Kozy ciftlik arayuzu KOYU DEGILDIR. Koyu panel, ekrandaki sicak cim/toprak
+        // paletinin uzerinde "sistem menusu" gibi durur ve oyundan kopar. Buradaki
+        // tonlar kagit/ahsap ailesinden: kalin kahve cerceve, krem govde, doygun
+        // yesil onay. Yazi krem uzerinde KOYU olur — beyaz yazi okunmaz.
+
+        /// <summary>Panel govdesi: krem kagit.</summary>
+        public static readonly Color UiKagit = H(252, 238, 208);
+
+        /// <summary>Panelin icine gomulu yuzey: liste satiri, slot, giris kutusu.</summary>
+        public static readonly Color UiKagitKoyu = H(236, 214, 172);
+
+        /// <summary>Daha da cukur yuzey: bos slot, cubuk zemini.</summary>
+        public static readonly Color UiKagitCukur = H(214, 188, 146);
+
+        /// <summary>Kalin dis cerceve — Hay Day benzeri arayuzun imzasi budur.</summary>
+        public static readonly Color UiCerceve = H(120, 82, 50);
+
+        /// <summary>Cerceve uzerindeki acik pah (ust kenar isigi).</summary>
+        public static readonly Color UiPah = new Color(1f, 1f, 1f, 0.35f);
+
+        /// <summary>Krem zemin uzerine yazi.</summary>
+        public static readonly Color UiKoyuYazi = H(78, 52, 32);
+        public static readonly Color UiKoyuYaziSolgun = new Color(78f / 255f, 52f / 255f, 32f / 255f, 0.62f);
+
+        /// <summary>Onay/ana eylem butonu.</summary>
+        public static readonly Color UiYesil = H(126, 184, 68);
+        public static readonly Color UiYesilKoyu = H(88, 140, 46);
+
+        /// <summary>Iptal/yikici eylem.</summary>
+        public static readonly Color UiKirmizi = H(220, 94, 76);
+        public static readonly Color UiKirmiziKoyu = H(172, 64, 50);
+
+        /// <summary>Ikincil ahsap buton.</summary>
+        public static readonly Color UiAhsapButon = H(178, 130, 84);
+        public static readonly Color UiAhsapButonKoyu = H(134, 94, 58);
+
+        /// <summary>Altin/para ve XP vurgusu.</summary>
+        public static readonly Color UiAltin = H(248, 194, 66);
+        public static readonly Color UiAltinKoyu = H(198, 146, 40);
+
+        /// <summary>Konturlu yazinin kontur rengi. Butonlarda beyaz yaziyi zeminden ayirir.</summary>
+        public static readonly Color UiKontur = new Color(0.24f, 0.15f, 0.08f, 0.9f);
+
+        // ---------------------------------------------------------------- HUD kapsulleri
+        //
+        // Referans arayuzun tasiyici fikri: oyun dunyasi zengin ve dolu oldugu icin
+        // HUD ogeleri KOYU kapsullerde durur ve etrafina ACIK bir cerceve alir.
+        // Cerceve olmadan koyu kapsul dunyanin koyu bolgelerinde kaybolur; asil
+        // okunurlugu saglayan sey kapsulun kendisi degil, o ince acik hattir.
+
+        /// <summary>HUD kapsul govdesi — dunyanin uzerinde yari saydam koyu.</summary>
+        public static readonly Color KapsulZemin = new Color(0.125f, 0.105f, 0.092f, 0.93f);
+
+        /// <summary>Kapsul cercevesi: krem. Koyu kapsulu her zeminden ayirir.</summary>
+        public static readonly Color KapsulCerceve = H(232, 216, 184);
+
+        /// <summary>Secili/onemli kapsul cercevesi: altin.</summary>
+        public static readonly Color KapsulAltin = H(214, 170, 76);
+
+        /// <summary>Parsomen panel — gorev, alet cubugu, liste.</summary>
+        public static readonly Color Parsomen = H(246, 236, 214);
+        public static readonly Color ParsomenKoyu = H(226, 210, 180);
+
+        /// <summary>"Ekle" dugmesi.</summary>
+        public static readonly Color ArtiYesil = H(108, 190, 72);
+        public static readonly Color ArtiYesilKoyu = H(76, 148, 48);
+
         /// <summary>Buyume asamasina gore bitki rengi. Asama ilerledikce koyulasir ve doyar.</summary>
         public static Color UrunRengi(int asama, int asamaSayisi)
         {
