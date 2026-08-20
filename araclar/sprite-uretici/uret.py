@@ -361,12 +361,57 @@ def karakterler() -> None:
         yaz(f"karakter_{i}", karakter(r, i), pivot=(0.5, 0.05))
 
 
+# ---------------------------------------------------------------- zemin yamalari
+
+
+def zemin_yamasi(tohum=0, ton=0.0) -> Image.Image:
+    """
+    Zemine serilen boyali cim yamasi.
+
+    ⚠ Kenari YUMUSAK olmali. Once mesh disk kullaniliyordu; keskin kenar
+    ortografik kamerada "doku" degil "hata" gibi okunuyordu. Alfa kenari
+    sonen bir yama, zeminin uzerine boyanmis gibi durur.
+    """
+    from PIL import ImageFilter
+    en = boy = 256
+    t = Tuval(en, boy)
+    rng = np.random.default_rng(700 + tohum)
+
+    taban = karistir("cim", "cim_acik" if ton >= 0 else "cim_koyu", abs(ton))
+    # Duzensiz kume: tek daire "leke" gibi durur, kume organik durur.
+    # ⚠ Leke tuvalin KENARINA DEGMEMELI. Ilk denemede m+r en fazla 0.64*en'e
+    # ulasiyordu; merkezden sinira 0.5*en var, yani lekeler kirpiliyor ve
+    # bulanik kenar kare bir sinir birakiyordu — zeminde saydam dikdortgenler
+    # goruldu. Toplam yaricap 0.36*en ile sinirlandi, bulaniga pay birakildi.
+    for i in range(9):
+        a = (i / 9) * math.tau + rng.uniform(-0.3, 0.3)
+        m = rng.uniform(0.06, 0.17) * en
+        r = rng.uniform(0.12, 0.19) * en
+        cx = en / 2 + math.cos(a) * m
+        cy = boy / 2 + math.sin(a) * m * 0.62
+        t.elips([cx - r, cy - r * 0.62, cx + r, cy + r * 0.62],
+                karistir(taban, "cim_acik", rng.uniform(0.0, 0.30)))
+
+    img = t.bitir(isik=0.22, kenar=0.0, doku=0.075, tohum=tohum)
+    # Kenari sondur: yama zemine karissin, uzerine yapistirilmasin.
+    a = np.asarray(img).astype(np.float32)
+    alfa = Image.fromarray(a[..., 3].astype(np.uint8), "L").filter(ImageFilter.GaussianBlur(radius=20))
+    a[..., 3] = (np.asarray(alfa, np.float32) * 0.42).clip(0, 255)
+    return Image.fromarray(a.astype(np.uint8), "RGBA")
+
+
+def zemin_yamalari() -> None:
+    for i in range(4):
+        yaz(f"zemin_yama_{i}", zemin_yamasi(i, -0.5 + i * 0.34), pivot=(0.5, 0.5))
+
+
 # ---------------------------------------------------------------- ana
 
 
 def main() -> None:
     _kayit.clear()
     karolar()
+    zemin_yamalari()
     urunler()
     dogal()
     yapilar()

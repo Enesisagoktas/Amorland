@@ -119,20 +119,29 @@ namespace Amorland.Gorsel
         private void CimYamalariKur()
         {
             var rastgele = new System.Random(20260820);
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < 22; i++)
             {
                 float x = -14f + (float)rastgele.NextDouble() * 40f;
                 float z = -10f + (float)rastgele.NextDouble() * 26f;
                 // Parsellerin uzerine yama atma: karo okunurlugunu bozar.
                 if (ParseleYakin(x, z)) continue;
 
-                // ⚠ Dikdortgen yama KULLANILMAZ: keskin kosesi ortografik kamerada
-                // "doku" degil "hata" gibi okunuyordu — cimin ustunde duran acik yesil
-                // kutular gibi duruyordu. Yuvarlak yama kenari belli etmez.
-                float yaricap = 1.8f + (float)rastgele.NextDouble() * 3.2f;
-                float ton = 0.97f + (float)rastgele.NextDouble() * 0.05f;
-                var yama = MeshUretici.Disk(yaricap, 12, Palet.Cim * ton);
-                MateryalDeposu.Nesne("CimYama" + i, yama, _kok, new Vector3(x, -0.02f, z));
+                // ⚠ Ne dikdortgen ne de keskin kenarli disk: ikisi de ortografik
+                // kamerada "doku" degil "hata" gibi okunuyor. Boyali yama sprite'i
+                // kenari sonerek biter, zemine karisir.
+                var konum = new Vector3(x, -0.02f, z);
+                if (SpriteDeposu.SetVar)
+                {
+                    float olcek = 2.2f + (float)rastgele.NextDouble() * 2.6f;
+                    SpriteDeposu.Yatik("zemin_yama_" + (i % 4), _kok, konum, null, olcek);
+                }
+                else
+                {
+                    float yaricap = 1.8f + (float)rastgele.NextDouble() * 3.2f;
+                    float ton = 0.97f + (float)rastgele.NextDouble() * 0.05f;
+                    MateryalDeposu.Nesne(
+                        "CimYama" + i, MeshUretici.Disk(yaricap, 12, Palet.Cim * ton), _kok, konum);
+                }
             }
         }
 
@@ -306,7 +315,7 @@ namespace Amorland.Gorsel
             }
 
             // Ot tutamlari: bos alanlari doldurur, olcek hissi verir.
-            for (int i = 0; i < 40; i++)
+            for (int i = 0; i < 90; i++)
             {
                 float x = -11f + (float)rastgele.NextDouble() * 32f;
                 float z = -7f + (float)rastgele.NextDouble() * 18f;
