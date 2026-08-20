@@ -1,0 +1,38 @@
+{
+  "$aciklama": "Kenney kit materyal adi -> Amorland paleti. Spec B.22 kaynak stratejisi: 'uretim sonrasi ortak palete normalize edilir.' nature-kit'in kendi paleti turkuaz/turuncudur (bkz. kitin Sample.png); tutarli ama Amorland'in sicak yesil/kahve dunyasina ait degildir. Materyaller ada gore PAYLASILDIGI icin burada 26 satir butun modelleri birden boyar.",
+  "$kaynak": "Kenney.nl, CC0 1.0 — atif zorunlu degil, gonulludur.",
+
+  "grass":        [126, 168, 92],
+  "leafsGreen":   [96, 152, 74],
+  "leafsDark":    [70, 118, 56],
+  "leafsFall":    [198, 132, 66],
+
+  "dirt":         [146, 110, 76],
+  "dirtDark":     [104, 76, 52],
+
+  "wood":         [150, 111, 74],
+  "woodBark":     [142, 104, 70],
+  "woodBarkDark": [112, 80, 52],
+  "woodDark":     [108, 78, 50],
+  "woodBirch":    [216, 194, 162],
+  "woodInner":    [200, 174, 144],
+
+  "stone":        [150, 150, 148],
+  "stoneDark":    [112, 112, 110],
+
+  "corn":         [214, 180, 92],
+  "colorYellow":  [214, 180, 92],
+  "colorTan":     [200, 164, 118],
+
+  "water":        [94, 148, 178],
+  "Water":        [94, 148, 178],
+  "glass":        [186, 210, 224],
+
+  "colorRed":     [186, 96, 78],
+  "colorRedDark": [134, 64, 52],
+  "colorPurple":  [146, 118, 182],
+  "colorWhite":   [238, 234, 226],
+
+  "_defaultMat":  [216, 194, 162],
+  "colormap":     [255, 255, 255]
+}

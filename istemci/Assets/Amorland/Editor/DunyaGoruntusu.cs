@@ -102,6 +102,21 @@ namespace Amorland.EditorAraclari
                 cam.backgroundColor = Palet.Gokyuzu;
                 cam.targetTexture = rt;
 
+                // ⚠ ISIK SART. Prosedurel mesh'ler ve sprite'lar Unlit'ti, isiksiz de
+                // dogru gorunuyordu. Kenney modelleri LIT shader kullaniyor: isiksiz
+                // sahnede yalnizca ortam rengiyle, turkuaza calan bir tonda cikiyorlar.
+                // Oyunun kendi isigiyla ayni acilar (Oyun.SahneKur).
+                var isikGo = new GameObject("Isik");
+                cop.Add(isikGo);
+                var isik = isikGo.AddComponent<Light>();
+                isik.type = LightType.Directional;
+                isik.color = new Color(1f, 0.97f, 0.90f);
+                isik.intensity = 1.15f;
+                isik.shadows = LightShadows.None;
+                isikGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+                RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+                RenderSettings.ambientLight = new Color(0.52f, 0.54f, 0.50f);
+
                 float radyan = pitch * Mathf.Deg2Rad;
                 Vector3 yon = new Vector3(0f, Mathf.Sin(radyan), -Mathf.Cos(radyan));
                 camGo.transform.position = merkez + yon * Mesafe;
@@ -154,6 +169,20 @@ namespace Amorland.EditorAraclari
             kok.transform.position = konum;
 
             float pitch = denge.Yuklendi ? denge.KameraPitch : 50f;
+            if (VarlikKatalogu.SetVar
+                && VarlikKatalogu.KarakterKur(kok.transform, Vector3.zero, out Animator anim) != null)
+            {
+                // ⚠ BURADA ANIMATOR TIKLATILMIYOR — bilerek.
+                // Denendi ve BOZDU: Kenney'in ayri animasyon FBX'leri (anim_idle/run)
+                // model FBX'inin iskeletiyle birebir uyusmuyor. Avatar CopyFromOther ile
+                // baglansa bile kemikler yanlis donusum aliyor ve skinned mesh ekran
+                // boyunca geriliyor; karakter kayboluyor. Tik atilmayinca model bind
+                // pozunda (T-pozu) kalir — dogru degil ama DURUST: animasyonun henuz
+                // calismadigini gosterir. Cozum retarget isi ve ayri ele alinacak.
+                if (anim != null) { }
+                SpriteDeposu.Yatik("golge", kok.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
+                return;
+            }
             if (SpriteDeposu.SetVar)
             {
                 SpriteDeposu.Yatik("golge", kok.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);

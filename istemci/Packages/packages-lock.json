@@ -160,6 +160,12 @@
       "source": "builtin",
       "dependencies": {}
     },
+    "com.unity.modules.animation": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
     "com.unity.modules.assetbundle": {
       "version": "1.0.0",
       "depth": 1,
@@ -180,7 +186,7 @@
     },
     "com.unity.modules.imageconversion": {
       "version": "1.0.0",
-      "depth": 1,
+      "depth": 0,
       "source": "builtin",
       "dependencies": {}
     },

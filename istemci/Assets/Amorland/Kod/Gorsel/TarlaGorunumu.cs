@@ -235,6 +235,22 @@ namespace Amorland.Gorsel
         /// </summary>
         private void CitSirasi(string ad, Vector3 merkez, float uzunluk, bool dikey)
         {
+            if (VarlikKatalogu.SetVar)
+            {
+                // Cit parcasi 1 birim; kenar boyunca dizilir. Dikey kenarda 90 derece doner.
+                int adet = Mathf.Max(1, Mathf.RoundToInt(uzunluk));
+                float adim = uzunluk / adet;
+                for (int i = 0; i < adet; i++)
+                {
+                    float t = -uzunluk / 2f + adim * (i + 0.5f);
+                    Vector3 k = dikey
+                        ? new Vector3(merkez.x, 0f, merkez.z + t)
+                        : new Vector3(merkez.x + t, 0f, merkez.z);
+                    VarlikKatalogu.Kur(VarlikKatalogu.CitDuz, _kok, k, adim,
+                                       dikey ? 90f : 0f, ad + i);
+                }
+                return;
+            }
             if (SpriteDeposu.SetVar && !dikey)
             {
                 // Cit parcasi 2 birim genis; kenari dolduracak kadar tekrarlanir.
@@ -281,10 +297,19 @@ namespace Amorland.Gorsel
         private void DekorKur()
         {
             var rastgele = new System.Random(999);
+            bool model = VarlikKatalogu.SetVar;
             bool sprite = SpriteDeposu.SetVar;
 
             void Agac(string ad, Vector3 konum, float olcek, int cesit)
             {
+                if (model)
+                {
+                    // Kenney CC0 3B kiti (B.22 kaynak stratejisi 2). Rastgele Y donusu
+                    // olmazsa ayni agacin kopyalari "kopyala-yapistir" gibi durur.
+                    VarlikKatalogu.Kur(VarlikKatalogu.Agac(cesit), _kok, konum,
+                                       olcek * 1.15f, (float)rastgele.NextDouble() * 360f, ad);
+                    return;
+                }
                 if (sprite)
                 {
                     SpriteDeposu.Yatik("golge", _kok, konum + new Vector3(0f, 0.02f, -0.05f), null, olcek * 0.85f);
@@ -321,7 +346,13 @@ namespace Amorland.Gorsel
                 float z = -7f + (float)rastgele.NextDouble() * 18f;
                 if (ParseleYakin(x, z)) continue;
                 var konum = new Vector3(x, 0f, z);
-                if (sprite) SpriteDeposu.Nesne("ot_" + (i % 3), _kok, konum, _pitch, 0.08f, null, 0.7f);
+                if (model)
+                {
+                    VarlikKatalogu.Kur(VarlikKatalogu.Ot(i), _kok, konum,
+                                       0.9f + (float)rastgele.NextDouble() * 0.5f,
+                                       (float)rastgele.NextDouble() * 360f, "Ot" + i);
+                }
+                else if (sprite) SpriteDeposu.Nesne("ot_" + (i % 3), _kok, konum, _pitch, 0.08f, null, 0.7f);
                 else MateryalDeposu.Nesne("Ot" + i, MeshUretici.OtTutami(i), _kok, konum);
             }
 
@@ -332,7 +363,13 @@ namespace Amorland.Gorsel
                 float z = -6f + (float)rastgele.NextDouble() * 15f;
                 if (ParseleYakin(x, z)) continue;
                 var konum = new Vector3(x, 0f, z);
-                if (sprite)
+                if (model)
+                {
+                    string m = i % 3 == 0 ? VarlikKatalogu.Cali(i) : VarlikKatalogu.Kaya(i);
+                    VarlikKatalogu.Kur(m, _kok, konum, 0.9f + (float)rastgele.NextDouble() * 0.4f,
+                                       (float)rastgele.NextDouble() * 360f, "Kaya" + i);
+                }
+                else if (sprite)
                 {
                     SpriteDeposu.Nesne(i % 3 == 0 ? "cali" : "kaya_" + (i % 2), _kok, konum,
                                        _pitch, 0.1f, null, 0.9f);
@@ -415,6 +452,18 @@ namespace Amorland.Gorsel
 
                     // B.22 revizyonu: urun artik cizim sprite'i. Sprite yoksa (uret.py
                     // hic calismadiysa) eski prosedurel mesh'e duser — oyun her halde acilir.
+                    if (VarlikKatalogu.SetVar)
+                    {
+                        string mYol = VarlikKatalogu.Urun(karo.UrunId, asama, _denge.BuyumeAsamaSayisi);
+                        g.Urun = VarlikKatalogu.Kur(mYol, _karoKok, yer, 1f, 0f, "Urun");
+                        if (g.Urun != null)
+                        {
+                            g.CizilenUrun = karo.UrunId;
+                            g.CizilenAsama = asama;
+                            return;
+                        }
+                    }
+
                     string spriteAdi = "urun_" + karo.UrunId + "_" + asama;
                     if (SpriteDeposu.SetVar && SpriteDeposu.Al(spriteAdi) != null)
                     {

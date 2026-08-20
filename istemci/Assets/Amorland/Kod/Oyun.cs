@@ -40,6 +40,7 @@ namespace Amorland
         private TarlaGorunumu _tarla;
         private KarakterKontrolcusu _karakter;
         private Transform _partnerGorsel;
+        private Animator _karakterAnim;
         private Izgara _izgara;
         private EtkilesimYoneticisi _etkilesim;
         private SesYoneticisi _ses;
@@ -347,7 +348,13 @@ namespace Amorland
             // o yuzden oturum paketinden tasinan deger kullanilir.
             // B.22 revizyonu: karakter cizim sprite'i. Sahte golge her nesnenin altinda.
             float pitch = _denge.Yuklendi ? _denge.KameraPitch : 50f;
-            if (Gorsel.SpriteDeposu.SetVar)
+            if (Gorsel.VarlikKatalogu.SetVar
+                && Gorsel.VarlikKatalogu.KarakterKur(gorselGo.transform, Vector3.zero, out _karakterAnim) != null)
+            {
+                // Kenney CC0 animasyonlu karakter (idle/run/jump). Sahte golge B.22 geregi.
+                Gorsel.SpriteDeposu.Yatik("golge", gorselGo.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
+            }
+            else if (Gorsel.SpriteDeposu.SetVar)
             {
                 Gorsel.SpriteDeposu.Yatik("golge", gorselGo.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
                 Gorsel.SpriteDeposu.Nesne(

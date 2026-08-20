@@ -63,3 +63,8 @@ tasarim/*.html
 
 # Windows: 2>/dev/null gercek dosya olusturuyor
 dev/
+
+# Kenney ham paketleri: 449 MB zip + ~2 GB acilmis. Kullanilan modeller
+# istemci/Assets/Amorland/Resources/varlik/ altinda depoda duruyor.
+varliklar/kenney/zip/
+varliklar/kenney/paket/
