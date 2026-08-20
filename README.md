@@ -15,7 +15,7 @@ ses altyapısı + yer tutucu ses seti.
 |---|---|
 | Sunucu (Spring Boot + PostgreSQL + WebSocket) | ✅ çalışıyor, 56 test geçiyor |
 | Protokol (C.3 tamamı) | ✅ 32 uçtan uca denetim geçiyor |
-| Unity istemci kodu | ✅ derleniyor (Unity'siz doğrulandı), **Unity'de henüz çalıştırılmadı** |
+| Unity istemci kodu | ✅ **gerçek Unity 6000.3.22f1'de 0 hatayla derlendi**, proje kuruldu |
 | Denge katmanı (mimari kural 8) | ✅ JSON'dan yükleniyor, 10 tutarlılık denetimi |
 | Bütünlük (26 yasak + 8 kural) | ✅ 22 çalışma zamanı + 16 statik denetim |
 
@@ -37,6 +37,8 @@ Docker ile (kalıcı veri):
 docker compose up -d && cd sunucu && ./mvnw spring-boot:run
 ```
 
+> Postgres **5433**'te (5432'de başka bir projenin container'ı vardı).
+
 Docker olmadan (geçici veri, gömülü PostgreSQL):
 
 ```bash
@@ -54,7 +56,7 @@ node araclar/protokol-testi.js
 ### 3. Unity istemcisini aç
 
 [dokuman/KURULUM.md](dokuman/KURULUM.md) adım adım anlatıyor. Özeti:
-Unity 6.3 LTS ile `istemci/` klasörünü aç → `Amorland > Kurulumu Çalıştır` → Play.
+Unity Hub > `istemci/` klasörü zaten kurulu ve ayarlı → **Play**.
 
 ---
 
@@ -77,7 +79,7 @@ dokuman/      Teslim raporu, kurulum, faz planı
 | Sunucu testleri (56) | `cd sunucu && ./mvnw test` |
 | Bütünlük denetimi (statik) | `python araclar/butunluk-denetimi.py` |
 | Protokol testi (sunucu açıkken) | `node araclar/protokol-testi.js` |
-| Unity C# derlemesi (Unity'siz) | `araclar/csharp-dogrulama/dogrula.sh` |
+| Unity C# derlemesi (4 varyant) | `araclar/csharp-dogrulama/dogrula.sh` |
 | Öğretici temposu ölçümü | `cd sunucu && ./mvnw test -Dtest=OgreticiTemposuTest` |
 
 ---

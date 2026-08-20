@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -50,6 +51,52 @@ namespace Amorland.EditorAraclari
             catch (Exception e)
             {
                 Debug.LogError("[Amorland] Kurulum basarisiz: " + e);
+            }
+        }
+
+        /// <summary>
+        /// Windows oyuncusu derler. Ayni makinede iki oyuncu test etmenin en kolay yolu:
+        /// bir kopya Editor'de Play, bir kopya bu derlemede.
+        ///
+        /// Komut satirindan:
+        ///   Unity.exe -batchmode -quit -projectPath ... -executeMethod
+        ///     Amorland.EditorAraclari.AmorlandKurulum.WindowsYap
+        /// </summary>
+        [MenuItem("Amorland/Windows Derlemesi Yap", false, 2)]
+        public static void WindowsYap()
+        {
+            Calistir();
+
+            string cikti = "Build/Windows/Amorland.exe";
+            string klasor = Path.GetDirectoryName(cikti);
+            if (!string.IsNullOrEmpty(klasor) && !Directory.Exists(klasor))
+            {
+                Directory.CreateDirectory(klasor);
+            }
+
+            var secenekler = new BuildPlayerOptions
+            {
+                scenes = new[] { SahneYolu },
+                locationPathName = cikti,
+                target = BuildTarget.StandaloneWindows64,
+                options = BuildOptions.Development
+            };
+
+            BuildReport rapor = BuildPipeline.BuildPlayer(secenekler);
+            BuildSummary ozet = rapor.summary;
+
+            if (ozet.result == BuildResult.Succeeded)
+            {
+                Debug.Log(
+                    "[Amorland] Derleme BASARILI: " + cikti
+                    + "  (" + (ozet.totalSize / (1024 * 1024)) + " MB, "
+                    + ozet.totalTime.TotalSeconds.ToString("F0") + " sn)");
+            }
+            else
+            {
+                Debug.LogError(
+                    "[Amorland] Derleme BASARISIZ: " + ozet.result
+                    + "  hata: " + ozet.totalErrors);
             }
         }
 

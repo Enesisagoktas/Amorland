@@ -3,8 +3,8 @@
 **Hedef (A.4 #1):** Ev + Tarla, tek ürün, ek/sula/biç, iki oyuncu bağlı, durum kalıcı,
 ses altyapısı + yer tutucu ses seti.
 
-**Durum:** dikey dilim çalışıyor ve doğrulandı. Unity istemcisi derleniyor ama
-**bu makinede Unity kurulu olmadığı için oyun içinde çalıştırılmadı.**
+**Durum:** dikey dilim çalışıyor ve doğrulandı. Unity 6000.3.22f1 kuruldu, proje açıldı,
+**istemci gerçek Unity'de 0 hatayla derlendi.**
 
 ---
 
@@ -53,12 +53,16 @@ ses altyapısı + yer tutucu ses seti.
 | Bütünlük — çalışma zamanı | **22/22 geçti** (26 yasak + 8 mimari kural) |
 | Bütünlük — statik | **16/16 geçti** |
 | Protokol — canlı sunucu | **32/32 geçti** (Unity dışından, gerçek WebSocket) |
-| Unity C# derlemesi | **0 hata** (iki girdi kolunda da) |
+| Unity C# derlemesi — stub | **0 hata** (iki girdi kolunda da) |
+| Unity C# derlemesi — **gerçek Unity DLL'leri** | **0 hata** (iki girdi kolunda da) |
+| Unity projesi açılışı + paket çözümü | **0 hata** (URP 17.3.0, Input System 1.20.0, Newtonsoft 3.2.2) |
+| `Amorland > Kurulumu Çalıştır` | **başarılı** — sahne, yön, girdi, ses politikası, URP |
 
 Hepsini tekrar koşmak için:
 
 ```bash
 cd sunucu && ./mvnw test && cd .. && python araclar/butunluk-denetimi.py
+araclar/csharp-dogrulama/dogrula.sh
 ```
 
 ---
@@ -148,7 +152,28 @@ tetikleyicisi kaydırılır, XP değeri düşürülmez.
 
 ---
 
-### 3.6 `UYE_DEGIL` red kodu eklendi
+### 3.6 Stub'ların gizlediği 3 Unity API hatası
+
+Unity kurulunca istemci kodunu **gerçek Unity assembly'lerine** karşı derledim
+(lisans gerektirmiyor). Stub'ların yanlış taklit ettiği 3 hata çıktı — **üçü de
+Unity'de derlemeyi kırardı:**
+
+| Hata | Doğrusu |
+|---|---|
+| `ShadowCastingMode` | `UnityEngine`'de değil, **`UnityEngine.Rendering`**'de |
+| `Button.onClick.AddListener(Action)` | `UnityAction` ister; `System.Action` değişkeni geçilemez (CS1503) |
+| `InputSystemUIInputModule` | `EventSystems`'te değil, **`UnityEngine.InputSystem.UI`**'da |
+
+Üçü düzeltildi, stub'lar gerçeğe uyduruldu. `dogrula.sh` artık 4 varyant koşuyor:
+stub/gerçek × eski/yeni girdi. Ayrıca MSBuild önbelleği bayat "0 hata" gösterebiliyordu —
+her varyant ayrı çıktı klasörüne derleniyor.
+
+**Ders:** stub tabanlı doğrulama iyi bir ilk savunma ama tek başına yeterli değil.
+Unity kuruluysa her zaman `GercekUnity` katmanı da koşturulmalı.
+
+---
+
+### 3.7 `UYE_DEGIL` red kodu eklendi
 
 Başkasının vadisini okumaya çalışmak önce `YETKISIZ` (401) dönüyordu. İstemciye
 otomatik jeton yenileme eklendiği gün bu **sonsuz döngü** üretirdi: jeton geçerli,
@@ -165,7 +190,7 @@ Ayrı kod eklendi, 403 dönüyor. `turetilmis.json` → `redKodlari.UYE_DEGIL`.
 | **AudioMixer varlığı yok** | AudioMixer bir asset'tir, çalışma zamanında oluşturulamaz. 4 kanal (Müzik/Ortam/Eylem/UI) kodda ayrı seviyelerle uygulandı; `SesYoneticisi.Mixer` alanına editörde bir mixer atanırsa otomatik bağlanır. Davranış aynı, cila aşamasında gerçek mixer'a taşınır. |
 | **asmdef yok** | asmdef, paket assembly'lerini açıkça referans etmek zorunda. Input System kurulu değilse **hiçbir script derlenmez** ve teşhisi zor. Gerekçe: `dokuman/asmdef-karari.md` |
 | **TextMeshPro yerine legacy Text** | TMP "Essential Resources" import adımı gerektiriyor. Dinamik OS yazı tipi sıfır asset ile çalışıyor. Cila aşamasında TMP'ye geçilir. |
-| **ProjectSettings elle yazılmadı** | Yanlış YAML projeyi açılmaz yapar. Unity kendi üretir, `Amorland > Kurulumu Çalıştır` gerekli ayarları uygular. |
+| **ProjectSettings elle yazılmadı** | Yanlış YAML projeyi açılmaz yapar. Unity kendi üretti, `Amorland > Kurulumu Çalıştır` gerekli ayarları uyguladı ✅ |
 | **Gerçek OAuth yok** | Dikey dilimde hesap bağlama şartı 12 haneli kurtarma koduyla karşılanıyor (B.19 zaten bu alternatifi tanımlıyor). |
 | **Ses dosyaları sentetik** | B.23: organik sesler sentezle iyi çıkmaz, oraya girme. Bunlar yer tutucu; gerçekleri telefonla kaydedilecek (A.5). |
 

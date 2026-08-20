@@ -50,3 +50,6 @@ desktop.ini
 .env
 sunucu/src/main/resources/application-yerel.yml
 araclar/cikti/
+
+# Unity oyuncu derlemesi (yerel, git'e girmez)
+istemci/Build/
