@@ -23,7 +23,7 @@ namespace Amorland.Arayuz
         {
             _durum = durum;
             _denge = denge;
-            _panel = new Panel(kanvas, "TezgahEkrani", "Basit tezgah");
+            _panel = new Panel(kanvas, "TezgahEkrani", "Basit tezgâh");
             _liste = UiKit.KaydirmaListesi(_panel.Icerik, "Liste", out _);
             var dis = _liste.parent.parent as RectTransform;
             if (dis != null) UiKit.Doldur(dis);
@@ -93,8 +93,8 @@ namespace Amorland.Arayuz
 
             var not = UiKit.Yazi(
                 _liste, "Not",
-                "Tas kazma ve tas balta Sv 1'den yapilabilir; dal ve tas parcasi elle toplanir. "
-                + "Boylece alet kirilsa bile oyun kilitlenmez.",
+                "Taş kazma ve taş balta Sv 1'den yapılabilir; dal ve taş parçası elle toplanır. "
+                + "Böylece alet kırılsa bile oyun kilitlenmez.",
                 UiKit.YaziMini, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
             UiKit.Boyut(not.gameObject, 0f, 48f);
         }
@@ -112,18 +112,18 @@ namespace Amorland.Arayuz
         /// <summary>Dikey dilimde ilk 5 sayfanin metni. Gerisi perde perde yazilir (A.8).</summary>
         private static readonly Dictionary<int, string> Sayfalar = new Dictionary<int, string>
         {
-            { 1, "Bu vadide hicbir is tek basina gorulmez.\n\nTren manifestosu iki imza ister. "
+            { 1, "Bu vadide hiçbir iş tek başına görülmez.\n\nTren manifestosu iki imza ister. "
                  + "Madende ikinci bir el olmadan derine inilmez. Tarlada biri eker, biri sular." },
-            { 2, "Ilk hasat.\n\nToprak verdigini geri aldigin gun, vadi seni tanimaya baslar." },
-            { 3, "Depo acildi.\n\nBurada biraktiklarin ona ulasir. O da sana birakabilir." },
-            { 4, "Ikinci imza.\n\nManifesto iki isim ister. Cagirdigin kisi ayni vadiye duser." },
-            { 5, "Tren yillar sonra ilk kez durdu.\n\nVadinin disariyla baglantisi geri geldi." }
+            { 2, "İlk hasat.\n\nToprak verdiğini geri aldığın gün, vadi seni tanımaya başlar." },
+            { 3, "Depo açıldı.\n\nBurada bıraktıkların ona ulaşır. O da sana bırakabilir." },
+            { 4, "İkinci imza.\n\nManifesto iki isim ister. Çağırdığın kişi aynı vadiye düşer." },
+            { 5, "Tren yıllar sonra ilk kez durdu.\n\nVadinin dışarıyla bağlantısı geri geldi." }
         };
 
         public DefterEkrani(Transform kanvas, DunyaDurumu durum)
         {
             _durum = durum;
-            _panel = new Panel(kanvas, "DefterEkrani", "Birlikte yapilanlar defteri");
+            _panel = new Panel(kanvas, "DefterEkrani", "Birlikte yapılanlar defteri");
             _liste = UiKit.KaydirmaListesi(_panel.Icerik, "Liste", out _);
             var dis = _liste.parent.parent as RectTransform;
             if (dis != null) UiKit.Doldur(dis);
@@ -165,7 +165,7 @@ namespace Amorland.Arayuz
             dizi.childAlignment = TextAnchor.MiddleLeft;
 
             var etiket = UiKit.Yazi(
-                serit, "Etiket", "Acilan sayfalar", UiKit.YaziKucuk, Palet.UiYaziSolgun,
+                serit, "Etiket", "Açılan sayfalar", UiKit.YaziKucuk, Palet.UiYaziSolgun,
                 TextAnchor.MiddleLeft);
             UiKit.Boyut(etiket.gameObject, 180f, 24f).flexibleWidth = 1f;
 
@@ -189,7 +189,7 @@ namespace Amorland.Arayuz
 
             string metin = Sayfalar.TryGetValue(no, out string m)
                 ? m
-                : "(bu sayfanin metni henuz yazilmadi)";
+                : "(bu sayfanın metni henüz yazılmadı)";
             var govde = UiKit.Yazi(
                 kart, "Metin", metin, UiKit.YaziKucuk, Palet.UiYazi, TextAnchor.UpperLeft);
             UiKit.Boyut(govde.gameObject, 0f, 64f);
@@ -213,7 +213,7 @@ namespace Amorland.Arayuz
             UiKit.Boyut(basli.gameObject, 120f, 22f).flexibleWidth = 1f;
 
             var kilit = UiKit.Yazi(
-                kart, "Kilit", "henuz acilmadi", UiKit.YaziMini, Palet.UiYaziSolgun,
+                kart, "Kilit", "henüz açılmadı", UiKit.YaziMini, Palet.UiYaziSolgun,
                 TextAnchor.MiddleRight);
             UiKit.Boyut(kilit.gameObject, 140f, 22f);
         }
@@ -233,7 +233,7 @@ namespace Amorland.Arayuz
         {
             _durum = durum;
             _denge = denge;
-            _panel = new Panel(kanvas, "HaritaEkrani", "Vadi haritasi", null, 660f, 460f);
+            _panel = new Panel(kanvas, "HaritaEkrani", "Vadi haritası", null, 660f, 460f);
             _liste = UiKit.KaydirmaListesi(_panel.Icerik, "Liste", out _);
             var dis = _liste.parent.parent as RectTransform;
             if (dis != null) UiKit.Doldur(dis);
@@ -310,7 +310,7 @@ namespace Amorland.Arayuz
         {
             // ⚠ Panel yuksekligi icerigin toplamina gore secildi. Fazla yuksek panel
             // dikey diziyi bosluga yayip butonlari sisiriyor.
-            _panel = new Panel(kanvas, "DavetEkrani", "Esini vadiye cagir", null, 660f, 520f);
+            _panel = new Panel(kanvas, "DavetEkrani", "Eşini vadiye çağır", null, 660f, 520f);
 
             var dikey = UiKit.Panel(_panel.Icerik, "Dikey", Color.clear);
             UiKit.Doldur(dikey);
@@ -318,8 +318,8 @@ namespace Amorland.Arayuz
 
             var aciklama = UiKit.Yazi(
                 dikey, "Aciklama",
-                "Bu vadide hicbir is tek basina gorulmez. Kodu esine gonder; ayni vadiye duser.\n"
-                + "Rastgele eslesme yoktur — yalnizca cagirdigin kisi gelir.",
+                "Bu vadide hiçbir iş tek başına görülmez. Kodu eşine gönder; aynı vadiye düşer.\n"
+                + "Rastgele eşleşme yoktur — yalnızca çağırdığın kişi gelir.",
                 UiKit.YaziGovde, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
             UiKit.Boyut(aciklama.gameObject, 0f, 50f);
 
@@ -332,7 +332,7 @@ namespace Amorland.Arayuz
             UiKit.Doldur(_kodYazi.rectTransform, 10f);
 
             // Ekranin tek ana eylemi: kod uretmek. Katilma ve baglama ikincil kalir.
-            var uret = UiKit.AnaButon(dikey, "Uret", "Davet kodu uret", () => KodIste?.Invoke());
+            var uret = UiKit.AnaButon(dikey, "Uret", "Davet kodu üret", () => KodIste?.Invoke());
             UiKit.Boyut(uret.gameObject, 0f, 52f);
 
             _durumYazi = UiKit.Yazi(
@@ -342,7 +342,7 @@ namespace Amorland.Arayuz
             UiKit.Ayirac(dikey);
 
             var ayracEtiket = UiKit.Yazi(
-                dikey, "AyracEtiket", "veya elindeki kodla katil", UiKit.YaziMini,
+                dikey, "AyracEtiket", "veya elindeki kodla katıl", UiKit.YaziMini,
                 Palet.UiYaziSolgun, TextAnchor.MiddleCenter);
             UiKit.Boyut(ayracEtiket.gameObject, 0f, 20f);
 
@@ -355,10 +355,10 @@ namespace Amorland.Arayuz
             _kodGiris = UiKit.Giris(katilSatir, "KodGiris", "8 haneli kod", 8, TextAnchor.MiddleCenter);
             UiKit.Boyut(_kodGiris.gameObject, 300f, 52f).flexibleWidth = 1f;
 
-            var katilButon = UiKit.Buton(katilSatir, "Katil", "Katil", () => Katil?.Invoke(_kodGiris.text));
+            var katilButon = UiKit.Buton(katilSatir, "Katil", "Katıl", () => Katil?.Invoke(_kodGiris.text));
             UiKit.Boyut(katilButon.gameObject, 170f, 52f);
 
-            var bagla = UiKit.Buton(dikey, "Bagla", "Hesabimi bagla (e-posta)", () => HesapBagla?.Invoke());
+            var bagla = UiKit.Buton(dikey, "Bagla", "Hesabımı bağla (e-posta)", () => HesapBagla?.Invoke());
             UiKit.Boyut(bagla.gameObject, 0f, 44f);
         }
 
@@ -369,7 +369,7 @@ namespace Amorland.Arayuz
         public void KodGoster(string kod)
         {
             _kodYazi.text = string.IsNullOrEmpty(kod) ? BosKod : kod;
-            _durumYazi.text = string.IsNullOrEmpty(kod) ? "" : "Kod 24 saat gecerli.";
+            _durumYazi.text = string.IsNullOrEmpty(kod) ? "" : "Kod 24 saat geçerli.";
             _durumYazi.color = Palet.UiOnay;
         }
 
@@ -415,7 +415,7 @@ namespace Amorland.Arayuz
 
             var not = UiKit.Yazi(
                 dikey, "Not",
-                "Sesi kapali oynayabilirsin: hicbir mekanik yalnizca sesle bildirilmez.",
+                "Sesi kapalı oynayabilirsin: hiçbir mekanik yalnızca sesle bildirilmez.",
                 UiKit.YaziMini, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
             UiKit.Boyut(not.gameObject, 0f, 40f);
         }
@@ -490,18 +490,18 @@ namespace Amorland.Arayuz
             var satir = Satir(ebeveyn, "Haptik", 56f);
 
             var ad = UiKit.Yazi(
-                satir, "Ad", "Titresim", UiKit.YaziGovde, Palet.UiYazi, TextAnchor.MiddleLeft, true);
+                satir, "Ad", "Titreşim", UiKit.YaziGovde, Palet.UiYazi, TextAnchor.MiddleLeft, true);
             UiKit.Boyut(ad.gameObject, 180f, 28f);
 
             Esneme(satir);
 
             Button haptikButon = null;
-            haptikButon = UiKit.Buton(satir, "Degistir", Haptik.Haptik.Acik ? "Acik" : "Kapali", () =>
+            haptikButon = UiKit.Buton(satir, "Degistir", Haptik.Haptik.Acik ? "Açık" : "Kapalı", () =>
             {
                 Haptik.Haptik.Acik = !Haptik.Haptik.Acik;
                 var y = haptikButon.GetComponentInChildren<Text>();
                 if (y == null) return;
-                y.text = Haptik.Haptik.Acik ? "Acik" : "Kapali";
+                y.text = Haptik.Haptik.Acik ? "Açık" : "Kapalı";
                 // Acik/kapali farki renkten de okunsun: yalniz yazi degisimi gozden kaciyor.
                 y.color = Haptik.Haptik.Acik ? Palet.UiOnay : Palet.UiYaziSolgun;
             });

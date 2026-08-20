@@ -209,10 +209,12 @@ namespace Amorland.Arayuz
         /// <summary>Zeminsiz buton: yalnizca yazi. Iptal, "sonra", kapatma gibi ikincil cikislar.</summary>
         public static Button DuzButon(Transform ebeveyn, string ad, string metin, Action tiklama)
         {
-            var buton = ButonKur(
-                ebeveyn, ad, metin, tiklama, new Color(1f, 1f, 1f, 0.06f), Palet.UiYaziSolgun,
+            // ⚠ Zemin TAMAMEN saydam. Onceki %6 beyaz dolgu, koyu kart uzerinde
+            // ikincil butondan daha parlak cikiyor ve hiyerarsiyi tersine ceviriyordu:
+            // "sonra" baglantisi ana eylemden once goze carpiyordu.
+            return ButonKur(
+                ebeveyn, ad, metin, tiklama, new Color(1f, 1f, 1f, 0f), Palet.UiYaziSolgun,
                 YaricapKucuk, false);
-            return buton;
         }
 
         /// <summary>Yuvarlak ikon butonu. Kapatma (X) gibi tek karakterli eylemler icin.</summary>
@@ -238,8 +240,15 @@ namespace Amorland.Arayuz
             Color zemin, Color yaziRengi, int yaricap, bool kalin)
         {
             var rt = Kart(ebeveyn, ad, zemin, yaricap);
+            var img = rt.gameObject.GetComponent<Image>();
+
+            // ⚠ Panel, saydam zeminli ogelerin raycastTarget'ini kapatir (gorunmez
+            // kapsayici tiklamayi yutmasin diye). Buton icin bu YANLIS: zemini saydam
+            // olan DuzButon tiklanamaz hale gelir. Butonda her zaman acik olmali.
+            img.raycastTarget = true;
+
             var buton = rt.gameObject.AddComponent<Button>();
-            buton.targetGraphic = rt.gameObject.GetComponent<Image>();
+            buton.targetGraphic = img;
             buton.colors = ButonRenkleri();
 
             // ⚠ UnityEvent.AddListener UnityAction ister. System.Action degiskeni
@@ -411,7 +420,7 @@ namespace Amorland.Arayuz
         /// <summary>Sureyi insan okunur yazar: "4 sa 12 dk", "38 sn".</summary>
         public static string SureMetni(double saniye)
         {
-            if (saniye <= 0) return "hazir";
+            if (saniye <= 0) return "hazır";
             int sn = Mathf.CeilToInt((float)saniye);
             if (sn < 60) return sn + " sn";
             int dk = sn / 60;
@@ -420,7 +429,7 @@ namespace Amorland.Arayuz
             int kalanDk = dk % 60;
             if (sa < 24) return kalanDk > 0 ? sa + " sa " + kalanDk + " dk" : sa + " sa";
             int gun = sa / 24;
-            return gun + " gun " + (sa % 24) + " sa";
+            return gun + " gün " + (sa % 24) + " sa";
         }
     }
 }

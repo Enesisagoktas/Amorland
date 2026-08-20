@@ -22,6 +22,7 @@ namespace Amorland.Gorsel
         private static readonly Dictionary<int, Sprite> _golge = new Dictionary<int, Sprite>();
         private static readonly Dictionary<int, Sprite> _halka = new Dictionary<int, Sprite>();
         private static Sprite _daire;
+        private static Sprite _hale;
 
         /// <summary>Yuvarlak koseli dolu dikdortgen. 9-dilim: her boyutta kose yaricapi sabit kalir.</summary>
         public static Sprite Yuvarlak(int yaricap)
@@ -129,6 +130,42 @@ namespace Amorland.Gorsel
             return _daire;
         }
 
+        /// <summary>
+        /// Merkezden kenara yumusak sonen daire — arka plan parlaklik lekesi.
+        ///
+        /// ⚠ <see cref="Daire"/> ile yapilamaz: dolu dairenin kenari KESKINDIR ve
+        /// dusuk alfada bile koyu zeminde "dev kahverengi disk" gibi gorunur.
+        /// Buradaki sonum karesel, yani merkeze yakin yerde hizli duser ve
+        /// kenarda hicbir cizgi birakmaz.
+        /// </summary>
+        public static Sprite Hale()
+        {
+            if (_hale != null) return _hale;
+
+            const int boy = 256;
+            var tex = YeniTexture(boy);
+            var px = new Color32[boy * boy];
+            const float merkez = boy / 2f;
+
+            for (int y = 0; y < boy; y++)
+            {
+                for (int x = 0; x < boy; x++)
+                {
+                    float dx = (x + 0.5f - merkez) / merkez;
+                    float dy = (y + 0.5f - merkez) / merkez;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = d >= 1f ? 0f : (1f - d) * (1f - d);
+                    px[y * boy + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(a * 255f));
+                }
+            }
+
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            _hale = Sprite.Create(tex, new Rect(0f, 0f, boy, boy), new Vector2(0.5f, 0.5f));
+            _hale.name = "Hale";
+            return _hale;
+        }
+
         /// <summary>Yuvarlak koseli cerceve (ici bos). Secili slotu isaretlemek icin.</summary>
         public static Sprite Halka(int yaricap, int kalinlik)
         {
@@ -170,6 +207,7 @@ namespace Amorland.Gorsel
             _golge.Clear();
             _halka.Clear();
             _daire = null;
+            _hale = null;
         }
 
         // ------------------------------------------------------------------ ic hesaplar

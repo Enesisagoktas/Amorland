@@ -200,7 +200,7 @@ namespace Amorland.Arayuz
             _altinKutu.gameObject.SetActive(altinVar);
             if (altinVar) _altinYazi.text = ben.Altin.ToString();
 
-            _cantaYazi.text = "Canta " + BenimSlotSayisi() + "/" + ben.CantaSlot;
+            _cantaYazi.text = "Çanta " + BenimSlotSayisi() + "/" + ben.CantaSlot;
             _kovaYazi.text = ben.KovaKapasite > 0
                 ? "Kova " + ben.KovaKalan + "/" + ben.KovaKapasite
                 : "Kova yok";
@@ -237,7 +237,7 @@ namespace Amorland.Arayuz
 
             // ⚠ Kusluk yalnizca bir GOSTERGEDIR (B.8). Ekonomik etkisi yoktur ve
             // bildirim gondermez. Rol olmaktan cikip yaptirim olursa kirmizi cizgi asilir.
-            string durumMetni = kus ? " (kus)" : (partner.Cevrimici ? " · cevrimici" : " · cevrimdisi");
+            string durumMetni = kus ? " (küs)" : (partner.Cevrimici ? " · çevrimiçi" : " · çevrimdışı");
             _partnerYazi.text = partner.Ad + durumMetni;
             _partnerYazi.color = partner.Cevrimici ? Palet.UiYazi : Palet.UiYaziSolgun;
         }

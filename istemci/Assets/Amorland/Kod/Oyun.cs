@@ -88,7 +88,7 @@ namespace Amorland
 
             SahneKur();
             ArayuzKur();
-            _yukleme.Goster("Sunucuya baglaniliyor...");
+            _yukleme.Goster("Sunucuya bağlanılıyor...");
             StartCoroutine(Acilis());
         }
 
@@ -214,8 +214,8 @@ namespace Amorland
             if (!dengeBasarili)
             {
                 _yukleme.Goster(
-                    "Sunucuya ulasilamadi.\n" + SunucuAyari.Temel
-                    + "\n\nSunucu calisiyor mu? Ayarlardan adresi degistirebilirsin.");
+                    "Sunucuya ulaşılamadı.\n" + SunucuAyari.Temel
+                    + "\n\nSunucu çalışıyor mu? Ayarlardan adresi değiştirebilirsin.");
                 yield break;
             }
 
@@ -250,13 +250,13 @@ namespace Amorland
             _giris = new GirisEkrani(_ustKanvas.transform, _denge);
             _giris.Basla += (isim, renk) =>
             {
-                _yukleme.Goster("Vadi hazirlaniyor...");
+                _yukleme.Goster("Vadi hazırlanıyor...");
                 _rest.MisafirGiris(isim, renk, sonuc =>
                 {
                     if (!sonuc.Basarili)
                     {
                         _yukleme.Gizle();
-                        _giris.HataGoster(sonuc.HataMesaji ?? "Baglanti kurulamadi.");
+                        _giris.HataGoster(sonuc.HataMesaji ?? "Bağlantı kurulamadı.");
                         return;
                     }
                     // Yas kapisi bir kez sorulur (B.18 0:15).
@@ -295,13 +295,13 @@ namespace Amorland
             _durum.BenimId = paket.OyuncuId;
             _benimRenk = paket.Renk;
             _giris.Kapat();
-            _yukleme.Goster("Vadi aciliyor...");
+            _yukleme.Goster("Vadi açılıyor...");
 
             _rest.VadiKur(sonuc =>
             {
                 if (!sonuc.Basarili)
                 {
-                    _yukleme.Goster("Vadi kurulamadi: " + sonuc.HataMesaji);
+                    _yukleme.Goster("Vadi kurulamadı: " + sonuc.HataMesaji);
                     return;
                 }
                 DunyayiKur();
@@ -324,7 +324,7 @@ namespace Amorland
             _baglanti.BaglantiDegisti += bagli =>
             {
                 if (bagli) _perde.Gizle();
-                else _perde.DurumYaz("Yeniden baglaniyor...");
+                else _perde.DurumYaz("Yeniden bağlanıyor...");
             };
 
             _durum.Red += (kod, mesaj) =>
@@ -336,7 +336,7 @@ namespace Amorland
             _durum.OyunOlayi += OlayIsle;
             _durum.SohbetMesaji += (gonderen, metin) => _bildirimler.Goster(metin);
             _durum.NotTahtasi += (gonderen, sablon, nesne) =>
-                _bildirimler.Goster("Not tahtasi: " + sablon + (nesne != null ? " (" + nesne + ")" : ""));
+                _bildirimler.Goster("Not tahtası: " + sablon + (nesne != null ? " (" + nesne + ")" : ""));
 
             _tarla.Kur(_durum, _denge);
 
@@ -469,19 +469,19 @@ namespace Amorland
                     }
                     catch (Exception)
                     {
-                        _davet.HataGoster("Kod okunamadi.");
+                        _davet.HataGoster("Kod okunamadı.");
                     }
                 }
-                else _davet.HataGoster(sonuc.HataMesaji ?? "Kod uretilemedi.");
+                else _davet.HataGoster(sonuc.HataMesaji ?? "Kod üretilemedi.");
             });
             _davet.Katil += kod => _rest.Katil(kod, sonuc =>
             {
                 if (sonuc.Basarili)
                 {
-                    _bildirimler.Goster("Vadiye katildin.");
+                    _bildirimler.Goster("Vadiye katıldın.");
                     _baglanti.Baslat(_rest.ErisimJetonu);
                 }
-                else _davet.HataGoster(sonuc.HataMesaji ?? "Katilamadi.");
+                else _davet.HataGoster(sonuc.HataMesaji ?? "Katılamadı.");
             });
             _davet.HesapBagla += () =>
             {
@@ -490,7 +490,7 @@ namespace Amorland
                 {
                     if (!sonuc.Basarili)
                     {
-                        _davet.HataGoster(sonuc.HataMesaji ?? "Kod alinamadi.");
+                        _davet.HataGoster(sonuc.HataMesaji ?? "Kod alınamadı.");
                         return;
                     }
                     try
@@ -501,7 +501,7 @@ namespace Amorland
                     }
                     catch (Exception)
                     {
-                        _davet.HataGoster("Kod okunamadi.");
+                        _davet.HataGoster("Kod okunamadı.");
                     }
                 });
             };
@@ -509,7 +509,7 @@ namespace Amorland
             _ayarlar.AdresDegisti += adres =>
             {
                 SunucuAyari.AdresYaz(adres);
-                _bildirimler.Goster("Sunucu adresi kaydedildi. Oyunu yeniden baslat.");
+                _bildirimler.Goster("Sunucu adresi kaydedildi. Oyunu yeniden başlat.");
             };
         }
 
@@ -532,7 +532,7 @@ namespace Amorland
 
         private IEnumerator BolgeGecisi(string bolgeId)
         {
-            _yukleme.Goster(_denge.BolgeAdi(bolgeId) + " yukleniyor...");
+            _yukleme.Goster(_denge.BolgeAdi(bolgeId) + " yükleniyor...");
             yield return new WaitForSecondsRealtime(0.6f);
             _yukleme.Gizle();
 
@@ -558,7 +558,7 @@ namespace Amorland
             var eylem = _etkilesim.EylemBelirle(karo);
             _bildirimler.Goster(
                 eylem == EtkilesimYoneticisi.Eylem.Yok
-                    ? "Burada yapilacak bir sey yok."
+                    ? "Burada yapılacak bir şey yok."
                     : "Bu karoda: " + eylem);
         }
 
@@ -579,23 +579,23 @@ namespace Amorland
                     break;
 
                 case "bolge_acildi":
-                    _bildirimler.Goster(_denge.BolgeAdi(olay.Deger) + " acildi.");
+                    _bildirimler.Goster(_denge.BolgeAdi(olay.Deger) + " açıldı.");
                     break;
 
                 case "alet_kirildi":
                     // ⚠ Sessizce kirilan alet ofke uretir (B.14). Cift darbe + gorsel + yazi.
-                    _bildirimler.Goster(_denge.EsyaAdi(olay.Deger) + " kirildi!", uyari: true, sure: 5f);
+                    _bildirimler.Goster(_denge.EsyaAdi(olay.Deger) + " kırıldı!", uyari: true, sure: 5f);
                     _ses.Cal(SesEtiketi.AletKirilma);
                     Haptik.Haptik.Calistir(Haptik.Haptik.Desen.CiftDarbe);
                     break;
 
                 case "alet_dayaniklilik_dustu":
                     _bildirimler.Goster(
-                        _denge.EsyaAdi(olay.Deger) + " yipraniyor (%20 alti).", uyari: true, sure: 5f);
+                        _denge.EsyaAdi(olay.Deger) + " yıpranıyor (%20 altı).", uyari: true, sure: 5f);
                     break;
 
                 case "depo_doldu":
-                    _bildirimler.Goster("Depo dolu — hasat engellendi. Urun tarlada bekliyor.", true, 5f);
+                    _bildirimler.Goster("Depo dolu — hasat engellendi. Ürün tarlada bekliyor.", true, 5f);
                     break;
 
                 case "ilk_kez":
@@ -608,10 +608,10 @@ namespace Amorland
         {
             switch (seviye)
             {
-                case 2: return "Depo acildi · Turp";
-                case 3: return "Partner daveti · Havuc";
-                case 4: return "Misir · Canta 12 slot";
-                case 5: return "Tren gari · Patates · Para oyuna girdi";
+                case 2: return "Depo açıldı · Turp";
+                case 3: return "Partner daveti · Havuç";
+                case 4: return "Mısır · Çanta 12 slot";
+                case 5: return "Tren garı · Patates · Para oyuna girdi";
                 default: return "";
             }
         }

@@ -155,6 +155,23 @@ namespace Amorland.EditorAraclari
                 else Gecti();
             }
 
+            // Hale: merkezde parlak, kenarda TAMAMEN sonmus olmali. Kenarda deger
+            // kalirsa koyu zeminde keskin bir disk gorunur — duzeltilen kusur buydu.
+            var hale = Sekil.Hale();
+            if (SpriteGecerli(hale, "Hale()"))
+            {
+                int b = hale.texture.width;
+                // ⚠ Esik 0.99 DEGIL: hale duz dolgu degil gradyan. Cift boyutlu bir
+                // texture'da merkez piksel yarim piksel kacik orneklenir, tepe deger
+                // (1 - 0.0055)^2 ≈ 0.989'u gecemez. 0.99 istemek ulasilamaz bir sart.
+                if (hale.texture.GetPixel(b / 2, b / 2).a < 0.95f) Ekle("Hale() merkezi sonuk");
+                else if (hale.texture.GetPixel(b / 2, 1).a > 0.02f)
+                    Ekle("Hale() kenari sonmemis — keskin disk gibi gorunur");
+                else if (hale.texture.GetPixel(b / 2, (int)(b * 0.75f)).a > 0.30f)
+                    Ekle("Hale() cok yavas sonuyor, yine disk gibi durur");
+                else Gecti();
+            }
+
             // Onbellek ayni ornegi dondurmeli: her cagride texture uretirse UI kasar.
             if (!ReferenceEquals(Sekil.Yuvarlak(16), Sekil.Yuvarlak(16)))
             {
@@ -260,7 +277,7 @@ namespace Amorland.EditorAraclari
                 // Yazi olceginin artan sirali oldugu burada denetlenmez: boyutlar const,
                 // derleyici karsilastirmayi sabit katliyor ve denetim olu koda donuyor.
 
-                if (UiKit.SureMetni(0) != "hazir") Ekle("SureMetni(0) 'hazir' donmedi");
+                if (UiKit.SureMetni(0) != "hazır") Ekle("SureMetni(0) 'hazir' donmedi");
                 else if (UiKit.SureMetni(90) != "1 dk") Ekle("SureMetni(90) yanlis: " + UiKit.SureMetni(90));
                 else Gecti();
             }
@@ -290,6 +307,9 @@ namespace Amorland.EditorAraclari
             if (img == null || img.sprite == null) { Ekle(ad + " sprite'siz — keskin kose"); return; }
             if (b.targetGraphic == null) { Ekle(ad + " targetGraphic bagli degil, basma efekti yok"); return; }
             if (b.GetComponentInChildren<Text>() == null) { Ekle(ad + " yazisi yok"); return; }
+            // ⚠ Saydam zeminli buton (DuzButon) icin gercek bir tuzak: UiKit.Panel
+            // saydam ogelerin raycast'ini kapatiyor ve buton sessizce tiklanamaz oluyor.
+            if (!img.raycastTarget) { Ekle(ad + " raycastTarget kapali — TIKLANAMAZ"); return; }
             Gecti();
         }
 

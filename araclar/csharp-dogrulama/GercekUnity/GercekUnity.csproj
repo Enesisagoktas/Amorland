@@ -62,6 +62,10 @@
     <Reference Include="UnityEngine.ParticleSystemModule">
       <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.ParticleSystemModule.dll</HintPath>
     </Reference>
+    <!-- EncodeToPNG bir uzanti metodu; ImageConversionModule olmadan gorunmez. -->
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">
       <HintPath>$(UnityManaged)\UnityEngine\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>

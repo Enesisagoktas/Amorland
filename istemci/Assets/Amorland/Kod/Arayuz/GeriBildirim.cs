@@ -114,14 +114,14 @@ namespace Amorland.Arayuz
             UiKit.GolgeEkle(kart, 20, 26, 10f);
 
             var baslik = UiKit.Yazi(
-                kart, "Baslik", "Baglanti yok", UiKit.YaziBuyuk, Palet.UiYazi, TextAnchor.MiddleCenter, true);
+                kart, "Baslik", "Bağlantı yok", UiKit.YaziBuyuk, Palet.UiYazi, TextAnchor.MiddleCenter, true);
             UiKit.Sabitle(baslik.rectTransform, 0.5f, 1f, 0f, -24f, KartGenislik - 56f, 38f);
 
             var cizgi = UiKit.Ayirac(kart);
             UiKit.Sabitle(cizgi, 0.5f, 1f, 0f, -72f, KartGenislik - 56f, 1f);
 
             _durumYazi = UiKit.Yazi(
-                kart, "Durum", "Yeniden baglaniyor...", UiKit.YaziGovde, Palet.UiYaziSolgun,
+                kart, "Durum", "Yeniden bağlanıyor...", UiKit.YaziGovde, Palet.UiYaziSolgun,
                 TextAnchor.MiddleCenter);
             UiKit.Sabitle(_durumYazi.rectTransform, 0.5f, 1f, 0f, -88f, KartGenislik - 56f, 30f);
 
@@ -138,7 +138,7 @@ namespace Amorland.Arayuz
             _kok.gameObject.SetActive(true);
             _kok.SetAsLastSibling();
             _kuyrukYazi.text = kuyruktakiEylem > 0
-                ? kuyruktakiEylem + " islem baglanti donunce gonderilecek."
+                ? kuyruktakiEylem + " işlem bağlantı dönünce gönderilecek."
                 : "";
         }
 
@@ -175,7 +175,7 @@ namespace Amorland.Arayuz
             kart.gameObject.GetComponent<Image>().raycastTarget = false;
 
             var etiket = UiKit.Yazi(
-                kart, "Etiket", "seviye atladin", UiKit.YaziKucuk, Palet.UiYaziSolgun,
+                kart, "Etiket", "seviye atladın", UiKit.YaziKucuk, Palet.UiYaziSolgun,
                 TextAnchor.MiddleCenter);
             UiKit.Sabitle(etiket.rectTransform, 0.5f, 1f, 0f, -22f, KartGenislik - 56f, 24f);
 
@@ -231,7 +231,7 @@ namespace Amorland.Arayuz
             UiKit.GolgeEkle(hap, UiKit.YaricapKucuk, 18, 6f);
 
             _yazi = UiKit.Yazi(
-                hap, "Yazi", "Yukleniyor...", UiKit.YaziGovde, Palet.UiYazi, TextAnchor.MiddleCenter, true);
+                hap, "Yazi", "Yükleniyor...", UiKit.YaziGovde, Palet.UiYazi, TextAnchor.MiddleCenter, true);
             UiKit.Doldur(_yazi.rectTransform, 18f);
         }
 

@@ -46,7 +46,7 @@ namespace Amorland.Arayuz
         {
             _durum = durum;
             _denge = denge;
-            _panel = new Panel(kanvas, "CantaEkrani", "Canta", () => SecilenEsya = null);
+            _panel = new Panel(kanvas, "CantaEkrani", "Çanta", () => SecilenEsya = null);
             Kur();
             _durum.DurumDegisti += _ => { if (_panel.Acik) Tazele(); };
         }
@@ -104,12 +104,12 @@ namespace Amorland.Arayuz
             altDizi.childAlignment = TextAnchor.MiddleLeft;
 
             var bosalt = UiKit.AnaButon(
-                altBar, "DepoyaBosalt", "Depoya bosalt", () => DepoyaGonder?.Invoke(null));
+                altBar, "DepoyaBosalt", "Depoya boşalt", () => DepoyaGonder?.Invoke(null));
             UiKit.Boyut(bosalt.gameObject, 200f, 42f);
 
             // ⚠ "Depodan al" TOPLU butonu YOKTUR (B.10). Kolaylik tek yonludur:
             // kazara bosaltma geri alinabilir, kazara toplu alma depoyu bosaltir.
-            var not = UiKit.Yazi(altBar, "Not", "Depodan toplu alma yok — tek tek secilir.",
+            var not = UiKit.Yazi(altBar, "Not", "Depodan toplu alma yok — tek tek seçilir.",
                 UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.MiddleLeft);
             UiKit.Boyut(not.gameObject, 300f, 42f).flexibleWidth = 1f;
         }
@@ -134,10 +134,10 @@ namespace Amorland.Arayuz
             var satirlar = new List<EnvanterSatiri>(_durum.BenimEnvanterim);
             foreach (var e in satirlar) kullanilan += Mathf.CeilToInt(e.Adet / (float)yigin);
 
-            _ozet.text = kullanilan + " / " + ben.CantaSlot + " slot   (yigin " + yigin + ")";
+            _ozet.text = kullanilan + " / " + ben.CantaSlot + " slot   (yığın " + yigin + ")";
             _ozet.color = kullanilan >= ben.CantaSlot ? Palet.UiUyari : Palet.UiYaziSolgun;
             _secimYazi.text = SecilenEsya != null
-                ? "Secili: " + _denge.EsyaAdi(SecilenEsya) + " — hedefe dokun"
+                ? "Seçili: " + _denge.EsyaAdi(SecilenEsya) + " — hedefe dokun"
                 : "";
 
             for (int i = _liste.childCount - 1; i >= 0; i--)
@@ -149,7 +149,7 @@ namespace Amorland.Arayuz
             if (satirlar.Count == 0)
             {
                 var bos = UiKit.Yazi(
-                    _liste, "Bos", "Canta bos.", UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.MiddleCenter);
+                    _liste, "Bos", "Çanta boş.", UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.MiddleCenter);
                 UiKit.Boyut(bos.gameObject, 0f, 60f);
                 return;
             }
@@ -233,7 +233,7 @@ namespace Amorland.Arayuz
             UiKit.Boyut(adet.gameObject, 72f, SatirIcYukseklik);
 
             var eylem = kategori == "tohum"
-                ? UiKit.Buton(satir, "Sec", "Cubuga al", () => TohumSec?.Invoke(esyaId))
+                ? UiKit.Buton(satir, "Sec", "Çubuğa al", () => TohumSec?.Invoke(esyaId))
                 : UiKit.Buton(satir, "Depoya", "Depoya", () => DepoyaGonder?.Invoke(esyaId));
             UiKit.Boyut(eylem.gameObject, 118f, 34f);
             eylem.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;

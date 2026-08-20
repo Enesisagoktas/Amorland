@@ -174,7 +174,7 @@ namespace Amorland.Oynanis
             // yapmamak "oyun beni dinlemiyor" hissi verir; sebebi soylenir.
             if (PartnerParseliMi(karo))
             {
-                Bildirim?.Invoke("Bu parsel partnerin. Dokunamazsin.");
+                Bildirim?.Invoke("Bu parsel partnerin. Dokunamazsın.");
                 return;
             }
 

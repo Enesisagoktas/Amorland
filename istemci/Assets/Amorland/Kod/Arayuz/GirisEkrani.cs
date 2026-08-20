@@ -44,11 +44,12 @@ namespace Amorland.Arayuz
             _kok = UiKit.Panel(kanvas, "GirisEkrani", new Color(0.085f, 0.075f, 0.065f, 1f));
             UiKit.Doldur(_kok);
 
-            // Basligin arkasinda genis, cok soluk bir sicaklik lekesi. Duz zemin
-            // ekranı ucuz gosteriyordu; bu tek leke derinlik hissini veriyor.
-            var isik = UiKit.Panel(_kok, "Isik", new Color(Palet.UiVurgu.r, Palet.UiVurgu.g, Palet.UiVurgu.b, 0.07f));
+            // Basligin arkasinda genis, yumusak bir sicaklik lekesi.
+            // ⚠ Sekil.Daire ile YAPILMAZ: dolu dairenin keskin kenari koyu zeminde
+            // dev bir disk gibi gorunuyordu. Hale merkezden kenara sonerek biter.
+            var isik = UiKit.Panel(_kok, "Isik", new Color(Palet.UiVurgu.r, Palet.UiVurgu.g, Palet.UiVurgu.b, 0.16f));
             var isikImg = isik.gameObject.GetComponent<Image>();
-            isikImg.sprite = Sekil.Daire();
+            isikImg.sprite = Sekil.Hale();
             isikImg.raycastTarget = false;
             UiKit.Sabitle(isik, 0.5f, 1f, 0f, 120f, 900f, 900f);
 
@@ -57,7 +58,7 @@ namespace Amorland.Arayuz
             UiKit.Sabitle(baslik.rectTransform, 0.5f, 1f, 0f, -52f, 700f, 66f);
 
             var altBaslik = UiKit.Yazi(
-                _kok, "AltBaslik", "Bu vadide hicbir is tek basina gorulmez.",
+                _kok, "AltBaslik", "Bu vadide hiçbir iş tek başına görülmez.",
                 UiKit.YaziGovde, Palet.UiYaziSolgun, TextAnchor.UpperCenter);
             UiKit.Sabitle(altBaslik.rectTransform, 0.5f, 1f, 0f, -118f, 700f, 30f);
 
@@ -87,14 +88,14 @@ namespace Amorland.Arayuz
             _isimAdim = KartKur("IsimAdim", 372f);
 
             var etiket = UiKit.Yazi(
-                _isimAdim, "Etiket", "Adin ne?", UiKit.YaziBaslik, Palet.UiYazi, TextAnchor.MiddleLeft, true);
+                _isimAdim, "Etiket", "Adın ne?", UiKit.YaziBaslik, Palet.UiYazi, TextAnchor.MiddleLeft, true);
             UiKit.Boyut(etiket.gameObject, 0f, 28f);
 
-            _isimGiris = UiKit.Giris(_isimAdim, "Giris", "adini yaz", 16);
+            _isimGiris = UiKit.Giris(_isimAdim, "Giris", "adını yaz", 16);
             UiKit.Boyut(_isimGiris.gameObject, 0f, 56f);
 
             var renkEtiket = UiKit.Yazi(
-                _isimAdim, "RenkEtiket", "Rengini sec", UiKit.YaziBaslik, Palet.UiYazi,
+                _isimAdim, "RenkEtiket", "Rengini seç", UiKit.YaziBaslik, Palet.UiYazi,
                 TextAnchor.MiddleLeft, true);
             UiKit.Boyut(renkEtiket.gameObject, 0f, 28f);
 
@@ -117,7 +118,7 @@ namespace Amorland.Arayuz
                 string isim = _isimGiris.text != null ? _isimGiris.text.Trim() : "";
                 if (isim.Length < 2)
                 {
-                    HataGoster("Ad en az 2 karakter olmali.");
+                    HataGoster("Ad en az 2 karakter olmalı.");
                     return;
                 }
                 Basla?.Invoke(isim, _seciliRenk);
@@ -126,7 +127,7 @@ namespace Amorland.Arayuz
         }
 
         /// <summary>
-        /// Renk secimi kare degil DAIRE. Kare renk kutulari "renk paleti aracı" gibi
+        /// Renk secimi kare degil DAIRE. Kare renk kutulari "renk paleti araci" gibi
         /// duruyordu; daire bir kimlik secimi gibi duruyor. Secili olan halkayla isaretlenir.
         /// </summary>
         private void RenkKutusuKur(Transform satir, int indeks)
@@ -159,14 +160,14 @@ namespace Amorland.Arayuz
             _yasAdim = KartKur("YasAdim", 330f);
 
             var etiket = UiKit.Yazi(
-                _yasAdim, "Etiket", "Dogum yilin?", UiKit.YaziBaslik, Palet.UiYazi,
+                _yasAdim, "Etiket", "Doğum yılın?", UiKit.YaziBaslik, Palet.UiYazi,
                 TextAnchor.MiddleLeft, true);
             UiKit.Boyut(etiket.gameObject, 0f, 30f);
 
             var aciklama = UiKit.Yazi(
                 _yasAdim, "Aciklama",
-                _denge.YasKapisiEsigi + " yasin altindaysan sohbet ve partner daveti kapali olur. "
-                + "Oyun tek kisilik oynanabilir.",
+                _denge.YasKapisiEsigi + " yaşın altındaysan sohbet ve partner daveti kapalı olur. "
+                + "Oyun tek kişilik oynanabilir.",
                 UiKit.YaziKucuk, Palet.UiYaziSolgun, TextAnchor.UpperLeft);
             UiKit.Boyut(aciklama.gameObject, 0f, 52f);
 
@@ -178,7 +179,7 @@ namespace Amorland.Arayuz
             {
                 if (!int.TryParse(_yilGiris.text, out int yil) || yil < 1900 || yil > 2100)
                 {
-                    HataGoster("Gecerli bir yil gir.");
+                    HataGoster("Geçerli bir yıl gir.");
                     return;
                 }
                 YasVerildi?.Invoke(yil);

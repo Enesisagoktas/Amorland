@@ -126,12 +126,12 @@ namespace Amorland.Ag
 
             if (!IzinliCevrimdisi.Contains(niyet.Tip))
             {
-                Bildirim?.Invoke("Bu islem baglanti gerektirir.");
+                Bildirim?.Invoke("Bu işlem bağlantı gerektirir.");
                 return false;
             }
             if (_kuyruk.Count >= MaksKuyrukEylem)
             {
-                Bildirim?.Invoke("Baglanti yok. Bekleyen islem siniri doldu.");
+                Bildirim?.Invoke("Bağlantı yok. Bekleyen işlem sınırı doldu.");
                 return false;
             }
             _kuyruk.Add(niyet);
@@ -287,7 +287,7 @@ namespace Amorland.Ag
             _kuyrukBosaltiliyor = false;
             if (_kuyrukRedSayisi > 0)
             {
-                Bildirim?.Invoke(_kuyrukRedSayisi + " islem uygulanamadi.");
+                Bildirim?.Invoke(_kuyrukRedSayisi + " işlem uygulanamadı.");
             }
             _kuyrukRedSayisi = 0;
         }

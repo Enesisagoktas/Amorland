@@ -209,7 +209,7 @@ namespace Amorland.Durum
         public string RedMetni(string kod, string sunucuMesaji)
         {
             string t = Metin(null, "turetilmis", "redKodlari", kod ?? "");
-            return !string.IsNullOrEmpty(t) ? t : (sunucuMesaji ?? "Islem yapilamadi.");
+            return !string.IsNullOrEmpty(t) ? t : (sunucuMesaji ?? "İşlem yapılamadı.");
         }
 
         /// <summary>Oyuncu renkleri (4 renk, B.18 0:00).</summary>

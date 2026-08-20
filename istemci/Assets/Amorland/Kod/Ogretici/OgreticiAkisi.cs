@@ -72,7 +72,7 @@ namespace Amorland.Ogretici
             // Tek satir, emir kipi, aciklama yok. "Dokun, ekilir."
             _adimlar.Add(new Adim
             {
-                Metin = "Evdeki defteri ac: Defter butonuna dokun.",
+                Metin = "Evdeki defteri aç: Defter butonuna dokun.",
                 Kosul = d => d.IsaretVar("defter:1")
             });
             _adimlar.Add(new Adim
@@ -82,39 +82,39 @@ namespace Amorland.Ogretici
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Bos karoya dokun. Karakterin yurur, capalar ve eker.",
+                Metin = "Boş karoya dokun. Karakterin yürür, çapalar ve eker.",
                 Kosul = d => d.IsaretVar("ilk:ilk_ekim")
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Ahsap kova yap: Harita > Ev > Basit tezgah (8 odun). "
-                        + "Odun icin tarla kenarindaki dallara dokun.",
+                Metin = "Ahşap kova yap: Harita > Ev > Basit tezgâh (8 odun). "
+                        + "Odun için tarla kenarındaki dallara dokun.",
                 Kosul = d => d.AletVar("ahsap_kova")
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Kuyuya dokun, kovayi doldur.",
+                Metin = "Kuyuya dokun, kovayı doldur.",
                 Kosul = d => d.Ben != null && d.Ben.KovaKalan > 0
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Ektigin karoyu sula. Sulanmayan urun buyumez.",
+                Metin = "Ektiğin karoyu sula. Sulanmayan ürün büyümez.",
                 Kosul = d => d.IsaretVar("ilk:ilk_sulama")
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Bugday 5 dakikada buyur. Bu arada dallari topla — bekleme bos gecmez.",
+                Metin = "Buğday 5 dakikada büyür. Bu arada dalları topla — bekleme boş geçmez.",
                 Kosul = d => d.IsaretVar("ilk:ilk_hasat")
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Ilk hasat tamam. Depoya bosalt: Canta > Depoya bosalt.",
+                Metin = "İlk hasat tamam. Depoya boşalt: Çanta > Depoya boşalt.",
                 Kosul = d => d.IsaretVar("ilk:ilk_depoya_bosaltma")
             });
             // ⚠ Kilit tasi (B.18 ~10:00): ogreticinin GERCEK hedefi bu satir.
             _adimlar.Add(new Adim
             {
-                Metin = "Bu vadide hicbir is tek basina gorulmez. Sv 3'te esini cagirabilirsin.",
+                Metin = "Bu vadide hiçbir iş tek başına görülmez. Sv 3'te eşini çağırabilirsin.",
                 Kosul = d => d.Ben != null && d.Ben.Seviye >= 3
             });
         }
