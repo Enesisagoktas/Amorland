@@ -1,0 +1,9 @@
+# Test profili — gomulu Postgres (Docker gerektirmez)
+spring:
+  flyway:
+    enabled: true
+logging:
+  level:
+    root: WARN
+    tr.amorland: INFO
+    org.flywaydb: INFO

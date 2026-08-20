@@ -1,0 +1,24 @@
+# Amorland — yerel gelistirme veritabani
+# Calistir:  docker compose up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: amorland-postgres
+    environment:
+      POSTGRES_DB: amorland
+      POSTGRES_USER: amorland
+      POSTGRES_PASSWORD: amorland
+      # Turkce locale'in kucuk/buyuk harf tuzagina dusmemek icin C collation
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - amorland-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U amorland -d amorland"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  amorland-pgdata:

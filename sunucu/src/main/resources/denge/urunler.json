@@ -1,0 +1,354 @@
+{
+ "$aciklama": "Amorland urun denge tablosu. Sunucuda yapilandirma olarak yuklenir, koda gomulmez. Tum degerler baslangic noktasidir; dikey dilim testinden sonra ayarlanacak.",
+ "surum": "0.3",
+ "tarih": "2026-08-19",
+ "saatlikGetiriKademeleri": {
+  "$aciklama": "altin / saat / karo. Uzun urun daha karli ama azalan artisla - 12 saatlik urun otomatik en iyi secenek olmamali.",
+  "300": 24,
+  "1800": 30,
+  "7200": 36,
+  "21600": 42,
+  "43200": 48
+ },
+ "urunler": [
+  {
+   "id": "bugday",
+   "ad": "Buğday",
+   "acilis": {
+    "tip": "seviye_odulu",
+    "seviye": 1
+   },
+   "buyumeSn": 300,
+   "tabanFiyat": 2,
+   "tohumFiyat": 1,
+   "verim": 1,
+   "xp": 1,
+   "not": "Ogretici + un zinciri girdisi. Tohum/hasat orani %50 - tabanFiyat 2 altinken tamsayi ile %30 tutturulamiyor. Kasitli istisna, ekonomik agirligi yok.",
+   "tohumGeriVerir": true
+  },
+  {
+   "id": "turp",
+   "ad": "Turp",
+   "acilis": {
+    "tip": "seviye_odulu",
+    "seviye": 2
+   },
+   "buyumeSn": 1800,
+   "tabanFiyat": 15,
+   "tohumFiyat": 5,
+   "verim": 1,
+   "xp": 1,
+   "tohumGeriVerir": true
+  },
+  {
+   "id": "havuc",
+   "ad": "Havuç",
+   "acilis": {
+    "tip": "seviye_odulu",
+    "seviye": 3
+   },
+   "buyumeSn": 1800,
+   "tabanFiyat": 16,
+   "tohumFiyat": 5,
+   "verim": 1,
+   "xp": 1,
+   "tohumGeriVerir": true
+  },
+  {
+   "id": "misir",
+   "ad": "Mısır",
+   "acilis": {
+    "tip": "seviye_odulu",
+    "seviye": 4
+   },
+   "buyumeSn": 7200,
+   "tabanFiyat": 72,
+   "tohumFiyat": 22,
+   "verim": 1,
+   "xp": 4,
+   "not": "Ilk gercek karar: hizli mi karli mi",
+   "tohumGeriVerir": true
+  },
+  {
+   "id": "patates",
+   "ad": "Patates",
+   "acilis": {
+    "tip": "seviye_odulu",
+    "seviye": 5
+   },
+   "buyumeSn": 7200,
+   "tabanFiyat": 68,
+   "tohumFiyat": 20,
+   "verim": 1,
+   "xp": 4,
+   "tohumGeriVerir": true
+  },
+  {
+   "id": "domates",
+   "ad": "Domates",
+   "acilis": {
+    "tip": "market",
+    "seviye": 6
+   },
+   "buyumeSn": 7200,
+   "tabanFiyat": 85,
+   "tohumFiyat": 24,
+   "verim": 1,
+   "xp": 4,
+   "yenidenVerir": {
+    "adet": 4,
+    "araSn": 21600
+   },
+   "tohumGeriVerir": false,
+   "not": "v0.6: ara sure 2sa->6sa, adet 3->4, fiyat 75->85. 2 saatlik ara oturum arasinin (6.9sa) altinda kaliyordu, yeniden verme hic ise yaramiyordu."
+  },
+  {
+   "id": "marul",
+   "ad": "Marul",
+   "acilis": {
+    "tip": "market",
+    "seviye": 7
+   },
+   "buyumeSn": 1800,
+   "tabanFiyat": 14,
+   "tohumFiyat": 4,
+   "verim": 1,
+   "xp": 1,
+   "tohumGeriVerir": false
+  },
+  {
+   "id": "kabak",
+   "ad": "Kabak",
+   "acilis": {
+    "tip": "market",
+    "seviye": 8
+   },
+   "buyumeSn": 21600,
+   "tabanFiyat": 252,
+   "tohumFiyat": 76,
+   "verim": 1,
+   "xp": 12,
+   "tohumGeriVerir": false
+  },
+  {
+   "id": "cilek",
+   "ad": "Çilek",
+   "acilis": {
+    "tip": "market",
+    "seviye": 10
+   },
+   "buyumeSn": 21600,
+   "tabanFiyat": 230,
+   "tohumFiyat": 70,
+   "verim": 1,
+   "xp": 12,
+   "yenidenVerir": {
+    "adet": 4,
+    "araSn": 10800
+   },
+   "tohumGeriVerir": false
+  },
+  {
+   "id": "aycicegi",
+   "ad": "Ayçiçeği",
+   "acilis": {
+    "tip": "market",
+    "seviye": 11
+   },
+   "buyumeSn": 21600,
+   "tabanFiyat": 245,
+   "tohumFiyat": 74,
+   "verim": 1,
+   "xp": 12,
+   "tohumGeriVerir": false
+  },
+  {
+   "id": "lahana",
+   "ad": "Lahana",
+   "acilis": {
+    "tip": "market",
+    "seviye": 12
+   },
+   "buyumeSn": 21600,
+   "tabanFiyat": 260,
+   "tohumFiyat": 78,
+   "verim": 1,
+   "xp": 12,
+   "tohumGeriVerir": false
+  },
+  {
+   "id": "karpuz",
+   "ad": "Karpuz",
+   "acilis": {
+    "tip": "market",
+    "seviye": 14
+   },
+   "buyumeSn": 43200,
+   "tabanFiyat": 576,
+   "tohumFiyat": 175,
+   "verim": 1,
+   "xp": 24,
+   "tohumGeriVerir": false
+  },
+  {
+   "id": "uzum",
+   "ad": "Üzüm",
+   "acilis": {
+    "tip": "market",
+    "seviye": 15
+   },
+   "buyumeSn": 43200,
+   "tabanFiyat": 540,
+   "tohumFiyat": 165,
+   "verim": 1,
+   "xp": 24,
+   "yenidenVerir": {
+    "adet": 3,
+    "araSn": 43200
+   },
+   "tohumGeriVerir": false,
+   "not": "v0.6: ara sure 6sa->12sa. Onceden kademesinin %69 ustundeydi, gec oyunda tek secenek haline geliyordu."
+  },
+  {
+   "id": "balkabagi",
+   "ad": "Balkabağı",
+   "acilis": {
+    "tip": "market",
+    "seviye": 16
+   },
+   "buyumeSn": 43200,
+   "tabanFiyat": 600,
+   "tohumFiyat": 180,
+   "verim": 1,
+   "xp": 24,
+   "tohumGeriVerir": false
+  },
+  {
+   "id": "kavun",
+   "ad": "Kavun",
+   "acilis": {
+    "tip": "market",
+    "seviye": 18
+   },
+   "buyumeSn": 43200,
+   "tabanFiyat": 590,
+   "tohumFiyat": 178,
+   "verim": 1,
+   "xp": 24,
+   "tohumGeriVerir": false,
+   "tohumPenceresi": true
+  },
+  {
+   "id": "safran",
+   "ad": "Safran",
+   "acilis": {
+    "tip": "market",
+    "seviye": 19
+   },
+   "buyumeSn": 43200,
+   "tabanFiyat": 900,
+   "tohumFiyat": 420,
+   "verim": 1,
+   "xp": 24,
+   "not": "v0.6: tohum 300->420. Yuksek fiyati korunuyor ama riski de artiyor - kit tohumlu prestij urunu.",
+   "tohumGeriVerir": false,
+   "tohumPenceresi": true
+  }
+ ],
+ "buyumeAsamasi": {
+  "$aciklama": "Her urun 4 gorsel asamada buyur. Asama = floor(gecenSure / buyumeSn * 4), 3'te sinirlanir. Sunucu okuma aninda hesaplar, cron yok.",
+  "asamaSayisi": 4
+ },
+ "gubre": {
+  "$aciklama": "Tek tip. Kalite kademesi yok. Sureyi degistirmez - sure degisseydi altin/saat ekonomisi siserdi.",
+  "acilisSeviye": 12,
+  "etki": {
+   "verimEk": 1
+  },
+  "fiyatOraniTabanFiyata": 0.7,
+  "craftlanabilir": false,
+  "not": "Oran bilincli: otomatik karli degil. Tren fiyati %100 ustundeyken kullanilir."
+ },
+ "marketAlisOrani": {
+  "$aciklama": "Marketin oyuncudan alis fiyati. Sabit, dalgalanmaz. Acil nakit muslugu.",
+  "min": 0.5,
+  "max": 0.6
+ },
+ "trenFiyat": {
+  "$aciklama": "Ortalamaya donen rastgele yuruyus. Saf rastgele KULLANILMAZ - mini grafikte okunacak egilim olmali.",
+  "bandMin": 0.7,
+  "bandMax": 1.3,
+  "baslangic": 1.0,
+  "ortalamayaDonusKatsayisi": 0.3,
+  "gurultuGenligi": 0.24,
+  "seferAraligiSn": 21600,
+  "epochUtc": "2026-01-01T00:00:00Z",
+  "ileriSarmaPenceresi": 50,
+  "formul": "p[n] = clamp(0.70, 1.30, p[n-1] + (1.0 - p[n-1]) * 0.30 + (hash01(tohum, urunId, n) - 0.5) * 0.24)"
+ },
+ "manifesto": {
+  "siparisKartiSayisi": 3,
+  "carpanMin": 1.6,
+  "carpanMax": 2.0,
+  "carpanKus": 1.3,
+  "tamDoldurmaXpBonus": 100,
+  "siparisXp": 60,
+  "tekKisilikKontenjanOrani": 0.7,
+  "kacirmaCezasi": false
+ },
+ "trenTohum": {
+  "cesitMin": 2,
+  "cesitMax": 3,
+  "indirimMin": 0.3,
+  "indirimMax": 0.4,
+  "sinirliAdet": true,
+  "not": "Sinirsiz olursa market anlamsizlasir."
+ },
+ "baslangicUrunKurali": {
+  "$aciklama": "v0.4: Baslangic urunleri hasatta 1 urun + 1 tohum verir. Market urunleri vermez.",
+  "urunler": [
+   "bugday",
+   "havuc",
+   "misir",
+   "patates",
+   "turp"
+  ],
+  "etki": "Perde 1 kendi kendine yetiyor; baslangic urunleri gec oyunda 'bedava ama dusuk getirili' guvenlik agi olarak kaliyor."
+ },
+ "yenidenVerirKurali": {
+  "$aciklama": "v0.6: 'adet' semantigi tanimlandi. Onceden belirsizdi ve simulasyonu gecersiz kiliyordu.",
+  "adetAnlami": "TOPLAM hasat sayisi (ilk hasat dahil). adet=3 -> 1 ilk + 2 yeniden.",
+  "tohumHarcamasi": "Sadece ekimde bir kez. Yeniden hasatlar tohum harcamaz.",
+  "araSnAnlami": "Bir hasattan sonraki hasada kadar gecen sure.",
+  "sonHasattanSonra": "Karo bosalir, yeniden ekilmesi gerekir.",
+  "gubreEtkisi": "SADECE bir sonraki hasata +1 verim. Tum donguye degil - yoksa gubre+yenidenveren kombinasyonu otomatik en iyi secenek olurdu.",
+  "depoDoluysa": "Hasat engellenir, urun karoda bekler, YENIDEN VERME SAYACI ISLEMEZ. Ancak hasat edilince sonraki sayac baslar.",
+  "fiyatPrimi": {
+   "$aciklama": "v0.6: yeniden veren urunler kademesinin %15-20 USTUNDE fiyatlanir.",
+   "gerekce": "Karoyu 3-4 kat daha uzun kilitliyorlar. Prim bu esneklik kaybinin karsiligi.",
+   "not": "Bu, kademe ici +-%10 varyasyon kuralinin bilincli istisnasidir."
+  }
+ },
+ "tohumPenceresiKurali": {
+  "$aciklama": "v0.6: 'kisa pencere' etiketi hem yabani kaynak hem urun icin kullaniliyordu, urun tarafi hic tanimli degildi.",
+  "anlam": "Bu urunlerin TOHUMU markette sadece belirli pencerelerde satilir. Buyume ve hasat normaldir.",
+  "gunlukPencereSayisi": 3,
+  "pencereSuresiSn": 7200,
+  "deterministik": true,
+  "hasatPenceresiYok": "Urun tarlada bekleyebilir, cururmez. 'Esya asla yok edilmez' kurali gecerli.",
+  "not": "Fiyat primi (safran +%56) tam olarak bu arz kisitindan geliyor - olcekli ekilemiyor."
+ },
+ "saatlikGetiriVaryasyonu": {
+  "$aciklama": "v0.6: Kademe ici +-%10 sapma KASITLIDIR, hata degil.",
+  "bant": 0.1,
+  "gerekce": "Bir kademedeki 4 urun birebir ayni fiyatta olsaydi aralarinda secim yapmak anlamsiz olurdu.",
+  "istisna": "safran +%56 - tohum penceresi arz kisiti karsiligi."
+ },
+ "oturumKapisi": {
+  "$aciklama": "v0.6 KRITIK BULGU: saatlik getiri kademesi gercek oturum modelinde gecerli DEGIL.",
+  "oturumAralikSaat": 6.86,
+  "bulgu": "Gunde 3.5 oturumda oturum arasi 6.9 saat. Bundan kisa buyuyen urun, hasat edilene kadar karoyu bos bekletiyor. 30 dakikalik urun kademe tablosunda 30 altin/saat diyor ama gerceklesen deger 2.2 - 14 kat fark.",
+  "sonuc": "Kisa urunler saatlik getiride yarisamaz. Rolleri farkli: AKTIF OTURUM DOLGUSU. Oyuncu zaten oyundayken 5-30 dakikalik urun ek bir hasat verir; uzun urun ise oyuncu yokken calisir.",
+  "duzeltme": "'Uzun urun saatte ~%25 daha karli' ifadesi YANLIS. Gercek fark 10-20 kat. Saatlik getiri kademesi sadece buyume suresi >= oturum arasi olan urunler icin gecerlidir (2sa ve uzeri)."
+ }
+}

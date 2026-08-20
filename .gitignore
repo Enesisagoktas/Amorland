@@ -1,0 +1,52 @@
+# ---------- Java / Maven ----------
+sunucu/target/
+*.class
+*.jar
+!sunucu/.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/dists/
+
+# ---------- Unity ----------
+istemci/[Ll]ibrary/
+istemci/[Tt]emp/
+istemci/[Oo]bj/
+istemci/[Bb]uild/
+istemci/[Bb]uilds/
+istemci/[Ll]ogs/
+istemci/[Uu]ser[Ss]ettings/
+istemci/[Mm]emoryCaptures/
+istemci/[Rr]ecordings/
+istemci/.vsconfig
+istemci/*.csproj
+istemci/*.sln
+istemci/*.unityproj
+istemci/*.pidb
+istemci/*.booproj
+istemci/*.svd
+istemci/*.pdb
+istemci/*.mdb
+istemci/*.opendb
+istemci/*.VC.db
+istemci/sysinfo.txt
+istemci/crashlytics-build.properties
+istemci/Assets/AssetStoreTools*
+istemci/Assets/Plugins/Editor/JetBrains*
+istemci/Assets/StreamingAssets/aa*
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.iml
+*.suo
+*.user
+*.userprefs
+
+# ---------- Isletim sistemi ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Yerel ----------
+*.local
+.env
+sunucu/src/main/resources/application-yerel.yml
+araclar/cikti/

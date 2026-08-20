@@ -1,0 +1,52 @@
+# Amorland sunucu yapilandirmasi
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: amorland-sunucu
+  datasource:
+    url: ${AMORLAND_DB_URL:jdbc:postgresql://localhost:5432/amorland}
+    username: ${AMORLAND_DB_USER:amorland}
+    password: ${AMORLAND_DB_PASS:amorland}
+    hikari:
+      maximum-pool-size: 16
+      pool-name: amorland-havuz
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  jackson:
+    default-property-inclusion: non_null
+  mvc:
+    problemdetails:
+      enabled: true
+
+amorland:
+  # JWT — mimari kural C.11: kisa omurlu erisim + uzun omurlu yenileme
+  jwt:
+    # URETIMDE MUTLAKA DEGISTIR. En az 32 bayt.
+    gizli-anahtar: ${AMORLAND_JWT_GIZLI:amorland-gelistirme-anahtari-degistir-32bayt!!}
+    erisim-omru-dk: 60
+    yenileme-omru-gun: 60
+  # Denge dosyalari (mimari kural 8: koda gomulmez)
+  denge:
+    dizin: classpath:denge/
+    surum-etiketi: "0.6"
+  # Hiz sinirlari (C.11)
+  hiz-siniri:
+    eylem-saniyede: 10
+    sohbet-saniyede: 1
+    jeton-gunde: 5
+  # Revizyon protokolu (C.1)
+  revizyon:
+    delta-esigi: 200
+    kayit-tutma: 200
+  # Idempotency kaydi TTL (C.2)
+  eylem-kaydi-ttl-saat: 24
+
+logging:
+  level:
+    root: INFO
+    tr.amorland: DEBUG

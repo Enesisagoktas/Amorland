@@ -1,0 +1,399 @@
+{
+ "$aciklama": "Bolum D'de sayisal karsiligi olmayan ama Bolum B ve C'de tanimli kurallar. D dosyalari (urunler/uretim/ilerleme) spec'ten BIREBIR kopyalanmistir, bu dosya onlara dokunmadan eksigi tamamlar. Her madde $kaynak alaninda spec bolumunu gosterir.",
+ "surum": "0.1",
+ "tarih": "2026-08-20",
+ "bolgeXpIstisnasi": {
+  "$kaynak": "B.16 — 'Perde 1 tek seferlik XP: 5 defter (375) + 3 bolge (150) + 3 craft (90) + 6 ilk kez (150) = 765'",
+  "$turetim": "Perde 1'de acilan bolgeler: tarla, depo, gar = 3 x 50 = 150. Ev sayilmiyor cunku oyuncu orada BASLIYOR, 'ilk acma' eylemi yok. 765 toplami ancak ev haric tutulunca tutuyor.",
+  "haricBolgeler": [
+   "ev"
+  ]
+ },
+ "gunlukSandik": {
+  "$kaynak": "C.8",
+  "sifirlamaSn": 86400,
+  "sifirlamaAnlami": "son_alimdan_itibaren",
+  "tohumMin": 3,
+  "tohumMaks": 5,
+  "tohumKaynagi": "acik_urunler",
+  "altinSeviyeCarpani": 50,
+  "seriVar": false,
+  "birikir": false,
+  "reklamla2xKatlar": [
+   "altin",
+   "tohum_adedi"
+  ]
+ },
+ "defter": {
+  "$kaynak": "B.21 — 20 sayfa ve tetikleyicileri",
+  "sayfaXp": 75,
+  "sonSayfaTekKisilikNot": "Ikinci imza satiri bos birakilir: 'Ikinci imza icin bir yer her zaman ayrilmistir.'",
+  "sayfalar": [
+   {
+    "no": 1,
+    "tetik": "oyun_baslangici",
+    "perde": 1
+   },
+   {
+    "no": 2,
+    "tetik": "ilk_hasat",
+    "perde": 1
+   },
+   {
+    "no": 3,
+    "tetik": "bolge_acildi:depo",
+    "perde": 1
+   },
+   {
+    "no": 4,
+    "tetik": "partner_daveti_acildi",
+    "perde": 1
+   },
+   {
+    "no": 5,
+    "tetik": "bolge_acildi:gar",
+    "perde": 1
+   },
+   {
+    "no": 6,
+    "tetik": "bolge_acildi:market",
+    "perde": 2
+   },
+   {
+    "no": 7,
+    "tetik": "bolge_acildi:orman",
+    "perde": 2
+   },
+   {
+    "no": 8,
+    "tetik": "yapi_acildi:kumes",
+    "perde": 2
+   },
+   {
+    "no": 9,
+    "tetik": "bolge_acildi:maden",
+    "perde": 2
+   },
+   {
+    "no": 10,
+    "tetik": "ilk_metal_alet",
+    "perde": 2
+   },
+   {
+    "no": 11,
+    "tetik": "ortak_proje:maden_asansoru",
+    "perde": 2
+   },
+   {
+    "no": 12,
+    "tetik": "maden_kat:2",
+    "perde": 2
+   },
+   {
+    "no": 13,
+    "tetik": "yapi_acildi:degirmen",
+    "perde": 3
+   },
+   {
+    "no": 14,
+    "tetik": "yapi_acildi:ahir",
+    "perde": 3
+   },
+   {
+    "no": 15,
+    "tetik": "ortak_proje:kopru",
+    "perde": 3
+   },
+   {
+    "no": 16,
+    "tetik": "orman_derinligi",
+    "perde": 3
+   },
+   {
+    "no": 17,
+    "tetik": "yapi_acildi:ev_genisletme",
+    "perde": 3
+   },
+   {
+    "no": 18,
+    "tetik": "maden_kat:4",
+    "perde": 3
+   },
+   {
+    "no": 19,
+    "tetik": "buyuk_manifesto",
+    "perde": 3
+   },
+   {
+    "no": 20,
+    "tetik": "final",
+    "perde": 3
+   }
+  ]
+ },
+ "cevrimdisi": {
+  "$kaynak": "C.4 — zarif kopus",
+  "ilke": "Kendi parselinde basladigin isi bitirebilirsin. Paylasilan duruma dokunan hicbir sey yapamazsin.",
+  "maksKuyrukEylem": 20,
+  "maksSureSn": 60,
+  "izinliEylemler": [
+   "ek",
+   "sula",
+   "hasat",
+   "topla"
+  ],
+  "izinliEylemKosulu": "hedef kendi parselin veya sahipsiz yabani kaynak olmali",
+  "yasakEylemler": [
+   "depoya_koy",
+   "depodan_al",
+   "depoya_bosalt",
+   "vur",
+   "craft",
+   "market_al",
+   "market_sat",
+   "tren_yatir",
+   "ortak_proje_katki",
+   "sahne_degistir",
+   "sohbet"
+  ],
+  "redOzetiTekBildirim": true
+ },
+ "yenidenBaglanma": {
+  "$kaynak": "C.9",
+  "gecikmelerSn": [
+   1,
+   2,
+   4,
+   8,
+   15,
+   30
+  ],
+  "ustSinirSn": 30,
+  "deltaEsigi": 200
+ },
+ "redKodlari": {
+  "$kaynak": "C.3 — istemci her birine ayri geri bildirim gosterir",
+  "DEPO_DOLU": "Depo dolu. Urun tarlada bekliyor.",
+  "CANTA_DOLU": "Cantada bos slot yok.",
+  "ESYA_YOK": "Esya yok — partner once almis olabilir.",
+  "DUGUM_TUKENDI": "Bu dugum tukendi.",
+  "SIPARIS_DOLDU": "Bu siparis karsilandi.",
+  "ALET_YOK": "Gereken kademede aletin yok.",
+  "SEVIYE_YETERSIZ": "Burasi henuz acilmadi.",
+  "HENUZ_OLGUN_DEGIL": "Urun henuz olgunlasmadi.",
+  "KILITLI": "Partner bu yigini kilitlemis.",
+  "GECERSIZ_HEDEF": "Bu karoda yapilacak bir sey yok.",
+  "BASKA_PARSEL": "Bu parsel partnerin. Dokunamazsin.",
+  "KAYNAK_YETERSIZ": "Yeterli malzemen yok.",
+  "HIZ_SINIRI": "Cok hizli. Biraz yavasla.",
+  "BASKA_CIHAZ": "Hesabin baska bir cihazda acildi.",
+  "YETKISIZ": "Oturum gecersiz.",
+  "BILINMEYEN": "Islem yapilamadi."
+ },
+ "iyimserIstemci": {
+  "$kaynak": "B.3 kural 7 + C.5",
+  "geriSarmaSn": 0.2,
+  "geriSarmaEgrisi": "yumusak",
+  "konumYayinHz": 5,
+  "konumYayinRevizyonUretir": false
+ },
+ "misafirHesap": {
+  "$kaynak": "B.19 + B.18",
+  "renkSayisi": 4,
+  "renkler": [
+   {
+    "id": 0,
+    "ad": "Kiremit",
+    "hex": "#D9694A"
+   },
+   {
+    "id": 1,
+    "ad": "Yosun",
+    "hex": "#5E8C55"
+   },
+   {
+    "id": 2,
+    "ad": "Gokyuzu",
+    "hex": "#4A7FB5"
+   },
+   {
+    "id": 3,
+    "ad": "Bal",
+    "hex": "#D9A441"
+   }
+  ],
+  "adMinUzunluk": 2,
+  "adMaksUzunluk": 16,
+  "davetKoduHane": 6,
+  "davetKoduOmruSn": 86400,
+  "kurtarmaKoduHane": 12
+ },
+ "baslangicDurumu": {
+  "$kaynak": "B.18 — ogretici 1:20 'Tarla, 4 karo, cantada 4 bugday tohumu'",
+  "envanter": [
+   {
+    "esyaId": "bugday_tohum",
+    "adet": 4
+   }
+  ],
+  "aletler": [],
+  "kovaKapasitesi": 0,
+  "not": "Ahsap kova Sv1 tezgahinda craftlanir (8 odun). Ogreticide kuyu kovayi doldurur; kova yoksa istemci once craft'a yonlendirir."
+ },
+ "kuyu": {
+  "$kaynak": "B.11 — 'kuyu tarla sahnesinin icinde'",
+  "bolge": "tarla",
+  "doldurmaSn": 1.0,
+  "sahneIcinde": true
+ },
+ "yabaniKaynakYerlesimi": {
+  "$kaynak": "B.18 2:20 — 'Tarla kenarindaki 3 yabani kaynak parlar'",
+  "tarla_kenari": {
+   "dal": 2,
+   "yem_otu": 1
+  },
+  "not": "Ogreticide tam 3 kaynak parlar. Dal, alet kilitlenmesine karsi guvenlik agidir (B.14)."
+ },
+ "esyalar": {
+  "$aciklama": "Esya kimlik sozlugu. Urun/tohum kimlikleri urunler.json'dan TURETILIR: <urunId> ve <urunId>_tohum. Burada sadece urun disi esyalar var.",
+  "$kaynak": "B.12, B.13, B.14",
+  "hamMadde": [
+   {
+    "id": "odun",
+    "ad": "Odun",
+    "kategori": "odun"
+   },
+   {
+    "id": "sert_odun",
+    "ad": "Sert odun",
+    "kategori": "odun"
+   },
+   {
+    "id": "degerli_odun",
+    "ad": "Degerli odun",
+    "kategori": "odun"
+   },
+   {
+    "id": "nadir_odun",
+    "ad": "Nadir odun",
+    "kategori": "odun"
+   },
+   {
+    "id": "tas",
+    "ad": "Tas",
+    "kategori": "cevher"
+   },
+   {
+    "id": "komur",
+    "ad": "Komur",
+    "kategori": "cevher"
+   },
+   {
+    "id": "demir",
+    "ad": "Demir",
+    "kategori": "cevher"
+   },
+   {
+    "id": "altin",
+    "ad": "Altin cevheri",
+    "kategori": "cevher"
+   },
+   {
+    "id": "elmas",
+    "ad": "Elmas",
+    "kategori": "cevher"
+   },
+   {
+    "id": "mantar",
+    "ad": "Mantar",
+    "kategori": "urun"
+   },
+   {
+    "id": "meyve",
+    "ad": "Yaban meyvesi",
+    "kategori": "urun"
+   },
+   {
+    "id": "yem",
+    "ad": "Yem",
+    "kategori": "sarf"
+   },
+   {
+    "id": "yumurta",
+    "ad": "Yumurta",
+    "kategori": "urun"
+   },
+   {
+    "id": "sut",
+    "ad": "Sut",
+    "kategori": "urun"
+   },
+   {
+    "id": "ceviz_urun",
+    "ad": "Ceviz",
+    "kategori": "urun"
+   }
+  ],
+  "islenmis": [
+   {
+    "id": "demir_kulce",
+    "ad": "Demir kulcesi",
+    "kategori": "islenmis"
+   },
+   {
+    "id": "celik_kulce",
+    "ad": "Celik kulcesi",
+    "kategori": "islenmis"
+   },
+   {
+    "id": "altin_kulce",
+    "ad": "Altin kulcesi",
+    "kategori": "islenmis"
+   },
+   {
+    "id": "un",
+    "ad": "Un",
+    "kategori": "islenmis"
+   },
+   {
+    "id": "ekmek",
+    "ad": "Ekmek",
+    "kategori": "islenmis"
+   },
+   {
+    "id": "peynir",
+    "ad": "Peynir",
+    "kategori": "islenmis"
+   }
+  ],
+  "kategoriSirasi": [
+   "tohum",
+   "urun",
+   "cevher",
+   "odun",
+   "islenmis",
+   "sarf",
+   "alet"
+  ]
+ },
+ "depoSiralama": {
+  "$kaynak": "B.10 — 'Kategoriye gore siralama (tohum / urun / cevher / odun / islenmis)'",
+  "maksKilitliYigin": 3,
+  "topluAlButonu": false,
+  "topluBosaltButonu": true
+ },
+ "sulama": {
+  "$kaynak": "B.1 'Tarlada biri eker, biri sular' + B.11 yagmurlama: '4 komsu karoyu HER BUYUME CEVRIMINDE otomatik sular'",
+  "$turetim": "Spec sulamanin mekanik etkisini hicbir yerde yazmiyor. Iki secenek vardi: (a) sulama zorunlu, (b) kozmetik. Yagmurlama craft'inin varlik sebebi ve hikayenin merkezindeki isbolumu (a)'yi gerektiriyor - sulama kozmetik olsaydi Sv14 craft'i ve kova kademeleri anlamsiz olurdu.",
+  "buyumeSulamayaBagli": true,
+  "buyumeSayaciBaslangici": "sulandiAt",
+  "cevrimBasinaSulama": 1,
+  "yenidenVerirCevrimindeYenidenSulanir": true,
+  "not": "Cron gerektirmez: olgunlukAni = sulandiAt + (hasatSayaci == 0 ? buyumeSn : yenidenVerir.araSn). Sulanmamis karo (sulandiAt = null) buyumez, asama 0'da kalir."
+ },
+ "depoKisitiKurali": {
+  "$kaynak": "B.10 'Depo dolu: hasat ENGELLENIR, urun tarlada bekler' + C.3 DEPO_DOLU",
+  "$turetim": "Depo Sv 2'de acilir; Sv 1'de kapasite 0'dir. Kural harfiyen uygulanirsa 0 >= 0 olur ve OGRETICIDEKI ILK HASAT ENGELLENIR. Bu yuzden kisit yalnizca depo ACIKKEN (kapasite > 0) uygulanir.",
+  "kapasiteSifirsaKisitYok": true
+ }
+}
