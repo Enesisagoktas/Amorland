@@ -1,0 +1,90 @@
+{
+ "en": 1920,
+ "boy": 1080,
+ "katman": {
+  "harita_zemin": {
+   "en": 1920,
+   "boy": 1080,
+   "oncelik": 0,
+   "bolge": "zemin",
+   "seviye": 0
+  },
+  "harita_orman": {
+   "en": 1920,
+   "boy": 1080,
+   "oncelik": 1,
+   "bolge": "orman",
+   "tiklama": [
+    795.0,
+    296.0
+   ],
+   "seviye": 7
+  },
+  "harita_maden": {
+   "en": 1920,
+   "boy": 1080,
+   "oncelik": 2,
+   "bolge": "maden",
+   "tiklama": [
+    1445.1,
+    538.5
+   ],
+   "seviye": 9
+  },
+  "harita_tren": {
+   "en": 1920,
+   "boy": 1080,
+   "oncelik": 3,
+   "bolge": "tren",
+   "tiklama": [
+    1247.1,
+    373.6
+   ],
+   "seviye": 5
+  },
+  "harita_market": {
+   "en": 1920,
+   "boy": 1080,
+   "oncelik": 4,
+   "bolge": "market",
+   "tiklama": [
+    1065.6,
+    711.8
+   ],
+   "seviye": 6
+  },
+  "harita_tarla": {
+   "en": 1920,
+   "boy": 1080,
+   "oncelik": 5,
+   "bolge": "tarla",
+   "tiklama": [
+    547.5,
+    469.2
+   ],
+   "seviye": 1
+  },
+  "harita_ev": {
+   "en": 1920,
+   "boy": 1080,
+   "oncelik": 6,
+   "bolge": "ev",
+   "tiklama": [
+    785.1,
+    565.0
+   ],
+   "seviye": 1
+  },
+  "harita_depo": {
+   "en": 1920,
+   "boy": 1080,
+   "oncelik": 7,
+   "bolge": "depo",
+   "tiklama": [
+    933.6,
+    639.2
+   ],
+   "seviye": 2
+  }
+ }
+}
