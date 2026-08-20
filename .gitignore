@@ -60,3 +60,6 @@ araclar/sprite-uretici/__pycache__/
 # design kanvasi: kaynak .dc.html tutulur, yayinlanan payload tutulmaz (2 MB)
 tasarim/*.html
 !tasarim/*.dc.html
+
+# Windows: 2>/dev/null gercek dosya olusturuyor
+dev/
