@@ -11,7 +11,8 @@ services:
       # Turkce locale'in kucuk/buyuk harf tuzagina dusmemek icin C collation
       POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
     ports:
-      - "5432:5432"
+      # 5432 baska projeler tarafindan sik kullaniliyor; Amorland 5433'te.
+      - "5433:5432"
     volumes:
       - amorland-pgdata:/var/lib/postgresql/data
     healthcheck:

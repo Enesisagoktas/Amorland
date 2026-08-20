@@ -7,7 +7,7 @@ spring:
   application:
     name: amorland-sunucu
   datasource:
-    url: ${AMORLAND_DB_URL:jdbc:postgresql://localhost:5432/amorland}
+    url: ${AMORLAND_DB_URL:jdbc:postgresql://localhost:5433/amorland}
     username: ${AMORLAND_DB_USER:amorland}
     password: ${AMORLAND_DB_PASS:amorland}
     hikari:
