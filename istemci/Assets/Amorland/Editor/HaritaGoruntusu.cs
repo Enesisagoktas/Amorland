@@ -116,11 +116,22 @@ namespace Amorland.EditorAraclari
                 }
                 Canvas.ForceUpdateCanvases();
 
-                cam.Render();
-
                 RenderTexture onceki = RenderTexture.active;
-                RenderTexture.active = rt;
                 var tex = new Texture2D(en, boy, TextureFormat.RGB24, false);
+
+                // Kare 0: karakter secim paneli — acilis boyle gorunur.
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0f, 0f, en, boy), 0, 0);
+                tex.Apply();
+                File.WriteAllBytes(Path.Combine(cikti, "00-play-secim.png"), tex.EncodeToPNG());
+
+                // Secim yap: karakter dogar, kamera takibe gecer, minimap sis acilir.
+                sahne.SecimUygula(false);
+                Canvas.ForceUpdateCanvases();
+
+                cam.Render();
+                RenderTexture.active = rt;
                 tex.ReadPixels(new Rect(0f, 0f, en, boy), 0, 0);
                 tex.Apply();
                 RenderTexture.active = onceki;
@@ -146,6 +157,29 @@ namespace Amorland.EditorAraclari
                 tex.ReadPixels(new Rect(0f, 0f, en, boy), 0, 0);
                 tex.Apply();
                 File.WriteAllBytes(Path.Combine(cikti, "00-play-bolge-karti.png"), tex.EncodeToPNG());
+
+                // Kare 3.5: 2.5D derinlik kaniti — karakter bir uzun agacin
+                // GOVDE hucresinin ustunde durur; Y-sort dogruysa govde karakteri
+                // kismen orter. Govde hucresi: gecilemeyen ama ustu gecilebilen.
+                sahne.KartKapat();
+                var vh = kok.GetComponentInChildren<VadiHaritasi>();
+                RectInt orman = vh.Alan("orman");
+                bool bulundu = false;
+                for (int ax = orman.xMin + 10; ax < orman.xMax - 10 && !bulundu; ax++)
+                    for (int ay = orman.yMin + 10; ay < orman.yMax - 14 && !bulundu; ay++)
+                        if (!vh.Gecilebilir(ax, ay) && vh.Gecilebilir(ax, ay + 1)
+                            && vh.Gecilebilir(ax, ay - 1))
+                        {
+                            sahne.KarakterKonumla(new Vector2(ax + 0.5f, ay + 0.85f));
+                            gezgin.Odakla(new Vector2(ax + 0.5f, ay + 0.5f), 6f);
+                            bulundu = true;
+                        }
+                Canvas.ForceUpdateCanvases();
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0f, 0f, en, boy), 0, 0);
+                tex.Apply();
+                File.WriteAllBytes(Path.Combine(cikti, "00-play-derinlik.png"), tex.EncodeToPNG());
 
                 // Kare 4: uzak bakis — bolge etiketleri kadrajda; olcek hatalari
                 // (dev bulanik harfler) burada yakalanir.
@@ -247,6 +281,9 @@ namespace Amorland.EditorAraclari
                 cop.Add(camGo);
                 var cam = camGo.AddComponent<Camera>();
                 cam.orthographic = true;
+                // 2.5D Y-sort: bireysel nesne karolari alt kenara gore siralanir.
+                cam.transparencySortMode = TransparencySortMode.CustomAxis;
+                cam.transparencySortAxis = Vector3.up;
                 cam.orthographicSize = ortoBoy;
                 cam.nearClipPlane = -100f;
                 cam.farClipPlane = 100f;

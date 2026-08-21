@@ -9,7 +9,7 @@ ornekleme yapilir. Boylece cizilen her sey rpg-base'le ayni paletten cikar ve
 "iki ayri oyundan gelmis" gorunumu olusmaz. rpg-base stili: kontursuz, yumusak
 govde golgesi, ustten isik. Cizimler de oyle: duz sekil + altta koyu ton.
 
-Cikti: istemci/Assets/Amorland/Resources/harita2d64/ek64.png (12x6 karo, 768x384)
+Cikti: istemci/Assets/Amorland/Resources/harita2d64/ek64.png (12x8 karo, 768x512)
 Ayrica gozle kontrol icin 4x buyutulmus kontak tablosu: ek64-kontak.png
 """
 import os
@@ -23,7 +23,10 @@ CIKTI = os.path.join(KOK, "istemci", "Assets", "Amorland", "Resources", "harita2
 KONTAK = os.path.join(KOK, "araclar", "karo-indeks", "ek64-kontak.png")
 
 T = 64
-SUT, SAT = 12, 6
+# ⚠ SAT artmadan yeni indeks EKLENMEZ: 12x6=72 karoyken koyu agaclar 71/72/73'e
+# cizildi ve 72-73 tuvalin DISINA dustu — PIL sessizce kirpti, Unity'de sprite
+# null donunce golge konup agac atlandi ("govdesiz golge" hatasi).
+SUT, SAT = 12, 8
 
 
 def ortalama(sheet, indeks, kutu=(16, 16, 48, 48)):
@@ -111,26 +114,40 @@ class Cizer:
             d.ellipse([cx, cy, cx + 3, cy + 2], fill=ton(self.TOPRAK, 0.62) + (255,))
 
     def ray(self, i, dikey):
-        """Tren rayi: toprak ustune traversler + iki celik ray."""
+        """Tren rayi. Denetim: balast entegre — traverslerin altinda mat cakil
+        bandi, ray artik ciplak toprakta yuzmuyor."""
         x, y, d = self.toprak_zemin(i)
+        import random
+        r = random.Random(3 + i)
         travers = ton(self.AHSAP, 0.72)
         celik = ton(self.TAS, 1.12)
         celik_koyu = ton(self.TAS, 0.78)
+        # balast bandi
+        for s_ in range(26):
+            cx = x + r.randint(0, 60)
+            cy = (y + 12 + r.randint(0, 40)) if not dikey else (y + r.randint(0, 60))
+            bx = (x + 12 + r.randint(0, 40)) if dikey else cx
+            w = 3 + r.randint(0, 3)
+            taban = ton((176, 158, 138), 0.8 + r.random() * 0.2)
+            if dikey:
+                by = y + r.randint(0, 58)
+                d.ellipse([bx, by, bx + w, by + w - 1], fill=taban + (255,))
+            else:
+                d.ellipse([cx, cy, cx + w, cy + w - 1], fill=taban + (255,))
         if not dikey:
-            for s in range(4):
-                xx = x + 4 + s * 16
+            for s_ in range(4):
+                xx = x + 4 + s_ * 16
                 d.rounded_rectangle([xx, y + 10, xx + 8, y + T - 11], 2, fill=travers + (255,))
             for yy in (y + 18, y + T - 24):
                 d.rectangle([x, yy + 4, x + T - 1, yy + 6], fill=celik_koyu + (255,))
                 d.rectangle([x, yy, x + T - 1, yy + 4], fill=celik + (255,))
         else:
-            for s in range(4):
-                yy = y + 4 + s * 16
+            for s_ in range(4):
+                yy = y + 4 + s_ * 16
                 d.rounded_rectangle([x + 10, yy, x + T - 11, yy + 8], 2, fill=travers + (255,))
             for xx in (x + 18, x + T - 24):
                 d.rectangle([xx + 4, y, xx + 6, y + T - 1], fill=celik_koyu + (255,))
                 d.rectangle([xx, y, xx + 4, y + T - 1], fill=celik + (255,))
-
     def kalas(self, i, dikey):
         """Kopru/iskele dosemesi: enine kalaslar."""
         x, y, d = self.zemin(i, ton(self.AHSAP, 0.80))
@@ -584,32 +601,32 @@ class Cizer:
                                     fill=ton(self.AHSAP, 0.62) + (255,))
 
     def nilufer(self, i):
-        """Iki nilufer yapragi + bir cicek. Acik suyun ustune dekor."""
+        """Nilufer. Denetim: cicek yapraktan kopuktu; artik buyuk yapragin
+        uzerinde oturuyor."""
         x, y = self.kanvas(i)
         d = ImageDraw.Draw(self.im)
         yesil = ton(self.CIM, 0.72)
-        for cx, cy, r_ in ((x + 22, y + 26, 12), (x + 44, y + 44, 9)):
-            d.pieslice([cx - r_, cy - r_ * 0.8, cx + r_, cy + r_ * 0.8],
-                       25, 335, fill=yesil + (255,))
-            d.pieslice([cx - r_, cy - r_ * 0.8, cx + r_, cy + r_ * 0.8],
-                       25, 140, fill=ton(yesil, 1.15) + (255,))
-        d.ellipse([x + 40, y + 38, x + 48, y + 44], fill=(224, 130, 158, 255))
-        d.ellipse([x + 42, y + 39, x + 46, y + 42], fill=(246, 220, 130, 255))
-
+        d.pieslice([x + 14, y + 18, x + 40, y + 40], 25, 335, fill=yesil + (255,))
+        d.pieslice([x + 14, y + 18, x + 40, y + 40], 25, 140, fill=ton(yesil, 1.15) + (255,))
+        d.pieslice([x + 40, y + 40, x + 58, y + 55], 25, 335, fill=yesil + (255,))
+        # cicek: buyuk yapragin ustunde
+        d.ellipse([x + 22, y + 22, x + 32, y + 31], fill=(238, 140, 158, 255))
+        d.ellipse([x + 25, y + 25, x + 29, y + 28], fill=(246, 220, 130, 255))
     def cakiltasi(self, i):
-        """Dagilmis minik taslar — toprak/maden zemin detayi."""
+        """Cakil. Denetim: parlak gumus kureler 'celik bilye' gibi okunuyordu;
+        simdi mat, sicak gri-kahve, farkli boy, parlamasiz."""
         x, y = self.kanvas(i)
         d = ImageDraw.Draw(self.im)
         import random
         r = random.Random(i * 13)
-        for s_ in range(6):
-            cx = x + 8 + r.randint(0, 48)
-            cy = y + 10 + r.randint(0, 44)
-            w = 4 + r.randint(0, 4)
-            taban = ton(self.TAS, 0.85 + r.random() * 0.25)
-            d.ellipse([cx, cy, cx + w, cy + w - 1], fill=taban + (255,))
-            d.ellipse([cx + 1, cy, cx + w - 1, cy + 2], fill=ton(taban, 1.15) + (255,))
-
+        for s_ in range(7):
+            cx = x + 6 + r.randint(0, 50)
+            cy = y + 8 + r.randint(0, 48)
+            w = 3 + r.randint(0, 5)
+            h = max(2, w - r.randint(0, 2))
+            gri = 0.78 + r.random() * 0.2
+            taban = ton((176, 158, 138), gri)
+            d.ellipse([cx, cy, cx + w, cy + h], fill=taban + (255,))
     def golge(self, i):
         """Yumusak elips golge — agac/hayvan/esya altina, Dekor katmanina.
 
@@ -623,28 +640,32 @@ class Cizer:
         self.yapistir(i, katman)
 
     def kuyu(self, i):
-        """Koy kuyusu: tas bilezik + ahsap catili cerceve + kova."""
+        """Koy kuyusu. Denetim bulgulari islendi: bilezik artik TAM elips (ust-arka
+        yay dahil), direk tabanlari bilezigin DIS kenarina basiyor."""
         x, y = self.kanvas(i)
         d = ImageDraw.Draw(self.im)
         tas = ton(self.TAS, 0.94)
         cati = ton(self.AHSAP, 0.78)
-        # bilezik
-        d.ellipse([x + 12, y + 36, x + 52, y + 58], fill=ton(tas, 0.75) + (255,))
-        d.ellipse([x + 12, y + 32, x + 52, y + 54], fill=tas + (255,))
-        d.ellipse([x + 18, y + 36, x + 46, y + 50], fill=(46, 38, 40, 255))
-        # direkler
-        d.rectangle([x + 14, y + 14, x + 19, y + 40], fill=cati + (255,))
-        d.rectangle([x + 45, y + 14, x + 50, y + 40], fill=cati + (255,))
+        # tam bilezik: dis elips + ic karanlik + on yuz kalinligi
+        d.ellipse([x + 12, y + 28, x + 52, y + 52], fill=ton(tas, 0.72) + (255,))
+        d.ellipse([x + 12, y + 24, x + 52, y + 48], fill=tas + (255,))
+        d.ellipse([x + 17, y + 28, x + 47, y + 44], fill=(46, 38, 40, 255))
+        # tas derzleri
+        for ax in (16, 28, 40):
+            d.arc([x + 12, y + 24, x + 52, y + 48], 150 + ax * 3, 165 + ax * 3,
+                  fill=ton(tas, 0.7) + (255,), width=2)
+        # direkler bilezigin disinda
+        d.rectangle([x + 9, y + 12, x + 14, y + 42], fill=cati + (255,))
+        d.rectangle([x + 50, y + 12, x + 55, y + 42], fill=cati + (255,))
         # cati
-        d.polygon([(x + 32, y + 2), (x + 6, y + 18), (x + 58, y + 18)],
+        d.polygon([(x + 32, y + 0), (x + 4, y + 16), (x + 60, y + 16)],
                   fill=ton(cati, 0.85) + (255,))
-        d.polygon([(x + 32, y + 6), (x + 14, y + 18), (x + 50, y + 18)],
+        d.polygon([(x + 32, y + 4), (x + 12, y + 16), (x + 52, y + 16)],
                   fill=ton(cati, 1.05) + (255,))
-        # makara ipi + kova
-        d.line([x + 32, y + 18, x + 32, y + 34], fill=(60, 50, 44, 255), width=2)
-        d.rounded_rectangle([x + 27, y + 32, x + 37, y + 40], 3,
+        # ip + kova
+        d.line([x + 32, y + 16, x + 32, y + 30], fill=(60, 50, 44, 255), width=2)
+        d.rounded_rectangle([x + 27, y + 28, x + 37, y + 36], 3,
                             fill=ton(self.TAS, 0.7) + (255,))
-
     def fener(self, i):
         """Sokak feneri: koyu direk + sicak isikli cam kutu + hale."""
         # hale ayri katmanda, blur'lu
@@ -788,44 +809,52 @@ class Cizer:
             d.ellipse([x + cx + 2, y + cy + 2, x + cx + 8, y + cy + 6],
                       fill=ton(self.KREM, 0.85) + (255,))
 
-    def tezgah(self, i):
-        """Pazar tezgahi: fistolu (yarim daire kenarli) tente + mal dolu masa."""
+    def tezgah(self, i, cesit=0):
+        """Pazar tezgahi. Denetim: tente dilimleri artik 54px'e TAM bolunuyor
+        (6 dilim x 9px, fisto ayni hizada) ve urun dizilimi cesitleniyor."""
         x, y = self.kanvas(i)
         d = ImageDraw.Draw(self.im)
         masa = ton(self.AHSAP, 0.9)
         d.rectangle([x + 10, y + 30, x + 14, y + 54], fill=ton(masa, 0.75) + (255,))
         d.rectangle([x + 50, y + 30, x + 54, y + 54], fill=ton(masa, 0.75) + (255,))
-        d.rounded_rectangle([x + 6, y + 34, x + 58, y + 44], 3, fill=masa + (255,))
-        # mal: comlek + meyveler (isiltili)
-        d.ellipse([x + 15, y + 26, x + 25, y + 36], fill=ton(self.TOPRAK, 0.9) + (255,))
-        d.ellipse([x + 17, y + 28, x + 20, y + 31], fill=ton(self.TOPRAK, 1.15) + (255,))
-        d.ellipse([x + 29, y + 27, x + 38, y + 36], fill=(216, 76, 60, 255))
-        d.ellipse([x + 31, y + 29, x + 34, y + 32], fill=(240, 130, 110, 255))
-        d.ellipse([x + 41, y + 27, x + 50, y + 36], fill=(246, 208, 90, 255))
-        d.ellipse([x + 43, y + 29, x + 46, y + 32], fill=(252, 234, 160, 255))
-        # tente: cizgili + fisto etek
+        d.rounded_rectangle([x + 5, y + 34, x + 59, y + 44], 3, fill=masa + (255,))
+        # urunler: ceside gore
+        urunler = [
+            [((216, 76, 60), (240, 130, 110)), ((246, 208, 90), (252, 234, 160)),
+             ((150, 106, 74), (186, 140, 104))],
+            [((236, 138, 60), (246, 172, 96)), ((216, 76, 60), (240, 130, 110)),
+             ((132, 176, 60), (168, 205, 96))],
+        ][cesit % 2]
+        for k, (ana, isik) in enumerate(urunler):
+            cx = x + 14 + k * 13
+            d.ellipse([cx, y + 26, cx + 10, y + 36], fill=ana + (255,))
+            d.ellipse([cx + 2, y + 28, cx + 5, y + 31], fill=isik + (255,))
+        # tente: 6 dilim x 9 = 54, fisto ayni izgarada
         for k in range(6):
             renk = (214, 70, 56) if k % 2 == 0 else (246, 240, 228)
-            d.polygon([(x + 4 + k * 9, y + 8), (x + 13 + k * 9, y + 8),
-                       (x + 12 + k * 9, y + 20), (x + 3 + k * 9, y + 20)],
-                      fill=renk + (255,))
+            d.rectangle([x + 5 + k * 9, y + 8, x + 14 + k * 9, y + 20], fill=renk + (255,))
         for k in range(6):
             renk = (214, 70, 56) if k % 2 == 0 else (246, 240, 228)
-            d.pieslice([x + 3 + k * 9, y + 15, x + 13 + k * 9, y + 25], 0, 180,
+            d.pieslice([x + 5 + k * 9, y + 15, x + 14 + k * 9, y + 25], 0, 180,
                        fill=renk + (255,))
-        d.rectangle([x + 2, y + 6, x + 58, y + 10], fill=ton(masa, 0.8) + (255,))
+        d.rectangle([x + 3, y + 6, x + 61, y + 10], fill=ton(masa, 0.8) + (255,))
     def asili_tabela(self, i):
-        """Dukkan kapisinin ustune asilan kucuk tabela."""
+        """Dukkan tabelasi. Denetim: kirmizi daire 'bildirim rozeti' gibi okunuyordu;
+        simdi koyu cerceveli pano + elma ikonu + zincir baglantilari."""
         x, y = self.kanvas(i)
         d = ImageDraw.Draw(self.im)
-        d.line([x + 24, y + 40, x + 28, y + 48], fill=(70, 58, 50, 255), width=2)
-        d.line([x + 40, y + 40, x + 36, y + 48], fill=(70, 58, 50, 255), width=2)
-        d.rounded_rectangle([x + 18, y + 46, x + 46, y + 60], 4,
-                            fill=ton(self.AHSAP, 0.95) + (255,))
-        d.rounded_rectangle([x + 18, y + 46, x + 46, y + 52], 4,
-                            fill=ton(self.AHSAP, 1.12) + (255,))
-        d.ellipse([x + 28, y + 50, x + 36, y + 57], fill=(214, 70, 56, 255))
-
+        for zx in (24, 40):
+            d.line([x + zx, y + 38, x + zx, y + 46], fill=(88, 76, 66, 255), width=2)
+            d.ellipse([x + zx - 2, y + 38, x + zx + 2, y + 42], fill=(88, 76, 66, 255))
+        d.rounded_rectangle([x + 16, y + 44, x + 48, y + 60], 4,
+                            fill=ton(self.AHSAP, 0.62) + (255,))
+        d.rounded_rectangle([x + 18, y + 46, x + 46, y + 58], 3,
+                            fill=ton(self.AHSAP, 1.0) + (255,))
+        # elma ikonu
+        d.ellipse([x + 27, y + 49, x + 37, y + 58], fill=(214, 70, 56, 255))
+        d.ellipse([x + 29, y + 50, x + 32, y + 53], fill=(240, 130, 110, 255))
+        d.line([x + 32, y + 49, x + 33, y + 46], fill=(88, 76, 66, 255), width=2)
+        d.ellipse([x + 33, y + 46, x + 37, y + 49], fill=ton(self.CIM, 0.8) + (255,))
     def kumes(self, i):
         """Tavuk kumesi: yuvarlak catili kirmizi kulube + yuvarlak kapi + pencere."""
         x, y = self.kanvas(i)
@@ -948,6 +977,112 @@ class Cizer:
         x, y = self.kanvas(i)
         self.im.paste(Image.fromarray(np.clip(a, 0, 255).astype("uint8"), "RGBA"), (x, y))
 
+    def uzun_agac(self, alt_i, ust_i, kaynak, koyu):
+        """2 karo boyunda agac: UST karo = agacin kendisi (kanopi), ALT karo =
+        cizilmis govde.
+
+        ⚠ Ilk deneme 96px'e olcekleyip ortadan kirpmakti — kanopinin yanlari
+        duz kesildi. Klasik yontem dogrusu: kanopi sprite'i ustte, altina kalin
+        govde; kaynak karonun kendi mini govdesi govdenin tepesiyle ortusur.
+        """
+        import numpy as np
+        k = self.karo_kopya(kaynak)
+        if koyu:
+            a = np.asarray(k).astype(np.float32)
+            a[:, :, :3] *= 0.84
+            k = Image.fromarray(np.clip(a, 0, 255).astype("uint8"), "RGBA")
+        x, y = self.kanvas(ust_i)
+        self.im.alpha_composite(k, (x, y))
+
+        # ⚠ Govde rengi ORNEKLENMEZ: kaynak karonun alt seridi kanopi doluydu,
+        # ornekleme yesil sapli mantarlar uretti. Sabit ahsap kabuk.
+        govde = ton(self.AHSAP, 0.82)
+        x, y = self.kanvas(alt_i)
+        d = ImageDraw.Draw(self.im)
+        koyu_g = ton(govde, 0.78)
+        acik_g = ton(govde, 1.14)
+        # govde: hafif konik, tepesi karonun ustunde (kanopiyle birlesir)
+        d.polygon([(x + 26, y), (x + 38, y), (x + 40, y + 50), (x + 24, y + 50)],
+                  fill=govde + (255,))
+        # kok payandalari
+        d.polygon([(x + 24, y + 50), (x + 18, y + 56), (x + 28, y + 54)], fill=govde + (255,))
+        d.polygon([(x + 40, y + 50), (x + 46, y + 56), (x + 36, y + 54)], fill=govde + (255,))
+        d.rounded_rectangle([x + 20, y + 50, x + 44, y + 56], 3, fill=ton(govde, 0.9) + (255,))
+        # kabuk cizgileri + isik
+        d.line([x + 29, y + 4, x + 28, y + 48], fill=koyu_g + (255,), width=2)
+        d.line([x + 35, y + 8, x + 36, y + 44], fill=koyu_g + (255,), width=2)
+        d.line([x + 32, y + 2, x + 32, y + 50], fill=acik_g + (255,), width=1)
+    def vitrin(self, i):
+        """Dukkan vitrini. Denetim: rpg-base cam karolari duvarla ayni renkti;
+        gok mavisi cam + capraz parilti + krem cerceve."""
+        x, y = self.kanvas(i)
+        d = ImageDraw.Draw(self.im)
+        cer = ton(self.KREM, 0.9)
+        d.rounded_rectangle([x + 8, y + 10, x + 56, y + 52], 5, fill=ton(cer, 0.72) + (255,))
+        d.rounded_rectangle([x + 11, y + 13, x + 53, y + 49], 4, fill=cer + (255,))
+        d.rounded_rectangle([x + 15, y + 17, x + 49, y + 45], 3, fill=(184, 216, 230, 255))
+        d.polygon([(x + 18, y + 45), (x + 30, y + 17), (x + 38, y + 17), (x + 22, y + 45)],
+                  fill=(214, 236, 246, 255))
+        d.rectangle([x + 30, y + 17, x + 34, y + 45], fill=cer + (255,))
+        d.rectangle([x + 15, y + 29, x + 49, y + 33], fill=cer + (255,))
+        d.rounded_rectangle([x + 6, y + 48, x + 58, y + 56], 3, fill=ton(cer, 0.8) + (255,))
+
+    def saman_yigini(self, i):
+        """Gercek saman yigini. Denetim: SamanYigin diye kullanilan rpg karosu
+        aslinda krem comlekti — denetci haritada saman bulamadi, hakliydi."""
+        x, y = self.kanvas(i)
+        d = ImageDraw.Draw(self.im)
+        saman = (232, 198, 110)
+        d.ellipse([x + 8, y + 28, x + 56, y + 56], fill=ton(saman, 0.88) + (255,))
+        d.ellipse([x + 12, y + 16, x + 52, y + 48], fill=saman + (255,))
+        d.ellipse([x + 18, y + 18, x + 40, y + 34], fill=ton(saman, 1.12) + (255,))
+        import random
+        r = random.Random(9)
+        for s_ in range(8):
+            sx = x + 10 + r.randint(0, 44)
+            sy = y + 18 + r.randint(0, 30)
+            d.line([sx, sy, sx + 6, sy - 3], fill=ton(saman, 0.72) + (255,), width=2)
+        d.line([x + 30, y + 16, x + 36, y + 6], fill=ton(saman, 0.72) + (255,), width=2)
+        d.line([x + 36, y + 6, x + 42, y + 12], fill=ton(saman, 0.72) + (255,), width=2)
+
+    def sandik(self, i):
+        """Kontrastli sandik. Denetim: rpg kasasi toprakla ayni tondaydi."""
+        x, y = self.kanvas(i)
+        d = ImageDraw.Draw(self.im)
+        cer = (118, 78, 48)
+        panel = (222, 178, 120)
+        d.rounded_rectangle([x + 10, y + 14, x + 54, y + 54], 5, fill=cer + (255,))
+        d.rounded_rectangle([x + 14, y + 18, x + 50, y + 32], 3, fill=panel + (255,))
+        d.rounded_rectangle([x + 14, y + 36, x + 50, y + 50], 3, fill=ton(panel, 0.9) + (255,))
+        d.rectangle([x + 14, y + 18, x + 50, y + 23], fill=ton(panel, 1.12) + (255,))
+        d.line([x + 14, y + 36, x + 50, y + 50], fill=cer + (255,), width=3)
+        d.line([x + 50, y + 36, x + 14, y + 50], fill=cer + (255,), width=3)
+
+    def cit_dikey(self, i):
+        """Dikey cit karosu. Denetim: dikey kenarlar tek kaziktan ibaretti,
+        raysiz cit cit gibi okunmuyordu — iki dikey ray + kazik."""
+        x, y = self.kanvas(i)
+        d = ImageDraw.Draw(self.im)
+        ahsap = ton(self.AHSAP, 0.88)
+        for rx in (24, 36):
+            d.rectangle([x + rx, y, x + rx + 4, y + 63], fill=ton(ahsap, 0.92) + (255,))
+            d.rectangle([x + rx, y, x + rx + 2, y + 63], fill=ton(ahsap, 1.08) + (255,))
+        d.rounded_rectangle([x + 28, y + 22, x + 36, y + 58], 3, fill=ahsap + (255,))
+        d.rounded_rectangle([x + 28, y + 22, x + 36, y + 34], 3, fill=ton(ahsap, 1.12) + (255,))
+        d.ellipse([x + 27, y + 56, x + 37, y + 61], fill=ton(ahsap, 0.7) + (255,))
+
+    def kopru_ray(self, i):
+        """Kopru + ray birlesimi: kalas doseme uzerinde celik raylar.
+        Denetim: tren koprusunde ray cizgisi kayboluyordu."""
+        self.kalas(i, dikey=False)
+        x, y = self.kanvas(i)
+        d = ImageDraw.Draw(self.im)
+        celik = ton(self.TAS, 1.12)
+        celik_koyu = ton(self.TAS, 0.78)
+        for yy in (y + 18, y + T - 24):
+            d.rectangle([x, yy + 4, x + T - 1, yy + 6], fill=celik_koyu + (255,))
+            d.rectangle([x, yy, x + T - 1, yy + 4], fill=celik + (255,))
+
     def isaret(self, i):
         """Yon tabelasi: saga isaret eden yuvarlak uclu ok levha. Ilk surum kaba
         bir T seklindeydi; simdi civili, iki tonlu, sivri uclu gercek bir tabela."""
@@ -1005,7 +1140,8 @@ def main():
     c.kelebek(55, acik=False)
     c.golge_serit(56)
     c.devrik_kutuk(57)
-    c.tezgah(58)
+    c.tezgah(58, cesit=0)
+    c.tezgah(87, cesit=1)
     c.asili_tabela(59)
     c.kumes(60)
     c.yalak(61)
@@ -1021,6 +1157,17 @@ def main():
     c.agac_koyu(71, 200)   # KavakYesil koyu
     c.agac_koyu(72, 220)   # TopYesil koyu
     c.agac_koyu(73, 221)   # TopYesilInce koyu
+    # Uzun (2 karo) agaclar — 2.5D derinlik icin
+    c.uzun_agac(74, 75, 200, koyu=True)    # koyu kavak uzun (alt, ust)
+    c.uzun_agac(76, 77, 204, koyu=False)   # teal cam uzun
+    c.uzun_agac(78, 79, 202, koyu=False)   # turuncu kavak uzun (sonbahar)
+    c.vitrin(80)
+    c.saman_yigini(81)
+    c.agac_koyu(82, 180, guc=0.8)   # buyuk yesil cali koyu (hayalet cali duzeltmesi)
+    c.agac_koyu(83, 181, guc=0.8)   # kucuk yesil cali koyu
+    c.sandik(84)
+    c.cit_dikey(85)
+    c.kopru_ray(86)
     # Satir 1: ekinler (genc 12-15, olgun 16-19)
     c.bugday(12, olgun=False)
     c.yumru(13, olgun=False, meyve=(214, 70, 56))

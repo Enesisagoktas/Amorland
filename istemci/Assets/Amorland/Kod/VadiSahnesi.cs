@@ -33,6 +33,18 @@ namespace Amorland
         private HaritaGezgini _gezgin;
         private Camera _kamera;
         private Text _bolgeYazisi;
+        private VadiKarakteri _karakter;
+        private RectTransform _secimPaneli;
+        private string _sonBolge;
+
+        // Kesif minimap'i
+        private const int MinimapOlcek = 4;
+        private Texture2D _sisDoku;
+        private Color32[] _sisPx;
+        private RectTransform _minimapIm;
+        private RectTransform _minimapIc;
+        private int _sisW, _sisH;
+        private Vector2Int _sonSisHucre = new Vector2Int(-999, -999);
 
         // Bolge karti
         private RectTransform _kart;
@@ -92,6 +104,205 @@ namespace Amorland
             ArayuzuKur();
             TrenKur();
             KelebekleriKur();
+            MinimapKur();
+            SecimPaneliKur();
+        }
+
+        // ------------------------------------------------------------ karakter
+
+        /// <summary>
+        /// Oyun basi karakter secimi: harita arkada gorunurken ortada cerceveli
+        /// kart, iki buyuk secenek. Secim yapilana kadar dokunma/yuruyus yok.
+        /// </summary>
+        private void SecimPaneliKur()
+        {
+            var kanvas = UiKit.Kanvas("SecimKanvasi", 60);
+            kanvas.transform.SetParent(transform, false);
+
+            var karart = UiKit.Panel(kanvas.transform, "Karart", new Color(0.05f, 0.06f, 0.05f, 0.55f));
+            karart.anchorMin = Vector2.zero; karart.anchorMax = Vector2.one;
+            karart.offsetMin = Vector2.zero; karart.offsetMax = Vector2.zero;
+
+            var dis = UiKit.Kart(kanvas.transform, "SecimKarti", Palet.UiYazi, 20);
+            dis.sizeDelta = new Vector2(520f, 300f);
+            var ic = UiKit.Kart(dis, "Ic", new Color(0.13f, 0.10f, 0.08f, 0.97f), 17);
+            ic.anchorMin = Vector2.zero; ic.anchorMax = Vector2.one;
+            ic.offsetMin = new Vector2(3f, 3f); ic.offsetMax = new Vector2(-3f, -3f);
+
+            var baslik = UiKit.Yazi(ic, "Baslik", "Karakterini seç", UiKit.YaziBuyuk,
+                                    Palet.UiYazi, TextAnchor.UpperCenter, true);
+            var brt = baslik.rectTransform;
+            brt.anchorMin = new Vector2(0f, 1f); brt.anchorMax = new Vector2(1f, 1f);
+            brt.pivot = new Vector2(0.5f, 1f);
+            brt.anchoredPosition = new Vector2(0f, -18f);
+            brt.sizeDelta = new Vector2(0f, 40f);
+
+            SecimSecenegi(ic, "Çiftçi", Karo64.KoyluErkek, -120f, () => SecimUygula(false));
+            SecimSecenegi(ic, "Çiftçi Kadın", Karo64.KoyluKadin, 120f, () => SecimUygula(true));
+
+            _secimPaneli = (RectTransform)kanvas.transform.GetChild(0).parent;
+            _secimPaneli = (RectTransform)kanvas.GetComponent<RectTransform>();
+        }
+
+        private void SecimSecenegi(Transform ebeveyn, string ad, int karo, float x, System.Action sec)
+        {
+            var buton = UiKit.YesilButon(ebeveyn, "Sec_" + ad, "", sec);
+            var rt = buton.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0f); rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = new Vector2(x, 26f);
+            rt.sizeDelta = new Vector2(190f, 190f);
+
+            var resimGo = new GameObject("Resim");
+            resimGo.transform.SetParent(buton.transform, false);
+            var img = resimGo.AddComponent<Image>();
+            img.sprite = Karo64.Al(Sayfa64.Ek, karo);
+            img.raycastTarget = false;
+            var irt = img.rectTransform;
+            irt.anchorMin = new Vector2(0.5f, 0.5f); irt.anchorMax = new Vector2(0.5f, 0.5f);
+            irt.anchoredPosition = new Vector2(0f, 18f);
+            irt.sizeDelta = new Vector2(110f, 110f);
+
+            var yazi = UiKit.Yazi(buton.transform, "Ad", ad, UiKit.YaziGovde,
+                                  Color.white, TextAnchor.LowerCenter, true);
+            var yrt = yazi.rectTransform;
+            yrt.anchorMin = Vector2.zero; yrt.anchorMax = Vector2.one;
+            yrt.offsetMin = new Vector2(4f, 14f); yrt.offsetMax = new Vector2(-4f, -4f);
+        }
+
+        /// <summary>Karakteri belirli noktaya isinlar (bassiz dogrulama + derin baglanti).</summary>
+        public void KarakterKonumla(Vector2 p)
+        {
+            if (_karakter != null) _karakter.transform.position = new Vector3(p.x, p.y, 0f);
+        }
+
+        /// <summary>Secimi uygular: paneli kapatir, karakteri dogurur, takibi baslar.</summary>
+        public void SecimUygula(bool kadin)
+        {
+            PlayerPrefs.SetString("vadi_karakter", kadin ? "kadin" : "erkek");
+            if (_secimPaneli != null) _secimPaneli.gameObject.SetActive(false);
+
+            var go = new GameObject("VadiKarakteri");
+            go.transform.SetParent(transform, false);
+            _karakter = go.AddComponent<VadiKarakteri>();
+
+            // Dogum noktasi: ciftlik evinin onu; hucre kapaliysa asagi dogru ara.
+            Vector2 dogum = new Vector2(229.5f, 168.5f);
+            for (int dy = 0; dy < 8; dy++)
+                if (_harita.Gecilebilir(229, 168 - dy)) { dogum.y = 168.5f - dy; break; }
+            _karakter.Kur(_harita, Karo64.Al(Sayfa64.Ek,
+                          kadin ? Karo64.KoyluKadin : Karo64.KoyluErkek), dogum);
+
+            _gezgin.Takip = _karakter.transform;
+            _gezgin.Odakla(dogum, 9f);
+            SisAc(dogum);
+        }
+
+        // ------------------------------------------------------------ minimap
+
+        /// <summary>
+        /// Kesif haritasi (sag alt): zemin ozeti + SIS. Sis karakter yurudukce
+        /// acilir — gezilmemis yerler koyu kalir, kesif hissi buradan gelir.
+        /// </summary>
+        private void MinimapKur()
+        {
+            var kanvas = UiKit.Kanvas("MinimapKanvasi", 45);
+            kanvas.transform.SetParent(transform, false);
+
+            var dis = UiKit.Kart(kanvas.transform, "Minimap", Palet.UiYazi, 14);
+            dis.anchorMin = new Vector2(1f, 0f); dis.anchorMax = new Vector2(1f, 0f);
+            dis.pivot = new Vector2(1f, 0f);
+            dis.anchoredPosition = new Vector2(-14f, 14f);
+            dis.sizeDelta = new Vector2(232f, 150f);
+            dis.gameObject.GetComponent<Image>().raycastTarget = false;
+
+            _minimapIc = UiKit.Kart(dis, "Ic", new Color(0.13f, 0.10f, 0.08f, 0.97f), 11);
+            _minimapIc.anchorMin = Vector2.zero; _minimapIc.anchorMax = Vector2.one;
+            _minimapIc.offsetMin = new Vector2(3f, 3f); _minimapIc.offsetMax = new Vector2(-3f, -3f);
+            _minimapIc.gameObject.GetComponent<Image>().raycastTarget = false;
+
+            // Zemin ozeti dokusu
+            Color32[] px = _harita.MinimapPikselleri(MinimapOlcek, out _sisW, out _sisH);
+            var doku = new Texture2D(_sisW, _sisH, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point };
+            doku.SetPixels32(px);
+            doku.Apply(false, false);
+
+            var hGo = new GameObject("Doku");
+            hGo.transform.SetParent(_minimapIc, false);
+            var raw = hGo.AddComponent<RawImage>();
+            raw.texture = doku;
+            raw.raycastTarget = false;
+            var hrt = raw.rectTransform;
+            hrt.anchorMin = Vector2.zero; hrt.anchorMax = Vector2.one;
+            hrt.offsetMin = new Vector2(4f, 4f); hrt.offsetMax = new Vector2(-4f, -4f);
+
+            // Sis dokusu: ustte, baslangicta her yer koyu
+            _sisDoku = new Texture2D(_sisW, _sisH, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Bilinear };
+            _sisPx = new Color32[_sisW * _sisH];
+            for (int i = 0; i < _sisPx.Length; i++) _sisPx[i] = new Color32(22, 18, 14, 236);
+            _sisDoku.SetPixels32(_sisPx);
+            _sisDoku.Apply(false, false);
+
+            var sGo = new GameObject("Sis");
+            sGo.transform.SetParent(_minimapIc, false);
+            var sisRaw = sGo.AddComponent<RawImage>();
+            sisRaw.texture = _sisDoku;
+            sisRaw.raycastTarget = false;
+            var srt = sisRaw.rectTransform;
+            srt.anchorMin = Vector2.zero; srt.anchorMax = Vector2.one;
+            srt.offsetMin = new Vector2(4f, 4f); srt.offsetMax = new Vector2(-4f, -4f);
+
+            // Konum imi
+            var imGo = new GameObject("Im");
+            imGo.transform.SetParent(_minimapIc, false);
+            var im = imGo.AddComponent<Image>();
+            im.color = new Color(1f, 0.86f, 0.3f, 1f);
+            im.sprite = Sekil.Yuvarlak(4);
+            im.raycastTarget = false;
+            _minimapIm = im.rectTransform;
+            _minimapIm.sizeDelta = new Vector2(9f, 9f);
+            _minimapIm.gameObject.SetActive(false);
+        }
+
+        /// <summary>Karakterin cevresindeki sisi acar (yumusak kenarli daire).</summary>
+        private void SisAc(Vector2 dunya)
+        {
+            if (_sisPx == null) return;
+            int cx = Mathf.FloorToInt(dunya.x / MinimapOlcek);
+            int cy = Mathf.FloorToInt(dunya.y / MinimapOlcek);
+            const int r = 7;
+            for (int dx = -r; dx <= r; dx++)
+            {
+                for (int dy = -r; dy <= r; dy++)
+                {
+                    int x = cx + dx, y = cy + dy;
+                    if (x < 0 || y < 0 || x >= _sisW || y >= _sisH) continue;
+                    float mesafe = Mathf.Sqrt(dx * dx + dy * dy) / r;
+                    byte hedefA = (byte)Mathf.Clamp((mesafe - 0.55f) / 0.45f * 236f, 0f, 236f);
+                    int i = y * _sisW + x;
+                    if (_sisPx[i].a > hedefA)
+                        _sisPx[i] = new Color32(22, 18, 14, hedefA);
+                }
+            }
+            _sisDoku.SetPixels32(_sisPx);
+            _sisDoku.Apply(false, false);
+        }
+
+        private void MinimapGuncelle()
+        {
+            if (_karakter == null || _minimapIm == null) return;
+            Vector2 k = _karakter.Konum;
+
+            var hucre = new Vector2Int((int)(k.x / MinimapOlcek), (int)(k.y / MinimapOlcek));
+            if (hucre != _sonSisHucre) { _sonSisHucre = hucre; SisAc(k); }
+
+            if (!_minimapIm.gameObject.activeSelf) _minimapIm.gameObject.SetActive(true);
+            Vector2 boyut = _minimapIc.rect.size - new Vector2(8f, 8f);
+            _minimapIm.anchoredPosition = new Vector2(
+                (k.x / VadiHaritasi.En - 0.5f) * boyut.x,
+                (k.y / VadiHaritasi.Boy - 0.5f) * boyut.y);
         }
 
         /// <summary>
@@ -192,6 +403,9 @@ namespace Amorland
             _kamera.orthographic = true;
             _kamera.nearClipPlane = -50f;
             _kamera.farClipPlane = 50f;
+            // 2.5D: bireysel nesne karolari ve karakter Y eksenine gore siralanir.
+            _kamera.transparencySortMode = TransparencySortMode.CustomAxis;
+            _kamera.transparencySortAxis = Vector3.up;
             _kamera.clearFlags = CameraClearFlags.SolidColor;
             // Harita disinda kalan alan: koyu yesil, vadinin disi.
             _kamera.backgroundColor = new Color(0.13f, 0.20f, 0.14f, 1f);
@@ -289,13 +503,14 @@ namespace Amorland
                                    UiKit.YaziKucuk, Palet.UiYazi, TextAnchor.MiddleCenter);
             UiKit.Doldur(ipucu.rectTransform, 6f);
 
+            // Sag alt kose minimap'e verildi; oyuna giris sag ustte.
             var buton = UiKit.YesilButon(kanvas.transform, "OyunaGir", "Oyuna gir", () => OyunaGec(null));
-            var brt = buton.GetComponent<RectTransform>();
-            brt.anchorMin = new Vector2(1f, 0f);
-            brt.anchorMax = new Vector2(1f, 0f);
-            brt.pivot = new Vector2(1f, 0f);
-            brt.anchoredPosition = new Vector2(-16f, 16f);
-            brt.sizeDelta = new Vector2(168f, 54f);
+            var butonRt = buton.GetComponent<RectTransform>();
+            butonRt.anchorMin = new Vector2(1f, 1f);
+            butonRt.anchorMax = new Vector2(1f, 1f);
+            butonRt.pivot = new Vector2(1f, 1f);
+            butonRt.anchoredPosition = new Vector2(-16f, -14f);
+            butonRt.sizeDelta = new Vector2(168f, 54f);
 
             BolgeKartiKur(kanvas.transform);
         }
@@ -364,7 +579,7 @@ namespace Amorland
             }
         }
 
-        private void KartKapat()
+        public void KartKapat()
         {
             _seciliBolge = null;
             if (_kart != null) _kart.parent.gameObject.SetActive(false);
@@ -376,8 +591,9 @@ namespace Amorland
             _kartBaslik.text = b.Baslik;
             _kartBilgi.text = "Seviye " + b.Seviye + " bölgesi";
             _kart.parent.gameObject.SetActive(true);
-            // Kamera bolgeye yumusakca yaklasir; kadraj icerigin uzerine oturur.
-            _gezgin.YumusakOdakla(b.Merkez, 10f);
+            // Kamera yalniz SERBEST moddayken bolgeye odaklanir; karakter varken
+            // kamera zaten karakteri izliyor, zorla cekmek mide bulandiriyor.
+            if (_karakter == null) _gezgin.YumusakOdakla(b.Merkez, 10f);
         }
 
         private void Update()
@@ -385,6 +601,8 @@ namespace Amorland
             TrenGuncelle();
             KelebekGuncelle();
             DokunmaIsle();
+            MinimapGuncelle();
+            BolgeGirisiIzle();
 
             if (_bolgeYazisi == null || _kamera == null) return;
 
@@ -399,6 +617,25 @@ namespace Amorland
                 break;
             }
             if (_bolgeYazisi.text != ad) _bolgeYazisi.text = ad;
+        }
+
+        /// <summary>Karakter yuruyerek bir bolgeye girince kart kendiliginden acilir.</summary>
+        private void BolgeGirisiIzle()
+        {
+            if (_karakter == null) return;
+            Vector2 k = _karakter.Konum;
+            var nokta = new Vector2Int(Mathf.FloorToInt(k.x), Mathf.FloorToInt(k.y));
+            string simdiki = null;
+            foreach (var b in _harita.Bolgeler)
+                if (b.Alan.Contains(nokta)) { simdiki = b.Ad; break; }
+
+            if (simdiki != _sonBolge)
+            {
+                _sonBolge = simdiki;
+                if (simdiki != null)
+                    foreach (var b in _harita.Bolgeler)
+                        if (b.Ad == simdiki) { BolgeSec(b); break; }
+            }
         }
 
         private void TrenGuncelle()
@@ -457,16 +694,21 @@ namespace Amorland
             _temasVar = false;
             if (_surukleOldu) return;
 
+            if (_karakter == null) return;   // secim yapilmadan dokunma yok
+
             Vector3 dunya = _kamera.ScreenToWorldPoint(p.Konum);
             var nokta = new Vector2Int(Mathf.FloorToInt(dunya.x), Mathf.FloorToInt(dunya.y));
             foreach (var b in _harita.Bolgeler)
             {
                 if (!b.Alan.Contains(nokta)) continue;
                 BolgeSec(b);
+                // Bolgeye dokununca karakter oraya da yurusun — kart + yuruyus birlikte.
+                _karakter.HedefKoy(dunya);
                 return;
             }
-            // Bolge disina dokunmak karti kapatir.
+            // Bos zemine dokunmak yuruyus hedefidir; acik kart varsa kapanir.
             KartKapat();
+            _karakter.HedefKoy(dunya);
         }
 
         private void OyunaGec(string bolgeId) => Onyukleyici.OyunaGec(bolgeId);

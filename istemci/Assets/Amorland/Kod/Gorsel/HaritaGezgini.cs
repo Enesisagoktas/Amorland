@@ -30,6 +30,13 @@ namespace Amorland.Gorsel
         /// <summary>Cimdikte 1 piksel = kac birim zoom.</summary>
         public float CimdikHizi = 0.045f;
 
+        /// <summary>
+        /// Takip hedefi (vadi karakteri). Doluyken kamera onu izler; surukleme
+        /// gecici bakinmadir, parmak kalkinca kamera karaktere geri suzulur.
+        /// WASD da karaktere gider — kamera tus kontrolu devre disi kalir.
+        /// </summary>
+        public Transform Takip;
+
         private Camera _kamera;
         private float _ortoHedef = -1f;
         private bool _suruklerken;
@@ -98,7 +105,10 @@ namespace Amorland.Gorsel
 
             Zoom();
             Surukle();
-            Tuslar();
+            if (Takip == null) Tuslar();
+            else if (!_suruklerken)
+                _hedef = new Vector3(Takip.position.x, Takip.position.y + 0.5f,
+                                     transform.position.z);
             Sinirla();
 
             // ⚠ Yumusatma: karo haritasinda sert takip titrek gorunur. 18 katsayisi

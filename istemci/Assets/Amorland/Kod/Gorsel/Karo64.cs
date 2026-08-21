@@ -254,6 +254,32 @@ namespace Amorland.Gorsel
         public const int KavakKoyu = 71;
         public const int TopKoyu = 72;
         public const int TopInceKoyu = 73;
+        /// <summary>
+        /// 2 karo boyunda agaclar (alt = govde, ust = kanopi). 2.5D derinligin
+        /// tasiyicisi: karakter govdenin arkasindan gecerken Y-sort orter,
+        /// kanopi ayri ust katmanda her zaman onde.
+        /// </summary>
+        public const int UzunKavakAlt = 74;
+        public const int UzunKavakUst = 75;
+        public const int UzunCamAlt = 76;
+        public const int UzunCamUst = 77;
+        public const int UzunTuruncuAlt = 78;
+        public const int UzunTuruncuUst = 79;
+        /// <summary>Cam vitrin — rpg-base cam karolari duvarla ayni renkti.</summary>
+        public const int Vitrin = 80;
+        /// <summary>Gercek saman yigini — 248 aslinda krem comlekmis.</summary>
+        public const int SamanYigini = 81;
+        /// <summary>Yesil calilarin koyu turevleri (hayalet cali duzeltmesi).</summary>
+        public const int CaliBuyukKoyu = 82;
+        public const int CaliKucukKoyu = 83;
+        /// <summary>Kontrastli sandik — rpg kasasi toprakta kayboluyordu.</summary>
+        public const int SandikKontrast = 84;
+        /// <summary>Cift rayli dikey cit karosu.</summary>
+        public const int CitDikeyKaro = 85;
+        /// <summary>Kopru dosemesi + celik ray birlesimi.</summary>
+        public const int KopruRay = 86;
+        /// <summary>Ikinci tezgah cesidi.</summary>
+        public const int TezgahB = 87;
 
         // ------------------------------------------------------------ yukleme
 
