@@ -347,18 +347,29 @@ namespace Amorland.Arayuz
             string esyaId = s.EsyaId;
 
             // Satir eylemleri IKINCIL: ahsap. Ekranin tek yesili alttaki "bosalt" butonu.
-            var al = UiKit.AhsapButon(ic, "Al", baskasininKilidi ? "Kilitli" : "Al", () =>
+            // MIKTARLI alma (oyuncu bulgusu): tum yigini cekmek cantayi bir anda
+            // dolduruyordu — "1 Al" gunluk kullanim, "Hepsi" tasima gunu icindir.
+            var birAl = UiKit.AhsapButon(ic, "BirAl", baskasininKilidi ? "Kilitli" : "1 Al", () =>
+            {
+                if (!baskasininKilidi) DepodanAl?.Invoke(esyaId, 1);
+            });
+            birAl.interactable = !baskasininKilidi;
+            UiKit.Boyut(birAl.gameObject, 66f, 42f);
+            birAl.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
+
+            var hepsiniAl = UiKit.AhsapButon(ic, "HepsiniAl", "Hepsi", () =>
             {
                 if (!baskasininKilidi) DepodanAl?.Invoke(esyaId, s.Adet);
             });
-            al.interactable = !baskasininKilidi;
-            UiKit.Boyut(al.gameObject, 84f, 42f);
-            al.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
+            hepsiniAl.interactable = !baskasininKilidi;
+            hepsiniAl.gameObject.SetActive(!baskasininKilidi);
+            UiKit.Boyut(hepsiniAl.gameObject, 66f, 42f);
+            hepsiniAl.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
 
             var kilit = UiKit.AhsapButon(ic, "Kilit", s.Kilitli ? "Aç" : "Kilitle",
                 () => KilitDegistir?.Invoke(esyaId));
             kilit.interactable = !baskasininKilidi;
-            UiKit.Boyut(kilit.gameObject, 96f, 42f);
+            UiKit.Boyut(kilit.gameObject, 84f, 42f);
             kilit.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
         }
 
