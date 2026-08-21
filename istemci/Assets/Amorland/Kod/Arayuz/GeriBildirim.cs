@@ -97,6 +97,9 @@ namespace Amorland.Arayuz
             yaziRt.offsetMax = new Vector2(-16f, -6f);
 
             _aktifler.Add(kabuk.gameObject);
+            // Toast her zaman EN USTTE cizilir: modal rozetleri metnin uzerine
+            // binince "Kuyudan" gibi kelimeler okunmuyordu (UI denetimi).
+            _kok.SetAsLastSibling();
             StartCoroutine(Soldur(kabuk.gameObject, sure));
         }
 
@@ -203,7 +206,7 @@ namespace Amorland.Arayuz
         private Text _acilanYazi;
 
         private const float KartGenislik = 560f;
-        private const float KartYukseklik = 224f;
+        private const float KartYukseklik = 268f;
 
         public void Kur(Transform kanvas)
         {
@@ -215,9 +218,11 @@ namespace Amorland.Arayuz
             // Kapsul dili + ALTIN cerceve: altin bu arayuzde "onemli/secili" demektir
             // (B.22). Kutlama kartinin krem cerceveli sayaclardan ayrildigi yer burasi.
             // ⚠ Icerik "ic" yuzeyine girer, dis cerceveye degil.
+            // ⚠ Govde PARSOMEN: koyu govde HUD kapsulune aittir, panele degil
+            // (UI denetimi). Kutlama vurgusu altin cerceve + rozet + altin sayidan gelir.
             RectTransform ic;
             var kart = UiKit.CerceveliKart(
-                _kok, "Kart", Palet.KapsulZemin, Palet.KapsulAltin, out ic, 24, 5f);
+                _kok, "Kart", Palet.Parsomen, Palet.KapsulAltin, out ic, 24, 5f);
             UiKit.Sabitle(kart, 0.5f, 0.5f, 0f, 0f, KartGenislik, KartYukseklik);
             UiKit.GolgeEkle(kart, 24, 28, 10f);
             kart.gameObject.GetComponent<Image>().raycastTarget = false;
@@ -237,7 +242,7 @@ namespace Amorland.Arayuz
             UiKit.Doldur(yildiz, 12f);
 
             var etiket = UiKit.Yazi(
-                ic, "Etiket", "seviye atladın", UiKit.YaziKucuk, Palet.UiYaziSolgun,
+                ic, "Etiket", "seviye atladın", UiKit.YaziKucuk, Palet.UiKoyuYaziSolgun,
                 TextAnchor.MiddleCenter);
             UiKit.Sabitle(etiket.rectTransform, 0.5f, 1f, 0f, -20f, KartGenislik - 56f, 24f);
 
@@ -250,9 +255,14 @@ namespace Amorland.Arayuz
             var cizgi = UiKit.Ayirac(ic);
             UiKit.Sabitle(cizgi, 0.5f, 1f, 0f, -122f, KartGenislik - 96f, 1f);
 
-            _acilanYazi = UiKit.KonturluYazi(
-                ic, "Acilan", "", UiKit.YaziGovde, Color.white, TextAnchor.UpperCenter, false, 1.2f);
-            UiKit.Sabitle(_acilanYazi.rectTransform, 0.5f, 1f, 0f, -138f, KartGenislik - 56f, 58f);
+            _acilanYazi = UiKit.Yazi(
+                ic, "Acilan", "", UiKit.YaziGovde, Palet.UiKoyuYazi, TextAnchor.UpperCenter, false);
+            UiKit.Sabitle(_acilanYazi.rectTransform, 0.5f, 1f, 0f, -138f, KartGenislik - 56f, 48f);
+
+            // Kapanis yolu: oyuncu beklemek zorunda kalmasin (UI denetimi: "modal
+            // nasil kapanir belli degil"). Otomatik kapanis da korunur.
+            var devam = UiKit.YesilButon(ic, "Devam", "Devam", KutlamayiKapat);
+            UiKit.Sabitle(devam.GetComponent<RectTransform>(), 0.5f, 0f, 0f, 12f, 190f, 48f);
 
             _kok.gameObject.SetActive(false);
         }
@@ -269,7 +279,14 @@ namespace Amorland.Arayuz
 
         private IEnumerator Kapat()
         {
-            yield return new WaitForSecondsRealtime(2.4f);
+            // Butonlu kartta sure daha comert: okumaya firsat kalsin.
+            yield return new WaitForSecondsRealtime(4.5f);
+            if (_kok != null) _kok.gameObject.SetActive(false);
+        }
+
+        private void KutlamayiKapat()
+        {
+            StopAllCoroutines();
             _kok.gameObject.SetActive(false);
         }
     }

@@ -86,11 +86,15 @@ namespace Amorland.Gorsel
         public static readonly Color UiCerceve = H(120, 82, 50);
 
         /// <summary>Cerceve uzerindeki acik pah (ust kenar isigi).</summary>
-        public static readonly Color UiPah = new Color(1f, 1f, 1f, 0.35f);
+        // ⚠ 0.35 opak pah butonun ust yarisini ayri bir "bos bar" gibi gosteriyordu
+        // (UI denetimi): parlama isik hissi vermeli, katman hissi degil.
+        public static readonly Color UiPah = new Color(1f, 1f, 1f, 0.22f);
 
         /// <summary>Krem zemin uzerine yazi.</summary>
         public static readonly Color UiKoyuYazi = H(78, 52, 32);
-        public static readonly Color UiKoyuYaziSolgun = new Color(78f / 255f, 52f / 255f, 32f / 255f, 0.62f);
+        // ⚠ 0.62 alfa krem zeminde ~2.2:1 kontrast veriyordu (UI denetimi, WCAG
+        // siniri 4.5:1). Solgunluk hiyerarsi icin yeter, okunmazlik icin degil.
+        public static readonly Color UiKoyuYaziSolgun = new Color(78f / 255f, 52f / 255f, 32f / 255f, 0.85f);
 
         /// <summary>Onay/ana eylem butonu.</summary>
         public static readonly Color UiYesil = H(126, 184, 68);

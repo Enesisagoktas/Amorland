@@ -37,6 +37,7 @@ namespace Amorland
         // --- sahne
         private Camera _kamera;
         private KameraYoneticisi _kameraYoneticisi;
+        private VadiHaritasi _vadi;
         private TarlaGorunumu _tarla;
         private KarakterKontrolcusu _karakter;
         private Transform _partnerGorsel;
@@ -118,15 +119,17 @@ namespace Amorland
             _kamera = kameraGo.AddComponent<Camera>();
             _kameraYoneticisi = kameraGo.AddComponent<KameraYoneticisi>();
 
-            // Yonlu isik: gercek zamanli golge kapali, yalnizca yuzey ayrimi icin.
-            var isikGo = new GameObject("Isik");
-            isikGo.transform.SetParent(transform, false);
-            var isik = isikGo.AddComponent<Light>();
-            isik.type = LightType.Directional;
-            isik.color = new Color(1f, 0.97f, 0.90f);
-            isik.intensity = 1.05f;
-            isik.shadows = LightShadows.None;
-            isikGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            // Dunya = VADI (2.5D). Oyun ayri bir "tarla kutusu" kurmaz: vadinin
+            // tarla bolgesinin ici oynanabilir alandir. Kok, sunucu karo (0,0)
+            // vadideki OyunCapa'ya denk gelecek sekilde kaydirilir; boylece tum
+            // oyun mantigi sunucu koordinatinda degismeden kalir (isik yok:
+            // sprite'lar isiksiz cizilir, derinlik Y-sort'tan gelir).
+            var vadiGo = new GameObject("Vadi");
+            vadiGo.transform.SetParent(transform, false);
+            vadiGo.transform.localPosition = new Vector3(
+                -(VadiHaritasi.OyunCapaX + 0.5f), -(VadiHaritasi.OyunCapaY + 0.5f), 0f);
+            _vadi = vadiGo.AddComponent<VadiHaritasi>();
+            _vadi.Kur(oyunAlani: true);
 
             var sesGo = new GameObject("Ses");
             sesGo.transform.SetParent(transform, false);
@@ -136,6 +139,8 @@ namespace Amorland
 
             var tarlaGo = new GameObject("TarlaGorunumu");
             tarlaGo.transform.SetParent(transform, false);
+            // Hucre-merkez sozlesmesi: karo (x,y)'nin merkezi dunya (x,y).
+            tarlaGo.transform.localPosition = new Vector3(-0.5f, -0.5f, 0f);
             _tarla = tarlaGo.AddComponent<TarlaGorunumu>();
 
             _izgara = new Izgara();
@@ -349,38 +354,17 @@ namespace Amorland
 
             _tarla.Kur(_durum, _denge);
 
-            // Karakter gorseli: renk oyuncunun sectigi renkten gelir.
-            var gorselGo = new GameObject("KarakterGorsel");
-            gorselGo.transform.SetParent(_karakter.transform, false);
-            // Oyuncunun ACILISTA sectigi renk. Dunya durumu henuz gelmedi (WS baglanmadi),
-            // o yuzden oturum paketinden tasinan deger kullanilir.
-            // B.22 revizyonu: karakter cizim sprite'i. Sahte golge her nesnenin altinda.
-            float pitch = _denge.Yuklendi ? _denge.KameraPitch : 50f;
-            if (Gorsel.VarlikKatalogu.SetVar
-                && Gorsel.VarlikKatalogu.KarakterKur(gorselGo.transform, Vector3.zero, out _karakterAnim) != null)
-            {
-                // Kenney CC0 animasyonlu karakter (idle/run/jump). Sahte golge B.22 geregi.
-                Gorsel.SpriteDeposu.Yatik("golge", gorselGo.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
-            }
-            else if (Gorsel.SpriteDeposu.SetVar)
-            {
-                Gorsel.SpriteDeposu.Yatik("golge", gorselGo.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
-                Gorsel.SpriteDeposu.Nesne(
-                    "karakter_" + Mathf.Clamp(_benimRenk, 0, 3), gorselGo.transform,
-                    Vector3.zero, pitch, 0.05f);
-            }
-            else
-            {
-                var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(_benimRenk), new Color(0.88f, 0.76f, 0.64f));
-                MateryalDeposu.Nesne("Govde", mesh, gorselGo.transform, Vector3.zero);
-                MateryalDeposu.Nesne(
-                    "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), gorselGo.transform,
-                    new Vector3(0f, 0.01f, 0f), saydam: true);
-            }
+            // Karakter: vadi acilisinda secilen poncik koylu (2.5D sprite).
+            // Renk artik govdeyi boyamaz; hafif bir ton olarak biner — iki oyuncunun
+            // ayirt edilebilirligi (B.7) renk tonundan okunmaya devam eder.
+            Transform gorsel = KarakterSpriteKur(
+                _karakter.transform,
+                PlayerPrefs.GetString("vadi_karakter", "erkek") == "kadin",
+                _benimRenk);
 
             IzgarayiKur();
             _karakter.KaroBasinaSn = _denge.YurumeKaroSn;
-            _karakter.Kur(gorselGo.transform, _izgara, new Vector3(1f, 0f, -2f));
+            _karakter.Kur(gorsel, _izgara, new Vector3(1f, -2f, 0f));
 
             _kameraYoneticisi.Pitch = _denge.KameraPitch;
             _kameraYoneticisi.YumusatmaSn = _denge.KameraYumusatma;
@@ -406,9 +390,45 @@ namespace Amorland
         private void IzgarayiKur()
         {
             _izgara.Temizle();
+            // Sinirlar TUM VADI: karakter tarladan cikip vadiyi gezebilir.
+            _izgara.MinX = -VadiHaritasi.OyunCapaX;
+            _izgara.MaksX = VadiHaritasi.En - VadiHaritasi.OyunCapaX - 1;
+            _izgara.MinY = -VadiHaritasi.OyunCapaY;
+            _izgara.MaksY = VadiHaritasi.Boy - VadiHaritasi.OyunCapaY - 1;
+            // Vadi engelleri (su, bina, govde) geri cagriyla: kume taramasi yok.
+            _izgara.DisEngel = (x, y) => !_vadi.Gecilebilir(
+                x + VadiHaritasi.OyunCapaX, y + VadiHaritasi.OyunCapaY);
             // Kuyu gecilemez: uzerinden yurunmez, yanina gidilir.
             Vector3 kuyu = TarlaGorunumu.KuyuKonumu;
-            _izgara.EngelKoy(Mathf.RoundToInt(kuyu.x), Mathf.RoundToInt(kuyu.z));
+            _izgara.EngelKoy(Mathf.RoundToInt(kuyu.x), Mathf.RoundToInt(kuyu.y));
+        }
+
+        /// <summary>
+        /// Ayak-pivot sozlesmesi (2.5D): kok karo merkezindedir, sprite yarim karo
+        /// yukarida bir cocuktur. Y-sort karsilastirmasi ayaga gore yapilir —
+        /// karakter agac govdesinin ustundeyken arkasinda, altindayken onunde cizilir.
+        /// </summary>
+        private Transform KarakterSpriteKur(Transform kok, bool kadin, int renk)
+        {
+            var golgeGo = new GameObject("Golge");
+            golgeGo.transform.SetParent(kok, false);
+            golgeGo.transform.localPosition = new Vector3(0f, -0.06f, 0f);
+            golgeGo.transform.localScale = new Vector3(0.8f, 0.7f, 1f);
+            var gsr = golgeGo.AddComponent<SpriteRenderer>();
+            gsr.sprite = Karo64.Al(Sayfa64.Ek, Karo64.Golge);
+            gsr.sortingOrder = 1;
+
+            var gorselGo = new GameObject("KarakterGorsel");
+            gorselGo.transform.SetParent(kok, false);
+            gorselGo.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            var sr = gorselGo.AddComponent<SpriteRenderer>();
+            sr.sprite = Karo64.Al(Sayfa64.Ek, kadin ? Karo64.KoyluKadin : Karo64.KoyluErkek);
+            sr.sortingOrder = 2;
+            if (_denge.Yuklendi)
+            {
+                sr.color = Color.Lerp(Color.white, _denge.OyuncuRengi(renk), 0.18f);
+            }
+            return gorselGo.transform;
         }
 
         private void PartnerGorseliKur()
@@ -434,22 +454,10 @@ namespace Amorland
             {
                 Destroy(_partnerGovde.transform.GetChild(i).gameObject);
             }
-            float pPitch = _denge.Yuklendi ? _denge.KameraPitch : 50f;
-            if (Gorsel.SpriteDeposu.SetVar)
-            {
-                Gorsel.SpriteDeposu.Yatik("golge", _partnerGovde.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
-                Gorsel.SpriteDeposu.Nesne(
-                    "karakter_" + Mathf.Clamp(renk, 0, 3), _partnerGovde.transform,
-                    Vector3.zero, pPitch, 0.05f);
-            }
-            else
-            {
-                var mesh = MeshUretici.Karakter(_denge.OyuncuRengi(renk), new Color(0.86f, 0.72f, 0.60f));
-                MateryalDeposu.Nesne("Govde", mesh, _partnerGovde.transform, Vector3.zero);
-                MateryalDeposu.Nesne(
-                    "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge), _partnerGovde.transform,
-                    new Vector3(0f, 0.01f, 0f), saydam: true);
-            }
+            // Partnerin cinsiyet secimi istemcide bilinmez (sunucu saklamaz);
+            // gorsel ayrim icin benim secimimin TERSI cizilir + renk tonu (B.7).
+            bool benKadin = PlayerPrefs.GetString("vadi_karakter", "erkek") == "kadin";
+            KarakterSpriteKur(_partnerGovde.transform, !benKadin, renk);
             _partnerRenk = renk;
         }
 
@@ -494,6 +502,8 @@ namespace Amorland
             _tezgah.Craftla += tarifId => Gonder("craft", ek: new NiyetEk { TarifId = tarifId });
 
             _harita.BolgeSecildi += BolgeyeGit;
+            // Harita paneline vadinin kus bakisi dokusu (bos parsomen kalmasin).
+            _harita.MinimapVer(_vadi.MinimapPikselleri(4, out int mw, out int mh), mw, mh);
 
             _davet.KodIste += () => _rest.DavetKodu(sonuc =>
             {
@@ -663,7 +673,7 @@ namespace Amorland
             _sonrakiKonumYayini = Time.unscaledTime + 1f / Mathf.Max(1, _denge.KonumYayinHz);
 
             Vector3 p = _karakter.transform.position;
-            _baglanti.KonumGonder(_aktifBolge, new Vector2(p.x, p.z), 0f);
+            _baglanti.KonumGonder(_aktifBolge, new Vector2(p.x, p.y), 0f);
 
             PartnerKonumunuUygula();
         }
@@ -684,7 +694,7 @@ namespace Amorland
             }
             _partnerGorsel.gameObject.SetActive(true);
             // 5 Hz gelen konum ARA DEGERLERLE yumusatilir; yoksa partner ziplayarak yurur.
-            Vector3 hedef = new Vector3(konum.X, 0f, konum.Y);
+            Vector3 hedef = new Vector3(konum.X, konum.Y, 0f);
             _partnerGorsel.position =
                 Vector3.Lerp(_partnerGorsel.position, hedef, Time.deltaTime * 8f);
         }
@@ -705,11 +715,26 @@ namespace Amorland
             if (!_joystick.Aktif || _joystick.Yon == Vector2.zero) return;
 
             // Joystick karo karo yurutmez, dogrudan iter: gezinmek icin daha akici.
-            Vector3 yon = new Vector3(_joystick.Yon.x, 0f, _joystick.Yon.y);
+            // ⚠ Carpisma karo bazli ve KAYDIRMALI: hedef hucre kapaliysa once
+            // yalniz X, sonra yalniz Y denenir — karakter engellere yapismaz.
             float hiz = 1f / Mathf.Max(0.01f, _denge.YurumeKaroSn);
             _karakter.Dur();
-            _karakter.transform.position += yon * (hiz * Time.deltaTime);
+            Vector2 adim = _joystick.Yon * (hiz * Time.deltaTime);
+            Vector2 simdiki = _karakter.transform.position;
+            Vector2 aday = simdiki + adim;
+            if (!KaroGecer(aday))
+            {
+                Vector2 sadeceX = simdiki + new Vector2(adim.x, 0f);
+                Vector2 sadeceY = simdiki + new Vector2(0f, adim.y);
+                if (KaroGecer(sadeceX)) aday = sadeceX;
+                else if (KaroGecer(sadeceY)) aday = sadeceY;
+                else return;
+            }
+            _karakter.transform.position = new Vector3(aday.x, aday.y, 0f);
         }
+
+        private bool KaroGecer(Vector2 konum) =>
+            _izgara.Gecilebilir(Mathf.RoundToInt(konum.x), Mathf.RoundToInt(konum.y));
 
         // ================================================================== disaridan
 

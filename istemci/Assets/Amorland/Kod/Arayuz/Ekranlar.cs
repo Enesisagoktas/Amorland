@@ -145,6 +145,27 @@ namespace Amorland.Arayuz
         /// krem parsomen uzerinde tamamen kaybolur. Kahve kagit tonuna cevrilir ve
         /// 1 px yerine 2 px'e cikarilir — ince acik cizgi kremde hic okunmuyordu.
         /// </summary>
+        /// <summary>
+        /// Bos-durum karti (UI denetimi): cirilciplak krem govde "bitmemis" okunuyor.
+        /// Ortada ikon + tek satir yonlendirme; her listede ayni kalip.
+        /// </summary>
+        internal static void BosDurum(Transform liste, string mesaj)
+        {
+            var kabuk = UiKit.Panel(liste, "BosDurum", Color.clear);
+            UiKit.Boyut(kabuk.gameObject, 0f, 150f);
+
+            var ikon = UiKit.Panel(kabuk, "Ikon", Palet.UiKoyuYaziSolgun);
+            var ikonImg = ikon.gameObject.GetComponent<Image>();
+            ikonImg.sprite = Sekil.Elmas();
+            ikonImg.raycastTarget = false;
+            UiKit.Sabitle(ikon, 0.5f, 0.5f, 0f, 26f, 44f, 44f);
+
+            var yazi = UiKit.Yazi(
+                kabuk, "Mesaj", mesaj, UiKit.YaziGovde, Palet.UiKoyuYaziSolgun,
+                TextAnchor.UpperCenter);
+            UiKit.Sabitle(yazi.rectTransform, 0.5f, 0.5f, 0f, -12f, 420f, 52f);
+        }
+
         internal static void Ayirac(Transform ebeveyn)
         {
             var rt = UiKit.Ayirac(ebeveyn, 2f);
@@ -193,8 +214,13 @@ namespace Amorland.Arayuz
             }
 
             var ben = _durum.Ben;
-            if (ben == null) return;
+            if (ben == null)
+            {
+                EkranParcasi.BosDurum(_liste, "Tarifler sunucudan geliyor...");
+                return;
+            }
 
+            bool tarifVar = false;
             foreach (string tarifId in _denge.TezgahTarifleri("basit_tezgah"))
             {
                 // Satir, parsomen govdenin UZERINE binen bir yuzeydir: bir ton koyu
@@ -242,7 +268,10 @@ namespace Amorland.Arayuz
                 buton.interactable = yeter && ben.Seviye >= _denge.AletCraftSeviyesi(tarifId);
                 UiKit.Boyut(buton.gameObject, 104f, 36f);
                 EkranParcasi.KilitGorunumu(buton);
+                tarifVar = true;
             }
+
+            if (!tarifVar) EkranParcasi.BosDurum(_liste, "Henüz tarif yok — tezgâh seviyeyle açılır.");
 
             var not = UiKit.Yazi(
                 _liste, "Not",
@@ -406,14 +435,64 @@ namespace Amorland.Arayuz
 
         public event Action<string> BolgeSecildi;
 
+        private RawImage _minimap;
+        private Text _minimapNotu;
+
         public HaritaEkrani(Transform kanvas, DunyaDurumu durum, DengeVerisi denge)
         {
             _durum = durum;
             _denge = denge;
-            _panel = new Panel(kanvas, "HaritaEkrani", "Vadi haritası", null, 660f, 460f);
+            _panel = new Panel(kanvas, "HaritaEkrani", "Vadi haritası", null, 660f, 520f);
+
+            // Ust: vadinin kus bakisi gorunumu. Icerik OyunDunyasi'ndan gelir
+            // (Oyun.HudKur -> MinimapVer); gelmeden once sicak bir yer tutucu durur —
+            // "bos parsomen asla oyuncuya gosterilmez" (UI denetimi).
+            RectTransform haritaIc;
+            var haritaKutu = UiKit.CerceveliKart(
+                _panel.Icerik, "Minimap", Palet.UiKagitCukur, Palet.UiCerceve, out haritaIc, 14, 3f);
+            haritaKutu.anchorMin = new Vector2(0f, 1f);
+            haritaKutu.anchorMax = new Vector2(1f, 1f);
+            haritaKutu.pivot = new Vector2(0.5f, 1f);
+            haritaKutu.anchoredPosition = Vector2.zero;
+            haritaKutu.sizeDelta = new Vector2(0f, 168f);
+
+            var mgo = new GameObject("Doku");
+            mgo.transform.SetParent(haritaIc, false);
+            _minimap = mgo.AddComponent<RawImage>();
+            _minimap.raycastTarget = false;
+            // 512x320 vadi orani: 248x155.
+            UiKit.Sabitle(_minimap.rectTransform, 0.5f, 0.5f, 0f, 0f, 248f, 155f);
+            _minimap.enabled = false;
+
+            _minimapNotu = UiKit.Yazi(
+                haritaIc, "Not", "Vadi keşfedildikçe burada açılır.", UiKit.YaziKucuk,
+                Palet.UiKoyuYaziSolgun, TextAnchor.MiddleCenter);
+            UiKit.Doldur(_minimapNotu.rectTransform);
+
             _liste = UiKit.KaydirmaListesi(_panel.Icerik, "Liste", out _);
             var dis = _liste.parent.parent as RectTransform;
-            if (dis != null) UiKit.Doldur(dis);
+            if (dis != null)
+            {
+                dis.anchorMin = Vector2.zero;
+                dis.anchorMax = Vector2.one;
+                dis.offsetMin = Vector2.zero;
+                dis.offsetMax = new Vector2(0f, -176f);
+            }
+        }
+
+        /// <summary>Vadinin kus bakisi pikselleri (VadiHaritasi.MinimapPikselleri).</summary>
+        public void MinimapVer(Color32[] pikseller, int genislik, int yukseklik)
+        {
+            if (pikseller == null || pikseller.Length == 0) return;
+            var doku = new Texture2D(genislik, yukseklik, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point
+            };
+            doku.SetPixels32(pikseller);
+            doku.Apply();
+            _minimap.texture = doku;
+            _minimap.enabled = true;
+            _minimapNotu.gameObject.SetActive(false);
         }
 
         public void Ac()
@@ -492,7 +571,7 @@ namespace Amorland.Arayuz
             // ⚠ Panel yuksekligi icerigin toplamina gore secildi. Fazla yuksek panel
             // dikey diziyi bosluga yayip butonlari sisiriyor. Cerceveli kabuklar her
             // satira 6 px ekledigi icin olcu 520'den 550'ye cikti.
-            _panel = new Panel(kanvas, "DavetEkrani", "Eşini vadiye çağır", null, 660f, 550f);
+            _panel = new Panel(kanvas, "DavetEkrani", "Eşini vadiye çağır", null, 660f, 576f);
 
             var dikey = UiKit.Panel(_panel.Icerik, "Dikey", Color.clear);
             UiKit.Doldur(dikey);
@@ -503,7 +582,9 @@ namespace Amorland.Arayuz
                 "Bu vadide hiçbir iş tek başına görülmez. Kodu eşine gönder; aynı vadiye düşer.\n"
                 + "Rastgele eşleşme yoktur — yalnızca çağırdığın kişi gelir.",
                 UiKit.YaziGovde, Palet.UiKoyuYaziSolgun, TextAnchor.UpperLeft);
-            UiKit.Boyut(aciklama.gameObject, 0f, 50f);
+            // ⚠ 50 px iki satira gore hesaplanmisti; dar panelde metin uc satira
+            // sarinca kod kapsulunun altinda kaliyordu (UI denetimi).
+            UiKit.Boyut(aciklama.gameObject, 0f, 76f);
 
             // Kod ICE COKUK, kalin cerceveli bir kutuda durur: kopyalanacak bir DEGER
             // oldugu okunsun, ekrandaki baska bir baslik gibi gorunmesin. Ekranin
@@ -531,9 +612,9 @@ namespace Amorland.Arayuz
             EkranParcasi.Ayirac(dikey);
 
             var ayracEtiket = UiKit.Yazi(
-                dikey, "AyracEtiket", "veya elindeki kodla katıl", UiKit.YaziMini,
+                dikey, "AyracEtiket", "veya elindeki kodla katıl", UiKit.YaziKucuk,
                 Palet.UiKoyuYaziSolgun, TextAnchor.MiddleCenter);
-            UiKit.Boyut(ayracEtiket.gameObject, 0f, 20f);
+            UiKit.Boyut(ayracEtiket.gameObject, 0f, 24f);
 
             var katilSatir = UiKit.Panel(dikey, "KatilSatir", Color.clear);
             UiKit.Boyut(katilSatir.gameObject, 0f, 56f);
@@ -600,7 +681,9 @@ namespace Amorland.Arayuz
             // ⚠ Yukseklik icerigin toplamindan (4 ses satiri + haptik + adres + not)
             // hesaplandi; daha alcak panel son satiri modalin disinda birakiyordu.
             // Cerceveli satirlar her satira 6 px ekledigi icin olcu 580'den 620'ye cikti.
-            _panel = new Panel(kanvas, "AyarlarEkrani", "Ayarlar", null, 640f, 620f);
+            // Surumde adres satiri yok; panel icerige gore kisalir (olu bant kalmasin).
+            _panel = new Panel(kanvas, "AyarlarEkrani", "Ayarlar", null, 640f,
+                Debug.isDebugBuild ? 620f : 556f);
 
             var dikey = UiKit.Panel(_panel.Icerik, "Dikey", Color.clear);
             UiKit.Doldur(dikey);
@@ -613,7 +696,9 @@ namespace Amorland.Arayuz
 
             EkranParcasi.Ayirac(dikey);
             HaptikSatiri(dikey);
-            AdresSatiri(dikey);
+            // Sunucu adresi bir GELISTIRICI ayaridir; oyuncu ekraninda durmaz
+            // (UI denetimi). Gelistirme derlemesinde gorunur kalir.
+            if (Debug.isDebugBuild) AdresSatiri(dikey);
             EkranParcasi.Ayirac(dikey);
 
             var not = UiKit.Yazi(
@@ -715,19 +800,21 @@ namespace Amorland.Arayuz
             };
             tazele();
 
+            // ⚠ 36 px dokunma hedefi mobil siniri (44) altindaydi ve iki buton
+            // merkezleri 46 px'e dusuyordu — yanlis basma riski (UI denetimi).
             var azalt = UiKit.AhsapButon(satir, "Az", "−", () =>
             {
                 _ses.KanalSeviyesiAyarla(k, _ses.KanalSeviyesi(k) - 0.1f);
                 tazele();
             });
-            UiKit.Boyut(azalt.gameObject, 36f, 36f);
+            UiKit.Boyut(azalt.gameObject, 44f, 44f);
 
             var artir = UiKit.AhsapButon(satir, "Cok", "+", () =>
             {
                 _ses.KanalSeviyesiAyarla(k, _ses.KanalSeviyesi(k) + 0.1f);
                 tazele();
             });
-            UiKit.Boyut(artir.gameObject, 36f, 36f);
+            UiKit.Boyut(artir.gameObject, 44f, 44f);
         }
 
         // Haptik kapatilabilir olmak ZORUNDA (B.23).

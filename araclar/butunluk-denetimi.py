@@ -260,8 +260,11 @@ def istemci_yaw_kilidi():
     """B.5: yaw KILITLI. Kamerayi donduren tek satir bile kaldiraci yok eder."""
     yol = os.path.join(ISTEMCI, "Kod", "Gorsel", "KameraYoneticisi.cs")
     icerik = oku(yol) if os.path.exists(yol) else ""
-    if "Quaternion.Euler(Pitch, 0f, 0f)" in icerik:
-        gecti("B.5 yaw kilidi", "kamera rotasyonu her karede yaw=0'a sabitleniyor")
+    # 3D donemde kalip Euler(Pitch,0,0) idi; 2.5D vadi kamerasi hic donmez ve
+    # her karede Quaternion.identity'e sabitlenir — ayni garanti, daha guclusu.
+    if ("Quaternion.Euler(Pitch, 0f, 0f)" in icerik
+            or "_kamera.transform.rotation = Quaternion.identity" in icerik):
+        gecti("B.5 yaw kilidi", "kamera rotasyonu her karede sabitleniyor")
     else:
         ihlal("B.5 yaw kilidi", "Kamera yaw'i sabitlenmiyor", [(os.path.relpath(yol, KOK), 0, "")])
 

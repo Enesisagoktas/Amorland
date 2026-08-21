@@ -41,8 +41,10 @@ namespace Amorland.Arayuz
 
         // Depo ciftin en cok actigi ekran: varsayilan modalden genis, cunku 46'lik
         // satirlara sikistirilmis liste "kim ne birakti" bilgisini okunmaz yapiyordu.
-        private const float PanelGenislik = 860f;
-        private const float PanelYukseklik = 560f;
+        // ⚠ Kardes ekranlarla (Canta/Tezgah, 720x520) AYNI kalip: iki envanter
+        // ekrani arasinda gecis "ziplama" hissi veriyordu (UI denetimi).
+        private const float PanelGenislik = 720f;
+        private const float PanelYukseklik = 520f;
 
         // ⚠ Panel govdesi cerceve kadar (6 px x 2) daralir, Icerik ayrica 16 px x 2 iceri
         // cekilir. 820 genislikte kartlar govdenin cercevesine biniyordu; 800 nefes birakir.
@@ -93,7 +95,7 @@ namespace Amorland.Arayuz
 
             _uyari = UiKit.Yazi(
                 ozetIc, "Uyari", "", UiKit.YaziKucuk, Palet.UiKoyuYaziSolgun, TextAnchor.UpperRight, true);
-            UiKit.Sabitle(_uyari.rectTransform, 1f, 1f, -16f, -12f, 380f, 26f);
+            UiKit.Sabitle(_uyari.rectTransform, 1f, 1f, -16f, -12f, 260f, 26f);
 
             // Cubuk zemini CUKUR parsomen: dolgunun nerede bittigi ancak boyle okunuyor.
             // Cerceve cubuga da gerekli — cercevesiz cubuk parsomen uzerinde bir leke gibi durur.
@@ -137,10 +139,11 @@ namespace Amorland.Arayuz
                 () => DepoyaBosalt?.Invoke());
             UiKit.Boyut(bosalt.gameObject, 288f, 50f);
 
+            // Ipucu her modalda ayni ritim: butonun sagina, sola yasli (UI denetimi).
             var not = UiKit.Yazi(altBar, "Not",
                 "Kilitli yığını partner alamaz · en fazla 3 yığın",
-                UiKit.YaziKucuk, Palet.UiKoyuYaziSolgun, TextAnchor.MiddleRight);
-            UiKit.Boyut(not.gameObject, 380f, 44f).flexibleWidth = 1f;
+                UiKit.YaziKucuk, Palet.UiKoyuYaziSolgun, TextAnchor.MiddleLeft);
+            UiKit.Boyut(not.gameObject, 300f, 44f).flexibleWidth = 1f;
         }
 
         public void Ac()

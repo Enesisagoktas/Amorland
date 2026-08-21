@@ -17,6 +17,13 @@ namespace Amorland.Girdi
     {
         private readonly HashSet<long> _engeller = new HashSet<long>();
 
+        /// <summary>
+        /// Dis engel sorgusu: vadi haritasinin gecilmezligi (su, bina, agac govdesi)
+        /// buradan gelir. 163 bin hucreyi kumeye taramak yerine geri cagri —
+        /// A* zaten yalnizca dokundugu hucreleri sorar.
+        /// </summary>
+        public System.Func<int, int, bool> DisEngel;
+
         public int MinX = -12, MaksX = 24, MinY = -8, MaksY = 16;
 
         private static long Anahtar(int x, int y) => ((long)x << 32) ^ (uint)y;
@@ -28,7 +35,9 @@ namespace Amorland.Girdi
         public void Temizle() => _engeller.Clear();
 
         public bool Gecilebilir(int x, int y) =>
-            x >= MinX && x <= MaksX && y >= MinY && y <= MaksY && !_engeller.Contains(Anahtar(x, y));
+            x >= MinX && x <= MaksX && y >= MinY && y <= MaksY
+            && !_engeller.Contains(Anahtar(x, y))
+            && (DisEngel == null || !DisEngel(x, y));
 
         private static readonly int[] KomsuX = { 1, -1, 0, 0, 1, 1, -1, -1 };
         private static readonly int[] KomsuY = { 0, 0, 1, -1, 1, -1, 1, -1 };

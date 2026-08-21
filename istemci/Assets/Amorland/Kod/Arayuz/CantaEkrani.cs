@@ -149,12 +149,20 @@ namespace Amorland.Arayuz
         public void Tazele()
         {
             var ben = _durum.Ben;
-            if (ben == null) return;
+            if (ben == null)
+            {
+                EkranParcasi.BosDurum(_liste, "Çanta sunucudan geliyor...");
+                return;
+            }
 
             int yigin = _denge.YiginBoyutu;
             int kullanilan = 0;
             var satirlar = new List<EnvanterSatiri>(_durum.BenimEnvanterim);
             foreach (var e in satirlar) kullanilan += Mathf.CeilToInt(e.Adet / (float)yigin);
+            if (satirlar.Count == 0)
+            {
+                EkranParcasi.BosDurum(_liste, "Çantan boş — tarladan ürün topla.");
+            }
 
             _ozet.text = kullanilan + " / " + ben.CantaSlot + " slot   (yığın " + yigin + ")";
             // Dolu canta uyarisi KOYU kirmizi: acik kirmizi krem seritte solgun kaliyor

@@ -34,8 +34,8 @@ ses altyapısı + yer tutucu ses seti.
 | REST + WebSocket, yeniden bağlanma merdiveni (1,2,4,8,15,30 sn) | ✅ derleniyor |
 | Çevrimdışı kuyruk — 20 eylem / 60 sn, sadece kendi parselin | ✅ derleniyor |
 | İyimser tahmin + 0.2 sn yumuşak geri sarma | ✅ derleniyor |
-| Ortografik kamera — 50° pitch, **yaw kilitli**, ölü bölge, iki zoom | ✅ derleniyor |
-| Prosedürel low-poly mesh, sert normal, 16 renkli palet, arka yüz yok | ✅ derleniyor |
+| Ortografik 2.5D kamera — dönmez, Y-sort ekseni, ölü bölge, iki zoom | ✅ derleniyor |
+| **Oyun dünyası = vadi** — tarla bölgesi oynanabilir alan, sunucu koordinatı korunur | ✅ **görüntüsü var** |
 | Izgara A*, dokun-yürü, dinamik joystick, partner avatarı (5 Hz interpolasyon) | ✅ derleniyor |
 | Bağlam duyarlı eylem (alet seçimi yok) + sürükle-boyama kuyruğu | ✅ derleniyor |
 | Kod ile UI — HUD, çanta, depo, tezgâh, defter, harita, davet, ayarlar, giriş | ✅ derleniyor |

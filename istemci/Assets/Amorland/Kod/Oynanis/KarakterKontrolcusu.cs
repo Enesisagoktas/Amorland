@@ -27,19 +27,23 @@ namespace Amorland.Oynanis
         private Vector3 _adimBaslangic;
 
         private Transform _gorsel;
+        private SpriteRenderer _sr;
+        private float _gorselTabanY;
         private float _sallanmaFazi;
 
         /// <summary>Yol bitince cagrilir: bekleyen baglam eylemi burada tetiklenir.</summary>
         public event Action<Vector2Int> HedefeVarildi;
 
         public Vector2Int Karo => new Vector2Int(
-            Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z));
+            Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y));
 
         public bool Yuruyor => _yuruyor;
 
         public void Kur(Transform gorsel, Izgara izgara, Vector3 baslangic)
         {
             _gorsel = gorsel;
+            _sr = gorsel != null ? gorsel.GetComponentInChildren<SpriteRenderer>() : null;
+            _gorselTabanY = gorsel != null ? gorsel.localPosition.y : 0f;
             Izgara = izgara;
             transform.position = baslangic;
             _hedefKonum = baslangic;
@@ -80,16 +84,13 @@ namespace Amorland.Oynanis
             Vector2Int sonraki = _yol[0];
             _yol.RemoveAt(0);
             _adimBaslangic = transform.position;
-            _hedefKonum = new Vector3(sonraki.x, 0f, sonraki.y);
+            _hedefKonum = new Vector3(sonraki.x, sonraki.y, 0f);
             _adimIlerleme = 0f;
             _yuruyor = true;
 
-            // Yon: yaw kilitli kamerada karakterin donusu tek okunabilirlik ipucu.
+            // Yon: 2.5D'de karakter donmez, sprite yatay cevrilir.
             Vector3 yon = _hedefKonum - _adimBaslangic;
-            if (yon.sqrMagnitude > 0.001f && _gorsel != null)
-            {
-                _gorsel.rotation = Quaternion.LookRotation(new Vector3(yon.x, 0f, yon.z));
-            }
+            if (Mathf.Abs(yon.x) > 0.05f && _sr != null) _sr.flipX = yon.x < 0f;
         }
 
         private void Update()
@@ -109,14 +110,14 @@ namespace Amorland.Oynanis
             }
             transform.position = Vector3.Lerp(_adimBaslangic, _hedefKonum, _adimIlerleme);
 
-            // Yurume sallanmasi: iskelet animasyonu yok, tek transform yeter (yer tutucu).
+            // Yurume zipirtisi: poncik his — minik hoplama + hafif yalpalama.
             if (_gorsel != null)
             {
-                _sallanmaFazi += Time.deltaTime * 9f;
-                float y = Mathf.Abs(Mathf.Sin(_sallanmaFazi)) * 0.06f;
-                _gorsel.localPosition = new Vector3(0f, y, 0f);
+                _sallanmaFazi += Time.deltaTime * 11f;
+                float y = Mathf.Abs(Mathf.Sin(_sallanmaFazi)) * 0.07f;
+                _gorsel.localPosition = new Vector3(0f, _gorselTabanY + y, 0f);
                 _gorsel.localRotation =
-                    Quaternion.Euler(0f, _gorsel.localEulerAngles.y, Mathf.Sin(_sallanmaFazi) * 4f);
+                    Quaternion.Euler(0f, 0f, Mathf.Sin(_sallanmaFazi) * 4f);
             }
         }
     }

@@ -223,7 +223,8 @@ namespace Amorland.Arayuz
                 // Adet rozeti: koyu daire — referanstaki sayac rozetiyle ayni dil.
                 var rozet = UiKit.Panel(slotIc, "AdetRozet", Palet.KapsulZemin);
                 rozet.gameObject.GetComponent<Image>().sprite = Sekil.Daire();
-                UiKit.Sabitle(rozet, 1f, 0f, -2f, 2f, 26f, 26f);
+                // Ic yuzeyin kosesinde, cerceveye binmeden (UI denetimi: tasiyordu).
+                UiKit.Sabitle(rozet, 1f, 0f, -4f, 4f, 24f, 24f);
                 var adet = UiKit.Yazi(
                     rozet, "Adet", "", UiKit.YaziMini, Color.white, TextAnchor.MiddleCenter, true);
                 UiKit.Doldur(adet.rectTransform);
@@ -263,7 +264,8 @@ namespace Amorland.Arayuz
                 var b = UiKit.AhsapButon(
                     kok, (string)dugmeler[i][0], (string)dugmeler[i][1], (Action)dugmeler[i][2]);
                 var rt = b.GetComponent<RectTransform>();
-                UiKit.Sabitle(rt, 1f, 0f, -14f - (dugmeler.Length - 1 - i) * 84f, 14f, 78f, 62f);
+                // 86 px buton + 94 px adim: yazi kenara 4 px kala dayanmasin (UI denetimi).
+                UiKit.Sabitle(rt, 1f, 0f, -14f - (dugmeler.Length - 1 - i) * 94f, 14f, 86f, 62f);
                 b.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
             }
 
@@ -288,7 +290,14 @@ namespace Amorland.Arayuz
         {
             if (_durum == null) return;
             var ben = _durum.Ben;
-            if (ben == null) return;
+            if (ben == null)
+            {
+                // ⚠ Iskelet doldurma (UI denetimi): sunucu durumu gelmeden bos kapsul
+                // "kirik/yuklenememis" okunuyordu. Veri yokken de her gosterge makul
+                // bir varsayilanla dolu durur; ilk gercek Tazele hepsini ezer.
+                IskeletDoldur();
+                return;
+            }
 
             _seviyeYazi.text = "Seviye " + ben.Seviye;
             float oran = ben.SonrakiSeviyeXp > 0 ? ben.Xp / (float)ben.SonrakiSeviyeXp : 1f;
@@ -308,6 +317,22 @@ namespace Amorland.Arayuz
 
             PartnerTazele();
             DepoTazele();
+            TohumCubugunuTazele();
+        }
+
+        private void IskeletDoldur()
+        {
+            _seviyeYazi.text = "Seviye 1";
+            UiKit.CubukAyarla(_xpDolgu, 0f, XpGenislik - 4f);
+            _xpYazi.text = "0 / 100";
+            _avatar.color = new Color(0.93f, 0.72f, 0.52f);
+            _partnerYazi.text = "Vadi çifti";
+            _partnerRozet.color = new Color(
+                Palet.UiKirmizi.r, Palet.UiKirmizi.g, Palet.UiKirmizi.b, 0.45f);
+            _cantaYazi.text = "Çanta 0/8";
+            _kovaYazi.text = "Kova 0/2";
+            _depoYazi.text = "Depo 0/3";
+            _depoYazi.color = Color.white;
             TohumCubugunuTazele();
         }
 
@@ -333,7 +358,9 @@ namespace Amorland.Arayuz
                 // Tek imza: kalp soluk kalir. "Ikinci imza icin bir yer her zaman
                 // ayrilmistir" (B.21) — gosterge kaybolmaz, sadece sonuk durur.
                 _partnerYazi.text = benimAdim;
-                _partnerRozet.color = new Color(1f, 1f, 1f, 0.28f);
+                // Kalp gri degil KIRMIZI-soluk: gosterge bos degil, "yer ayrilmis" (B.21).
+                _partnerRozet.color = new Color(
+                    Palet.UiKirmizi.r, Palet.UiKirmizi.g, Palet.UiKirmizi.b, 0.45f);
                 return;
             }
 

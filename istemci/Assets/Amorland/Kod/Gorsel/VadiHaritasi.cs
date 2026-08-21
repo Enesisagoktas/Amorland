@@ -35,6 +35,17 @@ namespace Amorland.Gorsel
         public const int Boy = 320;
         public const int Tohum = 20260821;
 
+        /// <summary>
+        /// Oyun capasi: sunucu karo (0,0)'in vadi hucre karsiligi. Oyun sahnesi
+        /// vadi kokunu (-CapaX-0.5, -CapaY-0.5) konumuna koyar; boylece sunucu
+        /// karo (x,y)'nin MERKEZI dunya (x,y) olur ve TUM oyun mantigi (izgara,
+        /// niyetler, konum yayini) sunucu koordinatinda degismeden kalir.
+        /// Tarla bolgesi (170,66,122,58) icinde secildi: parseller, kuyu (-4,1)
+        /// ve izgara sinirlari (-12..24, -8..16) bolgeye rahatca sigar.
+        /// </summary>
+        public const int OyunCapaX = 214;
+        public const int OyunCapaY = 88;
+
         public struct Bolge
         {
             public string Ad;
@@ -64,7 +75,7 @@ namespace Amorland.Gorsel
 
         // ------------------------------------------------------------------ kurulum
 
-        public void Kur()
+        public void Kur(bool oyunAlani = false)
         {
             _r = new System.Random(Tohum);
             _su = new bool[En, Boy];
@@ -104,6 +115,8 @@ namespace Amorland.Gorsel
             SuDetayi();
             Balast();
             KoprulerSer();
+
+            if (oyunAlani) OyunAlaniAc();
 
             _zemin.RefreshAllTiles();
             _dekor.RefreshAllTiles();
@@ -1134,6 +1147,41 @@ namespace Amorland.Gorsel
         }
 
         private static bool Icerde(int x, int y) => x >= 0 && y >= 0 && x < En && y < Boy;
+
+        /// <summary>
+        /// Oyun modunda tarla bolgesinin ORTASINI oynanabilir alan icin bosaltir:
+        /// dekoratif parseller, agaclar ve serpistirilmis nesneler kalkar, zemin
+        /// cime doner. Gercek parselleri sunucu verisiyle TarlaGorunumu cizer.
+        /// Bolgenin cit cevirisi ve disarida kalan dekor korunur — oyun alani
+        /// vadinin icinde bir "temizlenmis tarla" gibi durur, ayri bir kutu gibi degil.
+        /// </summary>
+        private void OyunAlaniAc()
+        {
+            // Sunucu uzayinda (-7..17) x (-4..7); ustte +1 satir kanopi payi.
+            var a = new RectInt(OyunCapaX - 7, OyunCapaY - 4, 25, 12);
+            for (int x = a.xMin; x <= a.xMax; x++)
+            {
+                for (int y = a.yMin; y <= a.yMax + 1; y++)
+                {
+                    if (!Icerde(x, y)) continue;
+                    var h = new Vector3Int(x, y, 0);
+                    _nesne.SetTile(h, null);
+                    _nesneUst.SetTile(h, null);
+                    _nesneTepe.SetTile(h, null);
+                    if (y > a.yMax) continue;   // kanopi satiri: yalniz tepe temizligi
+                    _dekor.SetTile(h, null);
+                    _dolu[x, y] = false;
+                    _engel[x, y] = false;
+                    // Dekoratif surulu parsel kalkar, zemin cime doner. Yol (toprak),
+                    // kaldirim ve su oldugu gibi kalir — yol tarladan gecmeye devam eder.
+                    if (_surulu[x, y])
+                    {
+                        _surulu[x, y] = false;
+                        Koy(_zemin, x, y, Rpg(Karo64.Sec(Karo64.Cim, _r)));
+                    }
+                }
+            }
+        }
 
         private bool Musait(int x, int y)
         {

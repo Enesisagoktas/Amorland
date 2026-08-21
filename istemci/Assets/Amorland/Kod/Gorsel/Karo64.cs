@@ -280,6 +280,9 @@ namespace Amorland.Gorsel
         public const int KopruRay = 86;
         /// <summary>Ikinci tezgah cesidi.</summary>
         public const int TezgahB = 87;
+        /// <summary>Oyun parseli evreleri: ekim aninda filiz, sulaninca islak zemin.</summary>
+        public const int Filiz = 88;
+        public const int SuruluIslak = 89;
 
         // ------------------------------------------------------------ yukleme
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -750,11 +751,30 @@ namespace Amorland.EditorAraclari
             if (!string.IsNullOrEmpty(yol) && File.Exists(yol))
             {
                 denge.Yukle(File.ReadAllText(yol));
+                return denge;
             }
-            else
+
+            // Yol verilmediyse denge YERELDEN derlenir: /denge cevabi
+            // { dosyaAdi: dosyaIcerigi } birlesimidir (DunyaGoruntusu ile ayni yontem).
+            // Dengesiz cizim her kapsulu bos gosteriyor ve denetim degeri kalmiyordu.
+            string dizin = Arguman("-dengeDizin");
+            if (string.IsNullOrEmpty(dizin))
             {
-                Debug.LogWarning("[Amorland] Denge dosyasi yok (" + yol + "), varsayilanlar kullanilacak.");
+                dizin = Path.GetFullPath(Path.Combine(
+                    Application.dataPath, "..", "..", "sunucu", "src", "main", "resources", "denge"));
             }
+            if (!Directory.Exists(dizin))
+            {
+                Debug.LogWarning("[Amorland] Denge dizini yok (" + dizin + "), varsayilanlar kullanilacak.");
+                return denge;
+            }
+            var kok = new JObject();
+            foreach (string dosya in Directory.GetFiles(dizin, "*.json"))
+            {
+                kok[Path.GetFileNameWithoutExtension(dosya)] = JToken.Parse(File.ReadAllText(dosya));
+            }
+            denge.Yukle(kok.ToString());
+            Debug.Log("[Amorland] Denge yerelden derlendi: " + dizin);
             return denge;
         }
 
@@ -768,9 +788,11 @@ namespace Amorland.EditorAraclari
             var durum = new DunyaDurumu();
             if (string.IsNullOrEmpty(yol) || !File.Exists(yol))
             {
-                Debug.LogWarning("[Amorland] Durum dokumu yok (" + yol
-                                 + "). Once: node araclar/durum-dokumu.js <dosya>");
-                return durum;
+                // Dokum yoksa DEMO durum: ekranlar gercek oyundaki gibi DOLU cizilir.
+                // Bos durum ayri bir denetim konusudur ama varsayilan bu olamaz —
+                // "bos kapsul" bulgulari gercek kusurlari golgeliyordu.
+                Debug.Log("[Amorland] Durum dokumu yok, demo durum kullaniliyor.");
+                return DemoDurum();
             }
 
             var degisim = JsonConvert.DeserializeObject<Degisim>(File.ReadAllText(yol));
@@ -788,6 +810,72 @@ namespace Amorland.EditorAraclari
             }
             durum.Uygula(degisim);
             Debug.Log("[Amorland] Durum yuklendi: " + yol);
+            return durum;
+        }
+
+        /// <summary>
+        /// Demo durum: HUD ve tum ekranlar dolu gorunsun diye kucuk, gercekci bir
+        /// vadi anligi. Sayilar denge dosyalarindaki gercek esya kimliklerini kullanir.
+        /// </summary>
+        private static DunyaDurumu DemoDurum()
+        {
+            var durum = new DunyaDurumu { BenimId = "demo-ben" };
+
+            durum.Oyuncular["demo-ben"] = new OyuncuOzeti
+            {
+                Id = "demo-ben", Ad = "Elif", Renk = 0, Seviye = 4, Xp = 120,
+                SonrakiSeviyeXp = 200, Altin = -1, CantaSlot = 12,
+                KovaKalan = 1, KovaKapasite = 2, Cevrimici = true
+            };
+            durum.Oyuncular["demo-es"] = new OyuncuOzeti
+            {
+                Id = "demo-es", Ad = "Kerem", Renk = 1, Seviye = 4, Xp = 90,
+                SonrakiSeviyeXp = 200, Altin = -1, CantaSlot = 12,
+                KovaKalan = 2, KovaKapasite = 2, Cevrimici = true
+            };
+            durum.Vadi = new VadiOzeti
+            {
+                Id = "demo-vadi", KuranId = "demo-ben", PartnerId = "demo-es",
+                DunyaSeviyesi = 4, DepoKapasitesi = 30, DepoDolu = 7
+            };
+
+            void Env(string esya, int adet)
+            {
+                durum.Envanter["demo-ben:" + esya] = new EnvanterSatiri
+                {
+                    Sahip = "demo-ben", EsyaId = esya, Adet = adet
+                };
+            }
+            Env("bugday_tohum", 12);
+            Env("turp_tohum", 8);
+            Env("havuc_tohum", 3);
+            Env("bugday", 5);
+            Env("turp", 2);
+
+            durum.Depo["bugday"] = new DepoSatiri
+            {
+                EsyaId = "bugday", Adet = 5, Koyan = "demo-ben"
+            };
+            durum.Depo["turp"] = new DepoSatiri
+            {
+                EsyaId = "turp", Adet = 2, Koyan = "demo-es", Kilitli = true, Kilitleyen = "demo-es"
+            };
+
+            DateTime simdi = durum.SunucuZamani;
+            void KaroEkle(string sahip, int x, int y, string urun, double oran)
+            {
+                var karo = new Karo
+                {
+                    ParselSahibi = sahip, X = x, Y = y, UrunId = urun,
+                    EkildiAt = simdi.AddMinutes(-30),
+                    SulandiAt = oran < 0 ? (DateTime?)null : simdi.AddSeconds(-600.0 * oran)
+                };
+                durum.Karolar[karo.Anahtar] = karo;
+            }
+            KaroEkle("demo-ben", 0, 0, "bugday", 1.5);
+            KaroEkle("demo-ben", 1, 0, "turp", 0.4);
+            KaroEkle("demo-es", 0, 1, "bugday", 0.7);
+
             return durum;
         }
 

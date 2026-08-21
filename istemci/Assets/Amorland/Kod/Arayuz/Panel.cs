@@ -61,10 +61,10 @@ namespace Amorland.Arayuz
             UiKit.Sabitle(Baslik.rectTransform, 0f, 0.5f, 18f, 0f, genislik - 150f, 34f);
 
             // Kapatma: kirmizi yuvarlak — referansta da kapatma tek kirmizi ogedir.
-            var kapat = UiKit.KirmiziButon(govde, "Kapat", "×", Kapat);
+            // Baslik seridinin dikey merkezine oturur; seritten tasmaz.
+            var kapat = UiKit.KapatButonu(govde, Kapat);
             var kapatRt = kapat.GetComponent<RectTransform>();
-            UiKit.Sabitle(kapatRt, 1f, 1f, -14f, -10f, 48f, 48f);
-            kapat.GetComponentInChildren<Text>().fontSize = UiKit.YaziBuyuk;
+            UiKit.Sabitle(kapatRt, 1f, 1f, -12f, -11f, 46f, 46f);
 
             Icerik = UiKit.Panel(govde, "Icerik", Color.clear);
             Icerik.anchorMin = Vector2.zero;

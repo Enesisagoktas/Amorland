@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using Amorland.Ag;
@@ -11,29 +11,28 @@ using Amorland.Gorsel;
 namespace Amorland.EditorAraclari
 {
     /// <summary>
-    /// 3B dunyanin PNG goruntusunu BASSIZ uretir.
+    /// 2.5D oyun dunyasinin PNG goruntusunu BASSIZ uretir.
     ///
-    /// Neden ayri bir arac: <see cref="ArayuzGoruntusu"/> yalnizca kanvasi cizer, dunyayi
-    /// cizmez. Dunyanin gorunup gorunmedigi ise bu projede gercek bir soru oldu — yukari
-    /// bakan butun yuzler ters sarilmisti ve oyun "calisiyor" ama ekran bostu. Play moduna
-    /// girmeden bunu gorebilmek gerekiyor.
-    ///
-    /// Kamera oyunun kendi matematigini birebir tekrarlar (<see cref="KameraYoneticisi"/>):
-    /// ortografik, yaw kilitli, pitch denge dosyasindan, mesafe 20.
+    /// Dunya artik VADIDIR: Oyun.SahneKur ile ayni kurulum tekrarlanir —
+    /// VadiHaritasi (oyunAlani modunda, OyunCapa kaydirmasiyla), TarlaGorunumu
+    /// (hucre-merkez sozlesmesi, -0.5 kaydirma), poncik koylu sprite'lari ve
+    /// Y-sort kamerasi. Sunucu yokken parseller SAHTE DEMO DURUMLA doldurulur:
+    /// filiz/genc/olgun evreleri, islak/kuru zemin, yabani dugumler ve partner
+    /// parseli tek karede denetlenebilir.
     ///
     /// Calistirma:
-    ///   node araclar/durum-dokumu.js durum.json
     ///   Unity -batchmode -projectPath &lt;proje&gt; \
     ///         -executeMethod Amorland.EditorAraclari.DunyaGoruntusu.Uret \
-    ///         -dengeYolu &lt;denge.json&gt; -durumYolu &lt;durum.json&gt; -cikti &lt;klasor&gt; -quit
+    ///         -dengeDizin &lt;repo&gt;/sunucu/src/main/resources/denge -cikti &lt;klasor&gt; -quit
     ///
     /// ⚠ <c>-nographics</c> KULLANMA: render icin grafik aygiti gerekir.
+    /// ⚠ Denge dizini yoksa uyari verir ve buyume hesaplanamadigi icin tum
+    ///   ekinler filiz cizilir — kare yine uretilir, denetim degeri dusuktur.
     /// </summary>
     public static class DunyaGoruntusu
     {
         private const int Genislik = 1280;
         private const int Yukseklik = 720;
-        private const float Mesafe = 20f;
 
         private static readonly List<string> _hatalar = new List<string>();
         private static int _uretilen;
@@ -48,20 +47,21 @@ namespace Amorland.EditorAraclari
             if (string.IsNullOrEmpty(cikti)) cikti = Path.Combine(Path.GetTempPath(), "amorland-dunya");
             Directory.CreateDirectory(cikti);
 
-            var denge = DengeYukle(Arguman("-dengeYolu"));
-            var durum = DurumYukle(Arguman("-durumYolu"));
+            DengeVerisi denge = DengeYukle();
+            DunyaDurumu durum = DemoDurum(denge);
 
-            float pitch = denge.Yuklendi ? denge.KameraPitch : 50f;
             float yakin = denge.Yuklendi ? denge.ZoomYakin : 5f;
             float uzak = denge.Yuklendi ? denge.ZoomUzak : 8f;
 
             // Karakterin durdugu yer (Oyun.cs ile ayni baslangic konumu).
-            Vector3 oyuncu = new Vector3(1f, 0f, -2f);
+            Vector3 oyuncu = new Vector3(1f, -2f, 0f);
 
-            Kare(cikti, "01-dunya-yakin.png", durum, denge, oyuncu, pitch, yakin);
-            Kare(cikti, "02-dunya-uzak.png", durum, denge, oyuncu, pitch, uzak);
-            // Genis kus bakisi: zeminin ve parselin tamami gorunsun.
-            Kare(cikti, "03-dunya-genis.png", durum, denge, new Vector3(2f, 0f, 0f), pitch, 14f);
+            Kare(cikti, "01-oyun-yakin.png", durum, denge, oyuncu, yakin);
+            Kare(cikti, "02-oyun-uzak.png", durum, denge, oyuncu, uzak);
+            // Genis bakis: iki parsel, kuyu ve dugumler tek karede.
+            Kare(cikti, "03-oyun-genis.png", durum, denge, new Vector3(4f, 1f, 0f), 12f);
+            // Vadi baglami: temizlenmis oyun alaninin vadiye oturusu.
+            Kare(cikti, "04-oyun-vadi-baglam.png", durum, denge, new Vector3(4f, 2f, 0f), 26f);
 
             Debug.Log("[Amorland] " + _uretilen + " dunya karesi uretildi, " + _hatalar.Count
                       + " hata. Klasor: " + cikti);
@@ -74,7 +74,7 @@ namespace Amorland.EditorAraclari
 
         private static void Kare(
             string klasor, string dosya, DunyaDurumu durum, DengeVerisi denge,
-            Vector3 merkez, float pitch, float zoom)
+            Vector3 merkez, float zoom)
         {
             Camera cam = null;
             RenderTexture rt = null;
@@ -92,7 +92,7 @@ namespace Amorland.EditorAraclari
                 cop.Add(camGo);
                 cam = camGo.AddComponent<Camera>();
 
-                // KameraYoneticisi.Yerlestir ile AYNI matematik. Farkli olsaydi goruntu
+                // KameraYoneticisi.Kur ile AYNI kurulum. Farkli olsaydi goruntu
                 // oyunda gorunenden baska bir sey gosterir, denetim degeri kalmazdi.
                 cam.orthographic = true;
                 cam.orthographicSize = zoom;
@@ -100,35 +100,27 @@ namespace Amorland.EditorAraclari
                 cam.farClipPlane = 100f;
                 cam.clearFlags = CameraClearFlags.SolidColor;
                 cam.backgroundColor = Palet.Gokyuzu;
+                cam.transparencySortMode = TransparencySortMode.CustomAxis;
+                cam.transparencySortAxis = Vector3.up;
                 cam.targetTexture = rt;
+                camGo.transform.position = new Vector3(merkez.x, merkez.y, -10f);
 
-                // ⚠ ISIK SART. Prosedurel mesh'ler ve sprite'lar Unlit'ti, isiksiz de
-                // dogru gorunuyordu. Kenney modelleri LIT shader kullaniyor: isiksiz
-                // sahnede yalnizca ortam rengiyle, turkuaza calan bir tonda cikiyorlar.
-                // Oyunun kendi isigiyla ayni acilar (Oyun.SahneKur).
-                var isikGo = new GameObject("Isik");
-                cop.Add(isikGo);
-                var isik = isikGo.AddComponent<Light>();
-                isik.type = LightType.Directional;
-                isik.color = new Color(1f, 0.97f, 0.90f);
-                isik.intensity = 1.15f;
-                isik.shadows = LightShadows.None;
-                isikGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
-                RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-                RenderSettings.ambientLight = new Color(0.52f, 0.54f, 0.50f);
+                // Vadi: Oyun.SahneKur ile ayni kaydirma sozlesmesi.
+                var vadiGo = new GameObject("Vadi");
+                cop.Add(vadiGo);
+                vadiGo.transform.position = new Vector3(
+                    -(VadiHaritasi.OyunCapaX + 0.5f), -(VadiHaritasi.OyunCapaY + 0.5f), 0f);
+                var vadi = vadiGo.AddComponent<VadiHaritasi>();
+                vadi.Kur(oyunAlani: true);
 
-                float radyan = pitch * Mathf.Deg2Rad;
-                Vector3 yon = new Vector3(0f, Mathf.Sin(radyan), -Mathf.Cos(radyan));
-                camGo.transform.position = merkez + yon * Mesafe;
-                camGo.transform.rotation = Quaternion.Euler(pitch, 0f, 0f);
-
-                // Gercek tarla gorunumu: zemin, kuyu, karolar, dugumler.
                 var tarlaGo = new GameObject("TarlaGorunumu");
                 cop.Add(tarlaGo);
+                tarlaGo.transform.position = new Vector3(-0.5f, -0.5f, 0f);
                 var tarla = tarlaGo.AddComponent<TarlaGorunumu>();
                 tarla.Kur(durum, denge);
 
-                KarakterKur(cop, denge, new Vector3(1f, 0f, -2f));
+                KarakterKur(cop, kadin: false, new Vector3(1f, -2f, 0f));
+                KarakterKur(cop, kadin: true, new Vector3(10f, 5f, 0f));   // partner temsili
 
                 cam.Render();
 
@@ -161,83 +153,119 @@ namespace Amorland.EditorAraclari
             }
         }
 
-        /// <summary>Oyuncu gorseli: Oyun.cs'teki kurulumun aynisi (govde + sahte golge).</summary>
-        private static void KarakterKur(List<GameObject> cop, DengeVerisi denge, Vector3 konum)
+        /// <summary>Oyuncu gorseli: Oyun.KarakterSpriteKur'un aynisi (golge + koylu).</summary>
+        private static void KarakterKur(List<GameObject> cop, bool kadin, Vector3 konum)
         {
             var kok = new GameObject("Karakter");
             cop.Add(kok);
             kok.transform.position = konum;
 
-            float pitch = denge.Yuklendi ? denge.KameraPitch : 50f;
-            if (VarlikKatalogu.SetVar
-                && VarlikKatalogu.KarakterKur(kok.transform, Vector3.zero, out Animator anim) != null)
-            {
-                // ⚠ BURADA ANIMATOR TIKLATILMIYOR — bilerek.
-                // Denendi ve BOZDU: Kenney'in ayri animasyon FBX'leri (anim_idle/run)
-                // model FBX'inin iskeletiyle birebir uyusmuyor. Avatar CopyFromOther ile
-                // baglansa bile kemikler yanlis donusum aliyor ve skinned mesh ekran
-                // boyunca geriliyor; karakter kayboluyor. Tik atilmayinca model bind
-                // pozunda (T-pozu) kalir — dogru degil ama DURUST: animasyonun henuz
-                // calismadigini gosterir. Cozum retarget isi ve ayri ele alinacak.
-                if (anim != null) { }
-                SpriteDeposu.Yatik("golge", kok.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
-                return;
-            }
-            if (SpriteDeposu.SetVar)
-            {
-                SpriteDeposu.Yatik("golge", kok.transform, new Vector3(0f, 0.05f, 0f), null, 0.62f);
-                SpriteDeposu.Nesne("karakter_0", kok.transform, Vector3.zero, pitch, 0.05f);
-                return;
-            }
-            Color renk = denge.Yuklendi ? denge.OyuncuRengi(0) : Palet.Cati;
-            MateryalDeposu.Nesne(
-                "Govde", MeshUretici.Karakter(renk, new Color(0.88f, 0.76f, 0.64f)),
-                kok.transform, Vector3.zero);
-            MateryalDeposu.Nesne(
-                "Golge", MeshUretici.Disk(0.45f, 10, Palet.Golge),
-                kok.transform, new Vector3(0f, 0.01f, 0f), saydam: true);
+            var golgeGo = new GameObject("Golge");
+            golgeGo.transform.SetParent(kok.transform, false);
+            golgeGo.transform.localPosition = new Vector3(0f, -0.06f, 0f);
+            golgeGo.transform.localScale = new Vector3(0.8f, 0.7f, 1f);
+            var gsr = golgeGo.AddComponent<SpriteRenderer>();
+            gsr.sprite = Karo64.Al(Sayfa64.Ek, Karo64.Golge);
+            gsr.sortingOrder = 1;
+
+            var gorselGo = new GameObject("KarakterGorsel");
+            gorselGo.transform.SetParent(kok.transform, false);
+            gorselGo.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            var sr = gorselGo.AddComponent<SpriteRenderer>();
+            sr.sprite = Karo64.Al(Sayfa64.Ek, kadin ? Karo64.KoyluKadin : Karo64.KoyluErkek);
+            sr.sortingOrder = 2;
         }
 
         // ------------------------------------------------------------------ veri
 
-        private static DengeVerisi DengeYukle(string yol)
+        /// <summary>
+        /// Dengeyi sunucunun sundugu bicimde yerelden derler: /denge cevabi
+        /// { dosyaAdi: dosyaIcerigi } birlesimidir (DengeVerisi.Sayi yollari
+        /// "ilerleme/kamera/..." seklinde dosya adiyla baslar).
+        /// </summary>
+        private static DengeVerisi DengeYukle()
         {
             var denge = new DengeVerisi();
-            if (!string.IsNullOrEmpty(yol) && File.Exists(yol))
+            string dizin = Arguman("-dengeDizin");
+            if (string.IsNullOrEmpty(dizin))
             {
-                denge.Yukle(File.ReadAllText(yol));
-                Debug.Log("[Amorland] Denge yuklendi: " + yol);
+                dizin = Path.GetFullPath(Path.Combine(
+                    Application.dataPath, "..", "..", "sunucu", "src", "main", "resources", "denge"));
             }
-            else
+            if (!Directory.Exists(dizin))
             {
-                Debug.LogWarning("[Amorland] Denge dosyasi yok (" + yol + "), varsayilanlar kullanilacak.");
+                Debug.LogWarning("[Amorland] Denge dizini yok (" + dizin
+                                 + ") — buyume hesaplanamaz, ekinler filiz cizilir.");
+                return denge;
             }
+
+            var kok = new JObject();
+            foreach (string yol in Directory.GetFiles(dizin, "*.json"))
+            {
+                kok[Path.GetFileNameWithoutExtension(yol)] = JToken.Parse(File.ReadAllText(yol));
+            }
+            denge.Yukle(kok.ToString());
+            Debug.Log("[Amorland] Denge yerelden derlendi: " + dizin);
             return denge;
         }
 
-        private static DunyaDurumu DurumYukle(string yol)
+        /// <summary>
+        /// Sahte demo durum: her buyume evresi + islak/kuru zemin + partner parseli
+        /// + 3 yabani dugum. Sunucu gerektirmez; gorsel denetim icindir.
+        /// </summary>
+        private static DunyaDurumu DemoDurum(DengeVerisi denge)
         {
-            var durum = new DunyaDurumu();
-            if (string.IsNullOrEmpty(yol) || !File.Exists(yol))
+            var durum = new DunyaDurumu { BenimId = "demo-ben" };
+            DateTime simdi = durum.SunucuZamani;
+
+            long Buyume(string urunId)
             {
-                Debug.LogWarning("[Amorland] Durum dokumu yok (" + yol
-                                 + "). Once: node araclar/durum-dokumu.js <dosya>");
-                return durum;
+                var u = denge.Urun(urunId);
+                return u != null && u.BuyumeSn > 0 ? u.BuyumeSn : 600;
             }
 
-            var degisim = JsonConvert.DeserializeObject<Degisim>(File.ReadAllText(yol));
-            if (degisim == null)
+            void KaroEkle(string sahip, int x, int y, string urun, double sulanmaOrani)
             {
-                Debug.LogWarning("[Amorland] Durum dokumu okunamadi.");
-                return durum;
+                var k = new Karo
+                {
+                    ParselSahibi = sahip,
+                    X = x,
+                    Y = y,
+                    UrunId = urun,
+                    EkildiAt = simdi.AddMinutes(-30),
+                    SulandiAt = sulanmaOrani < 0
+                        ? (DateTime?)null
+                        : simdi.AddSeconds(-Buyume(urun) * sulanmaOrani),
+                    HasatSayaci = 0
+                };
+                durum.Karolar[k.Anahtar] = k;
             }
 
-            if (degisim.Oyuncular != null && degisim.Oyuncular.Count > 0)
+            // Benim parsel: filiz (kuru) / filiz (yeni islak) / genc / olgun.
+            KaroEkle("demo-ben", 0, 0, "bugday", -1);
+            KaroEkle("demo-ben", 1, 0, "domates", 0.05);
+            KaroEkle("demo-ben", 2, 0, "havuc", 0.6);
+            KaroEkle("demo-ben", 3, 0, "kabak", 1.5);
+            KaroEkle("demo-ben", 4, 1, "turp", 1.5);
+            KaroEkle("demo-ben", 0, 2, "misir", 0.6);
+
+            // Partner parseli (+8 kaydirmayla cizilir).
+            KaroEkle("demo-es", 0, 0, "domates", 1.5);
+            KaroEkle("demo-es", 1, 1, "bugday", 0.6);
+
+            // Yabani kaynaklar: tarla kenari (dal x2 + yem otu, sunucu yerlesimi).
+            for (int i = 0; i < 3; i++)
             {
-                durum.BenimId = degisim.Oyuncular[0].Id;
+                var d = new Dugum
+                {
+                    Bolge = "tarla_kenari",
+                    X = -2,
+                    Y = i,
+                    Tur = i == 2 ? "yem_otu" : "dal",
+                    Sinif = "yabani"
+                };
+                durum.Dugumler[d.Anahtar] = d;
             }
-            durum.Uygula(degisim);
-            Debug.Log("[Amorland] Durum yuklendi: " + yol);
             return durum;
         }
 

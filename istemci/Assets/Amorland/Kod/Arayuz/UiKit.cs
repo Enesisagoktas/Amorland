@@ -338,8 +338,10 @@ namespace Amorland.Arayuz
             // ⚠ Pah rengi ham yazilmaz: joystick topuzu da ayni isigi kullanir ve iki
             // yerde farkli alfa tutulunca pahli ogeler ayni ekranda ayri malzemeden
             // gorunuyordu. Tek kaynak Palet.UiPah.
+            // ⚠ Pah ust %35'te kalir: %55'i kaplayan parlama, yaziyi acik/koyu
+            // sinirina oturtuyor ve ayri bir blok gibi okunuyordu (UI denetimi).
             var pah = Kart(yuzRt, "Pah", Palet.UiPah, 10);
-            pah.anchorMin = new Vector2(0f, 0.45f);
+            pah.anchorMin = new Vector2(0f, 0.66f);
             pah.anchorMax = new Vector2(1f, 1f);
             pah.offsetMin = new Vector2(6f, 0f);
             pah.offsetMax = new Vector2(-6f, -5f);
@@ -361,6 +363,35 @@ namespace Amorland.Arayuz
         /// <summary>Iptal/yikici eylem: kirmizi.</summary>
         public static Button KirmiziButon(Transform ebeveyn, string ad, string metin, Action tiklama) =>
             KalinButon(ebeveyn, ad, metin, tiklama, Palet.UiKirmizi, Palet.UiKirmiziKoyu, Color.white);
+
+        /// <summary>
+        /// Modal kapatma butonu: kirmizi daire + krem halka + ortalanmis carpi.
+        ///
+        /// ⚠ KalinButon ile YAPILMAZ: 46 px'lik kare butonda pah seridi carpiyi
+        /// sol-alta itiyor ve parlama ayri bir blok gibi okunuyordu (UI denetimi).
+        /// Kapatma icin pahsiz, tam merkezli daire gerekir.
+        /// </summary>
+        public static Button KapatButonu(Transform ebeveyn, Action tiklama)
+        {
+            var rt = Panel(ebeveyn, "Kapat", Palet.UiKirmizi);
+            var img = rt.gameObject.GetComponent<Image>();
+            img.sprite = Sekil.Daire();
+            img.raycastTarget = true;
+
+            var buton = rt.gameObject.AddComponent<Button>();
+            buton.targetGraphic = img;
+            buton.colors = ButonRenkleri();
+            if (tiklama != null) buton.onClick.AddListener(() => tiklama());
+
+            var halka = Cerceve(rt, "Halka", Palet.KapsulCerceve, 23, 3);
+            halka.sprite = Sekil.Halka(23, 3);
+
+            var yazi = KonturluYazi(rt, "Yazi", "×", YaziBuyuk, Color.white, TextAnchor.MiddleCenter);
+            Doldur(yazi.rectTransform);
+            // Carpi glifi taban cizgisiyle yukari kacar; minik dusey duzeltme merkezler.
+            yazi.rectTransform.offsetMin = new Vector2(0f, 2f);
+            return buton;
+        }
 
         /// <summary>
         /// Konturlu yazi. Doygun renk ustunde okunurlugu tasiyan sey konturdur;

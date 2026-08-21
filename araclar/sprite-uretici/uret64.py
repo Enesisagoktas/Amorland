@@ -92,6 +92,39 @@ class Cizer:
                 d.rounded_rectangle([px + 2, py + 2, px + 27, py + 13], 5,
                                     fill=ton(taban, 1.05) + (255,))
 
+    def filiz(self, i):
+        """Yeni ekilmis karo ustu: minik cift yaprakli filiz + tohum cukuru.
+
+        Oyun parselinde 3 evre vardir: filiz -> genc urun -> olgun urun.
+        Genc/olgun karolar (12-19) zaten var; bu, ekimin ANINDA gorunen ilk
+        evresidir (iyimser istemci: dokundugun an bir sey degismeli)."""
+        x, y = self.kanvas(i)
+        d = ImageDraw.Draw(self.im)
+        yesil = (106, 178, 70)
+        koyu = (74, 138, 52)
+        d.ellipse([x + 22, y + 40, x + 42, y + 52], fill=ton(self.TOPRAK, 0.64) + (200,))
+        d.rectangle([x + 30, y + 28, x + 33, y + 46], fill=koyu + (255,))
+        d.ellipse([x + 17, y + 21, x + 31, y + 34], fill=yesil + (255,))
+        d.ellipse([x + 33, y + 21, x + 47, y + 34], fill=yesil + (255,))
+        d.ellipse([x + 20, y + 23, x + 27, y + 29], fill=(150, 210, 110, 255))
+        d.ellipse([x + 36, y + 23, x + 43, y + 29], fill=(150, 210, 110, 255))
+
+    def surulu_islak(self, i, kaynak=2):
+        """Sulanmis surulu karo: kaynak karonun koyu-nemli TUREVI.
+
+        ⚠ Yeniden cizim degil turev: karik deseni birebir ayni kalir, yalniz
+        parlaklik duser ve hafif maviye kayar — kuru/islak farki desenden
+        degil tondan okunur (ayni ders: cim_koyu_duz ailesi)."""
+        import numpy as np
+        sx, sy = self.kanvas(kaynak)
+        k = self.im.crop((sx, sy, sx + T, sy + T))
+        a = np.asarray(k).astype(np.float32)
+        a[..., 0] *= 0.60
+        a[..., 1] *= 0.65
+        a[..., 2] *= 0.80
+        x, y = self.kanvas(i)
+        self.im.paste(Image.fromarray(a.clip(0, 255).astype("uint8"), "RGBA"), (x, y))
+
     def surulu(self, i):
         """Surulmus tarla — USTTEN bakis.
 
@@ -1186,6 +1219,9 @@ def main():
     c.tavuk(26)
     c.koylu(27, kadin=False)
     c.koylu(28, kadin=True)
+    # Oyun parseli evre karolari
+    c.filiz(88)
+    c.surulu_islak(89, kaynak=2)
 
     os.makedirs(os.path.dirname(CIKTI), exist_ok=True)
     c.im.save(CIKTI)

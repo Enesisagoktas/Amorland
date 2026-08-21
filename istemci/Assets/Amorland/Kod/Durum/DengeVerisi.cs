@@ -212,11 +212,25 @@ namespace Amorland.Durum
             return !string.IsNullOrEmpty(t) ? t : (sunucuMesaji ?? "İşlem yapılamadı.");
         }
 
+        /// <summary>
+        /// Denge gelmeden onceki yedek renkler: mercan, gokyuzu, nane, lavanta.
+        /// ⚠ Beyaz DONULMEZ (UI denetimi): giris ekraninda "rengini sec" daireleri
+        /// dordu de bembeyaz cikiyor ve ozellik islevsiz gorunuyordu.
+        /// </summary>
+        private static readonly Color[] _yedekRenkler =
+        {
+            new Color(0.93f, 0.45f, 0.40f),
+            new Color(0.42f, 0.66f, 0.86f),
+            new Color(0.45f, 0.78f, 0.55f),
+            new Color(0.72f, 0.56f, 0.84f),
+        };
+
         /// <summary>Oyuncu renkleri (4 renk, B.18 0:00).</summary>
         public Color OyuncuRengi(int indeks)
         {
             var dizi = Yol("turetilmis", "misafirHesap", "renkler") as JArray;
-            if (dizi == null || indeks < 0 || indeks >= dizi.Count) return Color.white;
+            if (dizi == null || indeks < 0 || indeks >= dizi.Count)
+                return _yedekRenkler[((indeks % 4) + 4) % 4];
             string hex = (string)dizi[indeks]["hex"];
             return ColorUtility.TryParseHtmlString(hex, out Color c) ? c : Color.white;
         }

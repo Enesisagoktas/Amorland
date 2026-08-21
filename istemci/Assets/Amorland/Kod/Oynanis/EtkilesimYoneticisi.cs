@@ -38,7 +38,7 @@ namespace Amorland.Oynanis
         private readonly List<Vector2Int> _kuyruk = new List<Vector2Int>();
         private readonly List<GameObject> _kuyrukIsaretleri = new List<GameObject>();
         private Transform _isaretKok;
-        private Mesh _isaretMesh;
+        private Sprite _isaretSprite;
 
         private bool _boyamaModu;
         private Vector2 _basmaNoktasi;
@@ -75,7 +75,7 @@ namespace Amorland.Oynanis
 
             _isaretKok = new GameObject("KuyrukIsaretleri").transform;
             _isaretKok.SetParent(transform, false);
-            _isaretMesh = MeshUretici.Disk(0.12f, 8, Palet.UiVurgu);
+            _isaretSprite = IsaretSprite();
 
             _karakter.HedefeVarildi += KaroyaVarildi;
         }
@@ -188,7 +188,7 @@ namespace Amorland.Oynanis
             }
             _bekleyenHedef = karo;
             _hedefBekliyor = true;
-            _tarla.VurguGoster(new Vector3(karo.x, 0f, karo.y));
+            _tarla.VurguGoster(new Vector3(karo.x, karo.y, 0f));
             _karakter.Yuru(karo);
         }
 
@@ -215,8 +215,9 @@ namespace Amorland.Oynanis
         public Eylem EylemBelirle(Vector2Int hedef)
         {
             // Kuyu: kova doldurma
-            if (Vector3.Distance(
-                    new Vector3(hedef.x, 0f, hedef.y), TarlaGorunumu.KuyuKonumu) < 1.2f)
+            if (Vector2.Distance(
+                    new Vector2(hedef.x, hedef.y),
+                    new Vector2(TarlaGorunumu.KuyuKonumu.x, TarlaGorunumu.KuyuKonumu.y)) < 1.2f)
             {
                 return Eylem.KovaDoldur;
             }
@@ -363,8 +364,12 @@ namespace Amorland.Oynanis
             if (_kuyruk.Contains(karo)) return;
 
             _kuyruk.Add(karo);
-            var isaret = MateryalDeposu.Nesne(
-                "KuyrukNoktasi", _isaretMesh, _isaretKok, new Vector3(karo.x, 0.05f, karo.y));
+            var isaret = new GameObject("KuyrukNoktasi");
+            isaret.transform.SetParent(_isaretKok, false);
+            isaret.transform.localPosition = new Vector3(karo.x, karo.y, 0f);
+            var isr = isaret.AddComponent<SpriteRenderer>();
+            isr.sprite = _isaretSprite;
+            isr.sortingOrder = 3;
             _kuyrukIsaretleri.Add(isaret);
         }
 
@@ -412,5 +417,36 @@ namespace Amorland.Oynanis
         }
 
         public int KuyruktakiEylem => _kuyruk.Count;
+
+        // ------------------------------------------------------------------ isaret sprite'i
+
+        private static Sprite _isaretOrnegi;
+
+        /// <summary>Kuyruk noktasi: yumusak kenarli altin disk (calisma zamaninda uretilir).</summary>
+        private static Sprite IsaretSprite()
+        {
+            if (_isaretOrnegi != null) return _isaretOrnegi;
+            const int B = 16;
+            var doku = new Texture2D(B, B, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear
+            };
+            Color renk = Palet.UiVurgu;
+            for (int y = 0; y < B; y++)
+            {
+                for (int x = 0; x < B; x++)
+                {
+                    float m = Vector2.Distance(
+                        new Vector2(x + 0.5f, y + 0.5f), new Vector2(B / 2f, B / 2f)) / (B / 2f);
+                    Color c = renk;
+                    c.a = Mathf.Clamp01(1.05f - m * m * 1.6f);
+                    doku.SetPixel(x, y, c);
+                }
+            }
+            doku.Apply();
+            _isaretOrnegi = Sprite.Create(
+                doku, new Rect(0, 0, B, B), new Vector2(0.5f, 0.5f), B * 2.5f);
+            return _isaretOrnegi;
+        }
     }
 }
