@@ -107,14 +107,18 @@ class DikeyDilimTest extends TestTemeli {
     Vadi vadi = vadiServisi.kur(o);
     niyet(o, vadi.id(), "ek", karo(0, 0), new Niyet.Ek("bugday", null, null, null));
 
-    OyunHatasi kovaYok =
-        assertThrows(OyunHatasi.class, () -> niyet(o, vadi.id(), "sula", karo(0, 0), null));
-    assertEquals(RedKodu.KAYNAK_YETERSIZ, kovaYok.kod());
+    // Baslangic kovasi artik DOLU verilir (ogretici varsayimi gercek kuruluma
+    // tasindi — dal matematigi 8 odunluk craft'a izin vermiyordu ve yeni oyuncu
+    // sulamaya ulasamiyordu). Bos-kova senaryosu elle kurulur.
+    dunya.kovaYaz(vadi.id(), o, 0);
 
-    // Kova da yok: once tezgahta ahsap kova yapilmali (8 odun)
-    OyunHatasi kuyuHata =
-        assertThrows(OyunHatasi.class, () -> niyet(o, vadi.id(), "kova_doldur", null, null));
-    assertEquals(RedKodu.ALET_YOK, kuyuHata.kod());
+    OyunHatasi kovaBos =
+        assertThrows(OyunHatasi.class, () -> niyet(o, vadi.id(), "sula", karo(0, 0), null));
+    assertEquals(RedKodu.KAYNAK_YETERSIZ, kovaBos.kod());
+
+    // Kova aleti bastan var: kuyu calisir, sulama acilir.
+    niyet(o, vadi.id(), "kova_doldur", null, null);
+    niyet(o, vadi.id(), "sula", karo(0, 0), null);
   }
 
   @Test

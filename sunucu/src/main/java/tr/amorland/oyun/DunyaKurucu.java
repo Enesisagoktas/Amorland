@@ -85,7 +85,13 @@ public class DunyaKurucu {
         dunya.envanterDegistir(vadiId, oyuncuId, e.esyaId(), e.adet());
       }
     }
-    dunya.kovaYaz(vadiId, oyuncuId, 0);
+    // Baslangic aletleri (ahsap kova): liste denge dosyasinda vardi ama hic
+    // islenmiyordu — kova olmadan sulama, sulama olmadan hasat imkansizdi
+    // (otomatik oynanis testi bulgusu; tempo testi kestirmeyle maskeliyordu).
+    for (String aletId : denge.turetilmisDosyasi().baslangicDurumu().aletler()) {
+      dunya.aletYaz(vadiId, oyuncuId, aletId, 0);
+    }
+    dunya.kovaYaz(vadiId, oyuncuId, denge.turetilmisDosyasi().baslangicDurumu().kovaKapasitesi());
     dunya.altinDegistir(vadiId, oyuncuId, 0);
   }
 

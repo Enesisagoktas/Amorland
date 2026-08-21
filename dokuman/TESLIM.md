@@ -36,6 +36,7 @@ ses altyapısı + yer tutucu ses seti.
 | İyimser tahmin + 0.2 sn yumuşak geri sarma | ✅ derleniyor |
 | Ortografik 2.5D kamera — dönmez, Y-sort ekseni, ölü bölge, iki zoom | ✅ derleniyor |
 | **Oyun dünyası = vadi** — tarla bölgesi oynanabilir alan, sunucu koordinatı korunur | ✅ **görüntüsü var** |
+| **Otomatik oynanış testi** — gerçek istemci canlı sunucuda: giriş → ekim → sulama → kuyu | ✅ **GEÇTİ** (`OyunDumanTesti`) |
 | Izgara A*, dokun-yürü, dinamik joystick, partner avatarı (5 Hz interpolasyon) | ✅ derleniyor |
 | Bağlam duyarlı eylem (alet seçimi yok) + sürükle-boyama kuyruğu | ✅ derleniyor |
 | Kod ile UI — HUD, çanta, depo, tezgâh, defter, harita, davet, ayarlar, giriş | ✅ derleniyor |

@@ -237,9 +237,9 @@
     "adet": 4
    }
   ],
-  "aletler": [],
-  "kovaKapasitesi": 0,
-  "not": "Ahsap kova Sv1 tezgahinda craftlanir (8 odun). Ogreticide kuyu kovayi doldurur; kova yoksa istemci once craft'a yonlendirir."
+  "aletler": ["ahsap_kova"],
+  "kovaKapasitesi": 6,
+  "not": "Baslangicta ahsap kova VERILIR: OgreticiTemposuTest zaten 'ogreticide kuyu hazir kabul edilir' diye kovayi elle yaziyordu ama gercek kurulum vermiyordu. Dal matematigi de craft'a izin vermez: tarla kenarinda 2 dal x 1-2 odun = en fazla 4; kova 8 odun ister, orman Sv7'de acilir - yeni oyuncu sulamaya ULASAMAZDI (otomatik oynanis testi bulgusu). Craft ogretisi tas aletlerle devam eder."
  },
  "kuyu": {
   "$kaynak": "B.11 — 'kuyu tarla sahnesinin icinde'",
