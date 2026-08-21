@@ -153,6 +153,27 @@ namespace Amorland.Ag
         [JsonIgnore] public string Anahtar => Sahip + ":" + AletId;
     }
 
+    /// <summary>Tren panosu karti (GET /api/vadi/{id}/tren — B.15).</summary>
+    [Serializable]
+    public class TrenKarti
+    {
+        [JsonProperty("kart")] public int Kart;
+        [JsonProperty("urunId")] public string UrunId;
+        [JsonProperty("miktar")] public int Miktar;
+        [JsonProperty("altin")] public int Altin;
+        [JsonProperty("xp")] public int Xp;
+        [JsonProperty("karsilandi")] public bool Karsilandi;
+        [JsonProperty("karsilayan")] public string Karsilayan;
+    }
+
+    [Serializable]
+    public class TrenCevabi
+    {
+        [JsonProperty("seferNo")] public long SeferNo;
+        [JsonProperty("kalanSn")] public long KalanSn;
+        [JsonProperty("siparisler")] public System.Collections.Generic.List<TrenKarti> Siparisler;
+    }
+
     [Serializable]
     public class OyuncuOzeti
     {

@@ -60,6 +60,8 @@ namespace Amorland
         private DavetEkrani _davet;
         private AyarlarEkrani _ayarlar;
         private SohbetEkrani _sohbet;
+        private TrenEkrani _tren;
+        private MarketEkrani _market;
         private GirisEkrani _giris;
         private Bildirimler _bildirimler;
         private BaglantiPerdesi _perde;
@@ -108,6 +110,7 @@ namespace Amorland
 
             KonumYayinla();
             JoystickGuncelle();
+            _tren?.SureTazele();
         }
 
         private void OnDestroy() => _baglanti?.Durdur();
@@ -509,6 +512,15 @@ namespace Amorland
             _harita = new HaritaEkrani(_ustKanvas.transform, _durum, _denge);
             _davet = new DavetEkrani(_ustKanvas.transform);
             _ayarlar = new AyarlarEkrani(_ustKanvas.transform, _ses);
+
+            _tren = new TrenEkrani(_ustKanvas.transform, _durum, _denge);
+            _tren.Karsila += kart => Gonder("tren_karsila", NiyetHedef.Dugum("gar", kart, 0));
+            _tren.Yenile += TrenTazele;
+            _market = new MarketEkrani(_ustKanvas.transform, _durum, _denge);
+            _market.SatIstegi += (esya, adet) =>
+                Gonder("sat", null, new NiyetEk { EsyaId = esya, Adet = adet });
+            _market.AlIstegi += (esya, adet) =>
+                Gonder("satin_al", null, new NiyetEk { EsyaId = esya, Adet = adet });
             _sohbet = new SohbetEkrani(_ustKanvas.transform);
             _sohbet.Gonder += metin => _baglanti.SohbetGonder(metin);
             // Kusluk manuel bir ILETISIM jestidir (B.8): sohbet panelinden yonetilir.
@@ -626,6 +638,21 @@ namespace Amorland
             _baglanti.NiyetGonder(Niyet.Olustur(tip, hedef, ek));
         }
 
+        /// <summary>
+        /// Tren panosunu sunucudan ceker (mimari kural 7: istemci fiyat HESAPLAMAZ,
+        /// yalnizca gosterir). Basarisizlik sessiz kalmaz.
+        /// </summary>
+        private void TrenTazele()
+        {
+            string vadiId = _durum.Vadi != null ? _durum.Vadi.Id : null;
+            if (vadiId == null) return;
+            _rest.TrenDurumu(vadiId, s =>
+            {
+                if (s.Basarili) _tren.Goster(s.Veri);
+                else _bildirimler.Goster("Tren panosu alınamadı: " + s.HataMesaji, uyari: true);
+            });
+        }
+
         private void BolgeyeGit(string bolgeId)
         {
             _aktifBolge = bolgeId;
@@ -650,6 +677,14 @@ namespace Amorland
                 case "ev":
                     _tezgah.Ac();
                     _ses.OrtamBaslat(SesEtiketi.OrtamEv);
+                    break;
+                case "gar":
+                    TrenTazele();
+                    _ses.OrtamBaslat(SesEtiketi.OrtamTarla);
+                    break;
+                case "market":
+                    _market.Ac();
+                    _ses.OrtamBaslat(SesEtiketi.OrtamTarla);
                     break;
                 default:
                     _ses.OrtamBaslat(SesEtiketi.OrtamTarla);
@@ -722,6 +757,22 @@ namespace Amorland
 
                 case "depo_doldu":
                     _bildirimler.Goster("Depo dolu — hasat engellendi. Ürün tarlada bekliyor.", true, 5f);
+                    break;
+
+                case "tren_siparis_karsilandi":
+                    _bildirimler.Goster("Sipariş teslim edildi — tren düdüğü senin için çaldı!");
+                    _ses.Cal(SesEtiketi.UiOnay);
+                    Haptik.Haptik.Calistir(Haptik.Haptik.Desen.UcluYukselen);
+                    if (_tren.Acik) TrenTazele();
+                    break;
+
+                case "manifesto_tamam":
+                    // B.1: "hicbir is tek basina gorulmez" — manifesto IKI imzanin isi,
+                    // kutlama da ikisine birden gider (sunucu iki tarafa da XP yazar).
+                    _bildirimler.Goster(
+                        "Manifesto 3/3 tamam! Bonus XP ikinize de yazıldı.", false, 8f);
+                    _ses.Cal(SesEtiketi.SeviyeAtlama);
+                    Haptik.Haptik.Calistir(Haptik.Haptik.Desen.UcluYukselen);
                     break;
 
                 case "ilk_kez":

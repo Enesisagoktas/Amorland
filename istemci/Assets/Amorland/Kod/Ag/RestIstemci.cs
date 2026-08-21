@@ -160,6 +160,12 @@ namespace Amorland.Ag
             return Gonder("/api/vadi/" + vadiId + "/anlik", "GET", null, geriCagri);
         }
 
+        /// <summary>Tren panosu (B.15): sefer, geri sayim, 3 siparis karti.</summary>
+        public Coroutine TrenDurumu(string vadiId, Action<Sonuc<TrenCevabi>> geriCagri)
+        {
+            return Gonder("/api/vadi/" + vadiId + "/tren", "GET", null, geriCagri);
+        }
+
         /// <summary>Denge JSON'lari (mimari kural 8). Kimlik gerekmez.</summary>
         public Coroutine Denge(Action<Sonuc<string>> geriCagri)
         {

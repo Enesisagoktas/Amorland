@@ -279,6 +279,8 @@ async function main() {
   const red = await a.bekle("RED");
   dogrula(red.kod === "GECERSIZ_HEDEF", "Gecersiz niyet RED + kod", red.kod);
 
+  // Baslangic seti DOLU ahsap kova verir (oyuncu bulgusu sonrasi kalici kural):
+  // sulama ILK denemede calismali. Bos-kova reddi sunucu birim testinde olculuyor.
   a.gonder({
     t: "NIYET",
     niyet: {
@@ -287,11 +289,26 @@ async function main() {
       hedef: { bolge: "tarla", x: 0, y: 0 },
     },
   });
-  const kovaRed = await a.bekle("RED");
+  const sulamaOnay = await a.bekle("ONAY");
+  const benOzet = (sulamaOnay.degisim.oyuncular || []).find(() => true);
   dogrula(
-    kovaRed.kod === "KAYNAK_YETERSIZ",
-    "Kova bossa sulama reddedilir",
-    kovaRed.mesaj
+    benOzet && benOzet.kovaKalan < benOzet.kovaKapasite,
+    "Baslangic kovasi dolu gelir, sulama ilk denemede calisir ve kovayi azaltir",
+    benOzet ? benOzet.kovaKalan + "/" + benOzet.kovaKapasite : "oyuncu ozeti yok"
+  );
+
+  // ---------------------------------------------------------------- tren panosu (B.15)
+  const tren = await istek("/api/vadi/" + vadiA.veri.id + "/tren", "GET", null, jwtA);
+  dogrula(tren.durum === 200, "Tren panosu okunur (GET /tren)");
+  dogrula(
+    tren.veri && Array.isArray(tren.veri.siparisler) && tren.veri.siparisler.length === 3,
+    "Sefer 3 siparis karti tasir (B.15)",
+    tren.veri && tren.veri.siparisler ? tren.veri.siparisler.length + " kart" : "govde yok"
+  );
+  dogrula(
+    tren.veri && tren.veri.kalanSn > 0 && tren.veri.kalanSn <= 21600,
+    "Geri sayim sefer araligi icinde",
+    tren.veri ? tren.veri.kalanSn + " sn" : ""
   );
 
   // ---------------------------------------------------------------- yeniden baglanma

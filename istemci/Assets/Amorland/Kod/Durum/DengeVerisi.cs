@@ -35,6 +35,7 @@ namespace Amorland.Durum
             public long BuyumeSn;
             public int AcilisSeviye;
             public int TabanFiyat;
+            public int TohumFiyat;
             public bool TohumGeriVerir;
             public int YenidenVerirAdet;
             public long YenidenVerirAraSn;
@@ -60,6 +61,7 @@ namespace Amorland.Durum
                     BuyumeSn = (long?)u["buyumeSn"] ?? 0,
                     AcilisSeviye = (int?)u["acilis"]?["seviye"] ?? 1,
                     TabanFiyat = (int?)u["tabanFiyat"] ?? 0,
+                    TohumFiyat = (int?)u["tohumFiyat"] ?? 0,
                     TohumGeriVerir = (bool?)u["tohumGeriVerir"] ?? false,
                     YenidenVerirAdet = (int?)u["yenidenVerir"]?["adet"] ?? 1,
                     YenidenVerirAraSn = (long?)u["yenidenVerir"]?["araSn"] ?? 0
@@ -199,6 +201,14 @@ namespace Amorland.Durum
 
         public int BuyumeAsamaSayisi => TamSayi(4, "urunler", "buyumeAsamasi", "asamaSayisi");
         public int YiginBoyutu => TamSayi(99, "ilerleme", "canta", "yiginBoyutu");
+
+        /// <summary>Market alis oraninin ortasi — sunucu da ayni ortayi kullanir (B.15).</summary>
+        public float MarketAlisOraniOrt =>
+            (Sayi(0.5f, "urunler", "marketAlisOrani", "min")
+                + Sayi(0.6f, "urunler", "marketAlisOrani", "max")) / 2f;
+
+        /// <summary>Paranin oyuna girdigi seviye (B.15 — oncesinde altin gorunmez).</summary>
+        public int ParaIlkSeviye => TamSayi(5, "ilerleme", "paraninGirisi", "ilkSeviye");
         public int ParaninIlkSeviyesi => TamSayi(5, "ilerleme", "paraninGirisi", "ilkSeviye");
         public float GeriSarmaSn => Sayi(0.2f, "turetilmis", "iyimserIstemci", "geriSarmaSn");
         public int KonumYayinHz => TamSayi(5, "turetilmis", "iyimserIstemci", "konumYayinHz");
