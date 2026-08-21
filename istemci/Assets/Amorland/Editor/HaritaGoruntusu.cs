@@ -126,10 +126,42 @@ namespace Amorland.EditorAraclari
                 RenderTexture.active = onceki;
 
                 File.WriteAllBytes(Path.Combine(cikti, "00-play-ekrani.png"), tex.EncodeToPNG());
+
+                // Kare 2: gar — hattaki tren ve peron gorunur.
+                var gezgin = kok.GetComponentInChildren<HaritaGezgini>();
+                RectInt gar = kok.GetComponentInChildren<VadiHaritasi>().Alan("tren");
+                gezgin.Odakla(new Vector2(gar.x + gar.width / 2f, gar.y + gar.height / 2f), 9f);
+                Canvas.ForceUpdateCanvases();
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0f, 0f, en, boy), 0, 0);
+                tex.Apply();
+                File.WriteAllBytes(Path.Combine(cikti, "00-play-gar.png"), tex.EncodeToPNG());
+
+                // Kare 3: bolge karti acik — dokunma akisinin gorunur kaniti.
+                sahne.BolgeyiGoster("market");
+                Canvas.ForceUpdateCanvases();
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0f, 0f, en, boy), 0, 0);
+                tex.Apply();
+                File.WriteAllBytes(Path.Combine(cikti, "00-play-bolge-karti.png"), tex.EncodeToPNG());
+
+                // Kare 4: uzak bakis — bolge etiketleri kadrajda; olcek hatalari
+                // (dev bulanik harfler) burada yakalanir.
+                gezgin.Odakla(new Vector2(229f, 160f), 20f);
+                Canvas.ForceUpdateCanvases();
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0f, 0f, en, boy), 0, 0);
+                tex.Apply();
+                File.WriteAllBytes(Path.Combine(cikti, "00-play-uzak.png"), tex.EncodeToPNG());
+                RenderTexture.active = onceki;
+
                 UnityEngine.Object.DestroyImmediate(tex);
                 cam.targetTexture = null;
 
-                Debug.Log("[Amorland] Play ekrani uretildi: " + cikti);
+                Debug.Log("[Amorland] Play ekranlari uretildi: " + cikti);
             }
             catch (Exception e)
             {

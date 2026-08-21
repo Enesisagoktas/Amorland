@@ -31,6 +31,7 @@ namespace Amorland.Gorsel
         public float CimdikHizi = 0.045f;
 
         private Camera _kamera;
+        private float _ortoHedef = -1f;
         private bool _suruklerken;
         private Vector3 _tutulanDunya;   // surukleme basladiginda parmagin altindaki nokta
         private Vector3 _hedef;
@@ -65,17 +66,36 @@ namespace Amorland.Gorsel
             _ = Kamera;
         }
 
-        /// <summary>Kamerayi bir noktaya oturtur (bolgeye gitmek icin).</summary>
+        /// <summary>Kamerayi bir noktaya ANINDA oturtur (acilis).</summary>
         public void Odakla(Vector2 dunyaNoktasi, float ortoBoy)
         {
-            Kamera.orthographicSize = Mathf.Clamp(ortoBoy, EnYakin, EnUzak);
+            _ortoHedef = Mathf.Clamp(ortoBoy, EnYakin, EnUzak);
+            Kamera.orthographicSize = _ortoHedef;
             _hedef = new Vector3(dunyaNoktasi.x, dunyaNoktasi.y, transform.position.z);
             Sinirla();
             transform.position = _hedef;
         }
 
+        /// <summary>
+        /// Kamerayi bir noktaya YUMUSAK tasir (bolgeye dokununca). Konum zaten
+        /// yumusatiliyordu; zoom icin ayrica hedef tutulur ve Update yaklastirir.
+        /// </summary>
+        public void YumusakOdakla(Vector2 dunyaNoktasi, float ortoBoy)
+        {
+            _ortoHedef = Mathf.Clamp(ortoBoy, EnYakin, EnUzak);
+            _hedef = new Vector3(dunyaNoktasi.x, dunyaNoktasi.y, transform.position.z);
+        }
+
         private void Update()
         {
+            // Yumusak zoom hedefi: elle zoom yapilinca hedef aninda esitlenir ki
+            // kullanicinin tekerlegiyle kavga etmesin.
+            if (_ortoHedef > 0f && !Mathf.Approximately(Kamera.orthographicSize, _ortoHedef))
+            {
+                Kamera.orthographicSize = Mathf.Lerp(Kamera.orthographicSize, _ortoHedef,
+                                                     1f - Mathf.Exp(-8f * Time.unscaledDeltaTime));
+            }
+
             Zoom();
             Surukle();
             Tuslar();
@@ -97,6 +117,7 @@ namespace Amorland.Gorsel
 
             if (Mathf.Approximately(degisim, 0f)) return;
             Kamera.orthographicSize = Mathf.Clamp(Kamera.orthographicSize + degisim, EnYakin, EnUzak);
+            _ortoHedef = Kamera.orthographicSize;   // elle zoom yumusak hedefi iptal eder
         }
 
         private void Surukle()

@@ -47,9 +47,17 @@ namespace Amorland
             else _kok.AddComponent<Oyun>();
         }
 
-        /// <summary>Vadiden oyuna gecer: mevcut kokU atar, yerine oyunu kurar.</summary>
-        public static void OyunaGec()
+        /// <summary>
+        /// Vadi haritasinda secilen bolge. Oyun, oturum kurulunca bunu okur ve
+        /// <c>BolgeyeGit</c> cagirir (spec B.4: bolgeye dokun, o sahneye gir).
+        /// Statik cunku vadi kokU yikilip oyun kokU kurulurken tasiyacak nesne yok.
+        /// </summary>
+        public static string IstenenBolge;
+
+        /// <summary>Vadiden oyuna gecer: mevcut koku atar, yerine oyunu kurar.</summary>
+        public static void OyunaGec(string bolgeId = null)
         {
+            IstenenBolge = bolgeId;
             if (_kok != null) Object.Destroy(_kok);
             OnbellekleriBosalt();
 

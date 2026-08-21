@@ -80,8 +80,13 @@ karodan döşenir; kahve çatı toprak avluyla ton tona kaybolur — toprak zemi
 (tek örnek kilidi). Doğrulama render'ları `%TEMP%\amorland-render-klon` altındaki
 klon projede koşuyor; `robocopy -MIR` ile eşitleniyor.
 
-Bilinen eksik: bölgeye dokunma bağlı değil (kayıtlar hazır, `Oyun.BolgeyeGit`
-bekliyor); tren yok, hat ve gar var.
+**Bölgeye dokunma bağlı.** Bölgeye tıklayınca kamera yumuşakça yaklaşır ve bölge
+kartı açılır (ad + seviye + "Bölgeye gir"). Giriş isteği `Onyukleyici.IstenenBolge`
+ile taşınır; `Oyun` oturum kurulunca `BolgeyeGit` çağırır. Dokunma/sürükleme ayrımı
+14 px eşiğiyle. Hatta **gezen tren** var (lokomotif + iki vagon, salt dekor).
+Başsız doğrulama 4 kare üretir: açılış, gar+tren, bölge kartı açık, uzak bakış
+(etiket ölçeği burada denetlenir — ilk sürümde etiket yazısı karttan taşıp dev
+bulanık harfler halinde yüzüyordu, ölçek/punto dengesiyle düzeltildi).
 
 ---
 

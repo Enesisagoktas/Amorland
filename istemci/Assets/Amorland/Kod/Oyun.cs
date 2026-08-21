@@ -308,6 +308,14 @@ namespace Amorland
                 DunyayiKur();
                 _baglanti.Baslat(paket.ErisimJetonu);
                 _yukleme.Gizle();
+
+                // Vadi haritasindan bir bolgeye dokunularak gelindiyse oraya gec.
+                if (!string.IsNullOrEmpty(Onyukleyici.IstenenBolge))
+                {
+                    string bolge = Onyukleyici.IstenenBolge;
+                    Onyukleyici.IstenenBolge = null;
+                    BolgeyeGit(bolge);
+                }
             });
         }
 

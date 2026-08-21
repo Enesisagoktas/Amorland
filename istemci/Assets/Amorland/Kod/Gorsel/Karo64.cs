@@ -184,6 +184,9 @@ namespace Amorland.Gorsel
         public const int KoyluKadin = 28;
         /// <summary>Tek ahsap direk — rpg-base'de DIKEY cit yok, dikey kenarlar bununla.</summary>
         public const int CitDirek = 8;
+        /// <summary>Yandan bakisli lokomotif ve yuk vagonu — hatta gezen tren.</summary>
+        public const int Lokomotif = 9;
+        public const int Vagon = 10;
 
         // ------------------------------------------------------------ yukleme
 

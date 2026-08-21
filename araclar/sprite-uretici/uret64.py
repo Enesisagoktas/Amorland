@@ -258,6 +258,41 @@ class Cizer:
         d.rounded_rectangle([x + 27, y + 14, x + 37, y + 54], 4, fill=ahsap + (255,))
         d.rounded_rectangle([x + 27, y + 14, x + 37, y + 30], 4, fill=ton(ahsap, 1.12) + (255,))
 
+    def lokomotif(self, i):
+        """Yandan bakisli kucuk buharli lokomotif — doguya (saga) gider."""
+        x, y = self.kanvas(i)
+        d = ImageDraw.Draw(self.im)
+        govde = ton(self.TAS, 0.52)
+        acik = ton(self.TAS, 0.72)
+        # kazan
+        d.rounded_rectangle([x + 4, y + 26, x + 42, y + 46], 7, fill=govde + (255,))
+        d.rounded_rectangle([x + 4, y + 26, x + 42, y + 34], 7, fill=acik + (255,))
+        # kabin (sagda)
+        d.rounded_rectangle([x + 40, y + 14, x + 58, y + 46], 4, fill=govde + (255,))
+        d.rectangle([x + 44, y + 20, x + 54, y + 30], fill=(140, 190, 205, 255))
+        # baca + isik
+        d.rectangle([x + 10, y + 14, x + 18, y + 28], fill=govde + (255,))
+        d.rounded_rectangle([x + 8, y + 10, x + 20, y + 16], 3, fill=acik + (255,))
+        # on tampon
+        d.polygon([(x + 2, y + 46), (x + 10, y + 38), (x + 10, y + 46)], fill=ton(self.AHSAP, 0.8) + (255,))
+        # tekerler
+        for cx in (14, 30, 48):
+            d.ellipse([x + cx - 7, y + 42, x + cx + 7, y + 56], fill=(52, 44, 46, 255))
+            d.ellipse([x + cx - 3, y + 46, x + cx + 3, y + 52], fill=acik + (255,))
+
+    def vagon(self, i):
+        """Yuk vagonu: ahsap sandik govde + iki teker."""
+        x, y = self.kanvas(i)
+        d = ImageDraw.Draw(self.im)
+        ahsap = ton(self.AHSAP, 0.9)
+        d.rounded_rectangle([x + 6, y + 24, x + 58, y + 48], 4, fill=ton(ahsap, 0.8) + (255,))
+        for k in range(4):
+            d.rectangle([x + 9 + k * 13, y + 27, x + 18 + k * 13, y + 45], fill=ahsap + (255,))
+        d.rectangle([x + 6, y + 24, x + 58, y + 29], fill=ton(ahsap, 1.1) + (255,))
+        for cx in (18, 46):
+            d.ellipse([x + cx - 6, y + 44, x + cx + 6, y + 56], fill=(52, 44, 46, 255))
+            d.ellipse([x + cx - 2, y + 48, x + cx + 2, y + 52], fill=ton(self.TAS, 0.72) + (255,))
+
     def isaret(self, i):
         """Yon tabelasi."""
         x, y = self.kanvas(i)
@@ -279,6 +314,8 @@ def main():
     c.kalas(6, dikey=True)
     c.isaret(7)
     c.direk(8)
+    c.lokomotif(9)
+    c.vagon(10)
     # Satir 1: ekinler (genc 12-15, olgun 16-19)
     c.bugday(12, olgun=False)
     c.yumru(13, olgun=False, meyve=(214, 70, 56))
