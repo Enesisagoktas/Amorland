@@ -65,7 +65,8 @@ namespace Amorland
         // Kelebekler: cicekli cayirlarda gezinen minik canlilik.
         private readonly List<Transform> _kelebekler = new List<Transform>();
         private readonly List<Vector2> _kelebekYuva = new List<Vector2>();
-        private Sprite _kanatAcik, _kanatKapali;
+        private readonly List<Sprite> _kanatAcikListe = new List<Sprite>();
+        private readonly List<Sprite> _kanatKapaliListe = new List<Sprite>();
         private float _kanatZamani;
 
         private void Start() => Kur();
@@ -99,8 +100,10 @@ namespace Amorland
         /// </summary>
         private void KelebekleriKur()
         {
-            _kanatAcik = Karo64.Al(Sayfa64.Ek, Karo64.KelebekAcik);
-            _kanatKapali = Karo64.Al(Sayfa64.Ek, Karo64.KelebekKapali);
+            Sprite tAcik = Karo64.Al(Sayfa64.Ek, Karo64.KelebekAcik);
+            Sprite tKapali = Karo64.Al(Sayfa64.Ek, Karo64.KelebekKapali);
+            Sprite mAcik = Karo64.Al(Sayfa64.Ek, Karo64.KelebekMaviAcik);
+            Sprite mKapali = Karo64.Al(Sayfa64.Ek, Karo64.KelebekMaviKapali);
 
             Vector2[] yuvalar =
             {
@@ -109,17 +112,20 @@ namespace Amorland
             };
             var kok = new GameObject("Kelebekler");
             kok.transform.SetParent(transform, false);
-            foreach (var yuva in yuvalar)
+            for (int i = 0; i < yuvalar.Length; i++)
             {
-                var go = new GameObject("Kelebek");
+                var go = new GameObject("Kelebek" + i);
                 go.transform.SetParent(kok.transform, false);
-                go.transform.position = new Vector3(yuva.x, yuva.y, 0f);
+                go.transform.position = new Vector3(yuvalar[i].x, yuvalar[i].y, 0f);
                 go.transform.localScale = Vector3.one * 0.8f;
                 var sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = _kanatAcik;
+                bool mavi = i % 2 == 1;
+                sr.sprite = mavi ? mAcik : tAcik;
                 sr.sortingOrder = 4;
                 _kelebekler.Add(go.transform);
-                _kelebekYuva.Add(yuva);
+                _kelebekYuva.Add(yuvalar[i]);
+                _kanatAcikListe.Add(mavi ? mAcik : tAcik);
+                _kanatKapaliListe.Add(mavi ? mKapali : tKapali);
             }
         }
 
@@ -225,16 +231,20 @@ namespace Amorland
                 // localScale ile dunya birimine indirilir. Ilk surum karti dogrudan
                 // dunya biriminde (26x7) acmisti; 30 puntoluk yazi 7 birimlik karta
                 // sigmayip tasti ve ekranda dev bulanik harfler yuzuyordu.
-                var kart = UiKit.Kart(rt, "Etiket_" + b.Ad, new Color(0.13f, 0.10f, 0.08f, 0.85f), 24);
-                kart.sizeDelta = new Vector2(300f, 72f);
-                kart.localScale = Vector3.one * 0.028f;
-                kart.localPosition = new Vector3(b.Merkez.x - VadiHaritasi.En / 2f,
-                                                 b.Alan.yMin - VadiHaritasi.Boy / 2f - 3f, 0f);
+                var dis = UiKit.Kart(rt, "Etiket_" + b.Ad, Palet.UiYazi, 26);
+                dis.sizeDelta = new Vector2(300f, 74f);
+                dis.localScale = Vector3.one * 0.028f;
+                dis.localPosition = new Vector3(b.Merkez.x - VadiHaritasi.En / 2f,
+                                                b.Alan.yMin - VadiHaritasi.Boy / 2f - 3f, 0f);
+                dis.gameObject.GetComponent<Image>().raycastTarget = false;
+                var kart = UiKit.Kart(dis, "Ic", new Color(0.13f, 0.10f, 0.08f, 0.92f), 22);
+                kart.anchorMin = Vector2.zero; kart.anchorMax = Vector2.one;
+                kart.offsetMin = new Vector2(4f, 4f); kart.offsetMax = new Vector2(-4f, -4f);
                 kart.gameObject.GetComponent<Image>().raycastTarget = false;
 
                 var yazi = UiKit.Yazi(kart, "Yazi", b.Baslik, 34, Palet.UiYazi,
                                       TextAnchor.MiddleCenter, true);
-                UiKit.Doldur(yazi.rectTransform, 6f);
+                UiKit.Doldur(yazi.rectTransform, 4f);
             }
         }
 
@@ -244,16 +254,22 @@ namespace Amorland
             kanvas.transform.SetParent(transform, false);
 
             // Ust seride vadi adi ve o an bakilan bolge.
-            var ust = UiKit.Kart(kanvas.transform, "Baslik", new Color(0.13f, 0.10f, 0.08f, 0.85f), 14);
-            ust.anchorMin = new Vector2(0.5f, 1f);
-            ust.anchorMax = new Vector2(0.5f, 1f);
-            ust.pivot = new Vector2(0.5f, 1f);
-            ust.anchoredPosition = new Vector2(0f, -14f);
-            ust.sizeDelta = new Vector2(340f, 46f);
+            // HUD dili: koyu kapsul + KREM CERCEVE (proje arayuz kurali).
+            var ustDis = UiKit.Kart(kanvas.transform, "Baslik", Palet.UiYazi, 16);
+            ustDis.anchorMin = new Vector2(0.5f, 1f);
+            ustDis.anchorMax = new Vector2(0.5f, 1f);
+            ustDis.pivot = new Vector2(0.5f, 1f);
+            ustDis.anchoredPosition = new Vector2(0f, -14f);
+            ustDis.sizeDelta = new Vector2(340f, 48f);
+            ustDis.gameObject.GetComponent<Image>().raycastTarget = false;
+            var ust = UiKit.Kart(ustDis, "Ic", new Color(0.13f, 0.10f, 0.08f, 0.96f), 13);
+            ust.anchorMin = Vector2.zero; ust.anchorMax = Vector2.one;
+            ust.offsetMin = new Vector2(3f, 3f); ust.offsetMax = new Vector2(-3f, -3f);
+            ust.gameObject.GetComponent<Image>().raycastTarget = false;
 
             _bolgeYazisi = UiKit.Yazi(ust, "Yazi", "Amorland Vadisi", UiKit.YaziBaslik,
                                       Palet.UiYazi, TextAnchor.MiddleCenter, true);
-            UiKit.Doldur(_bolgeYazisi.rectTransform, 8f);
+            UiKit.Doldur(_bolgeYazisi.rectTransform, 6f);
 
             // Alt seride kontrol ipucu.
             // ⚠ Kapsul ustunde: ilk denemede ciplak yaziydi ve acik yesil cimin
@@ -290,12 +306,15 @@ namespace Amorland
         /// </summary>
         private void BolgeKartiKur(Transform ebeveyn)
         {
-            _kart = UiKit.Kart(ebeveyn, "BolgeKarti", new Color(0.13f, 0.10f, 0.08f, 0.94f), 16);
-            _kart.anchorMin = new Vector2(0.5f, 0f);
-            _kart.anchorMax = new Vector2(0.5f, 0f);
-            _kart.pivot = new Vector2(0.5f, 0f);
-            _kart.anchoredPosition = new Vector2(0f, 70f);
-            _kart.sizeDelta = new Vector2(360f, 128f);
+            var kartDis = UiKit.Kart(ebeveyn, "BolgeKarti", Palet.UiYazi, 18);
+            kartDis.anchorMin = new Vector2(0.5f, 0f);
+            kartDis.anchorMax = new Vector2(0.5f, 0f);
+            kartDis.pivot = new Vector2(0.5f, 0f);
+            kartDis.anchoredPosition = new Vector2(0f, 70f);
+            kartDis.sizeDelta = new Vector2(366f, 134f);
+            _kart = UiKit.Kart(kartDis, "Ic", new Color(0.13f, 0.10f, 0.08f, 0.96f), 15);
+            _kart.anchorMin = Vector2.zero; _kart.anchorMax = Vector2.one;
+            _kart.offsetMin = new Vector2(3f, 3f); _kart.offsetMax = new Vector2(-3f, -3f);
 
             _kartBaslik = UiKit.Yazi(_kart, "Baslik", "", UiKit.YaziBaslik,
                                      Palet.UiYazi, TextAnchor.UpperCenter, true);
@@ -327,7 +346,7 @@ namespace Amorland
             krt.anchoredPosition = new Vector2(-14f, 12f);
             krt.sizeDelta = new Vector2(110f, 50f);
 
-            _kart.gameObject.SetActive(false);
+            _kart.parent.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -348,7 +367,7 @@ namespace Amorland
         private void KartKapat()
         {
             _seciliBolge = null;
-            if (_kart != null) _kart.gameObject.SetActive(false);
+            if (_kart != null) _kart.parent.gameObject.SetActive(false);
         }
 
         private void BolgeSec(VadiHaritasi.Bolge b)
@@ -356,7 +375,7 @@ namespace Amorland
             _seciliBolge = b.Ad;
             _kartBaslik.text = b.Baslik;
             _kartBilgi.text = "Seviye " + b.Seviye + " bölgesi";
-            _kart.gameObject.SetActive(true);
+            _kart.parent.gameObject.SetActive(true);
             // Kamera bolgeye yumusakca yaklasir; kadraj icerigin uzerine oturur.
             _gezgin.YumusakOdakla(b.Merkez, 10f);
         }
@@ -408,7 +427,7 @@ namespace Amorland
                     yuva.x + Mathf.Sin(t * f) * 3.2f,
                     yuva.y + Mathf.Sin(t * f * 1.7f + i) * 2.1f, 0f);
                 var sr = tr.GetComponent<SpriteRenderer>();
-                sr.sprite = acik ? _kanatAcik : _kanatKapali;
+                sr.sprite = acik ? _kanatAcikListe[i] : _kanatKapaliListe[i];
             }
         }
 

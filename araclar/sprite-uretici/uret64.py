@@ -749,21 +749,20 @@ class Cizer:
                       fill=(226, 186, 96, 255))
             d.ellipse([x + cx - 1, y + cy - 2, x + cx + 1, y + cy], fill=(255, 244, 210, 255))
 
-    def kelebek(self, i, acik):
-        """Kelebek: benekli kanatlar, iki kare cirpma."""
+    def kelebek(self, i, acik, renk=(234, 152, 64)):
+        """Kelebek: benekli kanatlar, iki kare cirpma. renk ile turuncu/mavi."""
         x, y = self.kanvas(i)
         d = ImageDraw.Draw(self.im)
-        turuncu = (234, 152, 64)
         if acik:
-            d.ellipse([x + 19, y + 24, x + 31, y + 37], fill=turuncu + (255,))
-            d.ellipse([x + 33, y + 24, x + 45, y + 37], fill=turuncu + (255,))
-            d.ellipse([x + 22, y + 33, x + 30, y + 41], fill=ton(turuncu, 1.2) + (255,))
-            d.ellipse([x + 34, y + 33, x + 42, y + 41], fill=ton(turuncu, 1.2) + (255,))
+            d.ellipse([x + 19, y + 24, x + 31, y + 37], fill=renk + (255,))
+            d.ellipse([x + 33, y + 24, x + 45, y + 37], fill=renk + (255,))
+            d.ellipse([x + 22, y + 33, x + 30, y + 41], fill=ton(renk, 1.2) + (255,))
+            d.ellipse([x + 34, y + 33, x + 42, y + 41], fill=ton(renk, 1.2) + (255,))
             d.ellipse([x + 23, y + 27, x + 27, y + 31], fill=(250, 240, 220, 255))
             d.ellipse([x + 37, y + 27, x + 41, y + 31], fill=(250, 240, 220, 255))
         else:
-            d.ellipse([x + 25, y + 23, x + 32, y + 39], fill=turuncu + (255,))
-            d.ellipse([x + 32, y + 23, x + 39, y + 39], fill=ton(turuncu, 1.15) + (255,))
+            d.ellipse([x + 25, y + 23, x + 32, y + 39], fill=renk + (255,))
+            d.ellipse([x + 32, y + 23, x + 39, y + 39], fill=ton(renk, 1.15) + (255,))
         d.rounded_rectangle([x + 30, y + 26, x + 34, y + 40], 2, fill=(70, 54, 46, 255))
     def golge_serit(self, i):
         """Sacak golgesi: ustten asagi solan yari saydam serit — kaide pedinin
@@ -897,6 +896,58 @@ class Cizer:
         x, y = self.kanvas(i)
         self.im.paste(Image.fromarray(a.astype("uint8"), "RGBA"), (x, y))
 
+    def cim_sicak(self, i, kenarli):
+        """Sonbahar zemin tonu: cimin sicak (sari-turuncu kacik) hali.
+
+        Ayni leke mimarisi: kenarli=False leke ICI (tam karo sicak),
+        kenarli=True leke KENARI (yalniz merkez sicak, kenar halkasi orijinal).
+        Sonbahar agaclari yesil zeminde igreti duruyordu; zemin de donsun.
+        """
+        import numpy as np
+        k = self.karo_kopya(43)
+        a = np.asarray(k).astype(np.float32)
+        if kenarli:
+            yy, xx = np.mgrid[0:T, 0:T]
+            mesafe = np.sqrt(((xx - 31.5) / 30.0) ** 2 + ((yy - 31.5) / 30.0) ** 2)
+            maske = np.clip(1.0 - mesafe, 0.0, 1.0) ** 0.7
+        else:
+            maske = np.ones((T, T), dtype=np.float32)
+        a[:, :, 0] *= 1.0 + 0.10 * maske
+        a[:, :, 1] *= 1.0 - 0.015 * maske
+        a[:, :, 2] *= 1.0 - 0.16 * maske
+        x, y = self.kanvas(i)
+        self.im.paste(Image.fromarray(np.clip(a, 0, 255).astype("uint8"), "RGBA"), (x, y))
+
+    def odun_istifi(self, i):
+        """Kesilmis odun istifi — oduncu acikligi icin. Halkali kutuk uclari one bakar."""
+        x, y = self.kanvas(i)
+        d = ImageDraw.Draw(self.im)
+        govde = ton(self.AHSAP, 0.72)
+        halka = ton(self.KREM, 0.9)
+        ic = ton(self.AHSAP, 1.05)
+        yerler = [(14, 44), (28, 44), (42, 44), (21, 33), (35, 33), (28, 22)]
+        for cx, cy in yerler:
+            d.ellipse([x + cx - 8, y + cy - 8, x + cx + 8, y + cy + 8], fill=govde + (255,))
+            d.ellipse([x + cx - 6, y + cy - 6, x + cx + 6, y + cy + 6], fill=halka + (255,))
+            d.ellipse([x + cx - 3, y + cy - 3, x + cx + 3, y + cy + 3], fill=ic + (255,))
+        # alt destek kalasi
+        d.rounded_rectangle([x + 4, y + 50, x + 52, y + 55], 2, fill=ton(govde, 0.85) + (255,))
+
+    def agac_koyu(self, i, kaynak, guc=0.84):
+        """rpg-base agacinin koyulastirilmis turevi.
+
+        ⚠ Olcum: KavakYesil'in (200) ana yesili (129,181,45), koyulastirilmis
+        orman zeminiyle (131,182,49) neredeyse birebir ayniydi — yesil agaclar
+        kendi zeminlerinde GORUNMEZ oluyordu. Koyu turev hem normal cimde hem
+        koyu tabanda kontrastli; kanopinin cimden koyu olmasi dogal da okunur.
+        """
+        import numpy as np
+        k = self.karo_kopya(kaynak)
+        a = np.asarray(k).astype(np.float32)
+        a[:, :, :3] *= guc
+        x, y = self.kanvas(i)
+        self.im.paste(Image.fromarray(np.clip(a, 0, 255).astype("uint8"), "RGBA"), (x, y))
+
     def isaret(self, i):
         """Yon tabelasi: saga isaret eden yuvarlak uclu ok levha. Ilk surum kaba
         bir T seklindeydi; simdi civili, iki tonlu, sivri uclu gercek bir tabela."""
@@ -962,6 +1013,14 @@ def main():
     c.dalga(63)
     c.derin_su(64)
     c.cim_koyu_duz(65, 0.07)
+    c.cim_sicak(66, kenarli=False)
+    c.cim_sicak(67, kenarli=True)
+    c.kelebek(68, acik=True, renk=(108, 168, 205))
+    c.kelebek(69, acik=False, renk=(108, 168, 205))
+    c.odun_istifi(70)
+    c.agac_koyu(71, 200)   # KavakYesil koyu
+    c.agac_koyu(72, 220)   # TopYesil koyu
+    c.agac_koyu(73, 221)   # TopYesilInce koyu
     # Satir 1: ekinler (genc 12-15, olgun 16-19)
     c.bugday(12, olgun=False)
     c.yumru(13, olgun=False, meyve=(214, 70, 56))

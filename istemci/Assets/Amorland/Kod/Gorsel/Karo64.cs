@@ -239,6 +239,21 @@ namespace Amorland.Gorsel
         public const int DerinSu = 64;
         /// <summary>Orman tabani: cimin tamami koyu — genis alanda dikissiz.</summary>
         public const int OrmanTabani = 65;
+        /// <summary>Sonbahar zemini: sicak ton — leke ici (66) ve kenari (67).</summary>
+        public const int SonbaharIci = 66;
+        public const int SonbaharKenari = 67;
+        public const int KelebekMaviAcik = 68;
+        public const int KelebekMaviKapali = 69;
+        /// <summary>Kesilmis odun istifi — oduncu acikligi.</summary>
+        public const int OdunIstifi = 70;
+        /// <summary>
+        /// ⚠ Yesil agaclarin KOYU turevleri — rpg-base yesilleri cimle ayni tonda
+        /// ve koyu orman tabaninda tamamen kayboluyorlardi (olcumle yakalandi).
+        /// Yesil agac icin HEP bunlar kullanilir; 200/220/221 emeklidir.
+        /// </summary>
+        public const int KavakKoyu = 71;
+        public const int TopKoyu = 72;
+        public const int TopInceKoyu = 73;
 
         // ------------------------------------------------------------ yukleme
 
