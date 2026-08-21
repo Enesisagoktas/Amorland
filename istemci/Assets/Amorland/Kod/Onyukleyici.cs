@@ -74,7 +74,7 @@ namespace Amorland
         {
             Gorsel.Sekil.Unut();
             Gorsel.SpriteDeposu.Unut();
-            Gorsel.KaroSeti.Unut();
+            Gorsel.Karo64.Unut();
             Gorsel.VadiHaritasi.OnbellegiTemizle();
         }
     }

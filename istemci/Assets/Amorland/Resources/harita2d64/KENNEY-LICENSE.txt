@@ -1,0 +1,10 @@
+	Amorland 64px karo sayfalari — kaynak ve lisans
+
+	rpgbase.png <- Kenney "RPG Base" (CC0) — arazi, agac, cit, bina, cati.
+	ek64.png    <- araclar/sprite-uretici/uret64.py ciktisi. Renkleri rpgbase
+	               sayfasindan orneklenerek cizildi (ekin, hayvan, koylu, ray,
+	               kalas, kaldirim). O da CC0 sayilir; uretici betik depodadir.
+
+	Kenney icerigi kisisel/egitsel/ticari projelerde serbesttir.
+	http://creativecommons.org/publicdomain/zero/1.0/
+	Destek: http://support.kenney.nl

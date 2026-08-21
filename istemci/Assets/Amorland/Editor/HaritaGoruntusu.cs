@@ -38,16 +38,17 @@ namespace Amorland.EditorAraclari
             var cop = new List<GameObject>();
             try
             {
-                KaroSeti.Unut();
-                foreach (Sayfa sayfa in Enum.GetValues(typeof(Sayfa)))
+                Karo64.Unut();
+                foreach (Sayfa64 sayfa in System.Enum.GetValues(typeof(Sayfa64)))
                 {
                     cop.Clear();
-                    int sut = sayfa == Sayfa.Su ? 18 : 12;
-                    const int sat = 11, aralik = 2;
+                    int sut = sayfa == Sayfa64.RpgBase ? 20 : 12;
+                    int sat = sayfa == Sayfa64.RpgBase ? 13 : 3;
+                    const int aralik = 2;
 
                     for (int i = 0; i < sut * sat; i++)
                     {
-                        Sprite s = KaroSeti.Al(sayfa, i);
+                        Sprite s = Karo64.Al(sayfa, i);
                         if (s == null) continue;
                         var go = new GameObject("k" + i);
                         cop.Add(go);
@@ -57,11 +58,11 @@ namespace Amorland.EditorAraclari
 
                     Kare(cikti, "00-karo-" + sayfa.ToString().ToLowerInvariant() + ".png", cop,
                          new Vector2((sut - 1) * aralik / 2f, -(sat - 1) * aralik / 2f),
-                         sat * aralik / 2f + 1f, sut * 110, 1240);
+                         sat * aralik / 2f + 1f, sut * 90, sat * 90 + 90);
 
                     foreach (var go in cop) if (go != null) UnityEngine.Object.DestroyImmediate(go);
                 }
-                Debug.Log("[Amorland] Karo tablolari yazildi. Indeksler soldan saga, ustten asagi.");
+                Debug.Log("[Amorland] Karo tablolari yazildi.");
             }
             finally
             {
@@ -91,7 +92,7 @@ namespace Amorland.EditorAraclari
 
             try
             {
-                KaroSeti.Unut();
+                Karo64.Unut();
                 VadiHaritasi.OnbellegiTemizle();
 
                 kok = new GameObject("VadiSahnesi");
@@ -153,7 +154,7 @@ namespace Amorland.EditorAraclari
 
             try
             {
-                KaroSeti.Unut();
+                Karo64.Unut();
                 VadiHaritasi.OnbellegiTemizle();
 
                 var kokGo = new GameObject("VadiHaritasi");
@@ -171,7 +172,10 @@ namespace Amorland.EditorAraclari
                     Kare(cikti, "02-" + b.Ad + ".png", cop, b.Merkez, 9f, 1280, 720);
 
                 // Koprunun oldugu yer: nehrin ana yolu kestigi nokta.
-                Kare(cikti, "03-kopru.png", cop, new Vector2(74f, 92f), 12f, 1280, 720);
+                Kare(cikti, "03-kopru.png", cop, new Vector2(296f, 132f), 11f, 1280, 720);
+
+                // Meyve bahcesi ve iskele resmi bolge degil; ayrica cekilir.
+                Kare(cikti, "04-bahce-iskele.png", cop, new Vector2(280f, 232f), 26f, 1280, 720);
 
                 Debug.Log("[Amorland] Harita goruntuleri uretildi: " + cikti);
             }

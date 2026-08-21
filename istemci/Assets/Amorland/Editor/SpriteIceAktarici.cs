@@ -16,12 +16,18 @@ namespace Amorland.EditorAraclari
     {
         private const string Klasor = "/Resources/sprite/";
         private const string KaroKlasoru = "/Resources/harita2d/";
+        private const string Karo64Klasoru = "/Resources/harita2d64/";
 
         private void OnPreprocessTexture()
         {
             string y = assetPath == null ? null : assetPath.Replace('\\', '/');
             if (y == null) return;
 
+            if (y.IndexOf(Karo64Klasoru) >= 0)
+            {
+                Karo64Sayfasi();
+                return;
+            }
             if (y.IndexOf(KaroKlasoru) >= 0)
             {
                 KaroSayfasi();
@@ -53,6 +59,29 @@ namespace Amorland.EditorAraclari
         /// Nokta filtre ve sikistirmasiz doku de sart: piksel sanati bilineer
         /// filtreyle bulanir, sikistirma ise karo kenarlarinda kirli piksel birakir.
         /// </summary>
+        /// <summary>
+        /// 64px sayfalar (rpg-base ailesi) icin KAYNAK doku ayarlari.
+        ///
+        /// ⚠ Bu sayfalar dogrudan cizilmez: Karo64 calisma aninda karolari extrude
+        /// atlasa kopyalar. O yuzden buradaki tek kritik ayar isReadable — kapali
+        /// olursa GetPixels32 patlar. Mipmap/filtre atlasta uretilir; kaynakta gereksiz.
+        /// npotScale yine None: 1280x832 olceklenirse 64 px izgara kayar.
+        /// </summary>
+        private void Karo64Sayfasi()
+        {
+            var ti = (TextureImporter)assetImporter;
+            ti.textureType = TextureImporterType.Default;
+            ti.isReadable = true;
+            ti.npotScale = TextureImporterNPOTScale.None;
+            ti.mipmapEnabled = false;
+            ti.filterMode = FilterMode.Bilinear;
+            ti.wrapMode = TextureWrapMode.Clamp;
+            ti.alphaIsTransparency = true;
+            ti.textureCompression = TextureImporterCompression.Uncompressed;
+            ti.maxTextureSize = 2048;
+            ti.sRGBTexture = true;
+        }
+
         private void KaroSayfasi()
         {
             var ti = (TextureImporter)assetImporter;

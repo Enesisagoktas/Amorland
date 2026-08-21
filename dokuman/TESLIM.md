@@ -47,40 +47,41 @@ ses altyapısı + yer tutucu ses seti.
 
 ---
 
-## 1b. Vadi haritası
+## 1b. Vadi haritası (64 px, ikinci sürüm)
 
-Açılışta gelen ekran artık vadi haritası. `Onyukleyici.AcilisModu` varsayılan olarak
-`Vadi`; "Oyuna gir" düğmesi `Oyun`'a geçiriyor. Sebep: `Oyun` açılışta sunucuya
-bağlanıyor ve sunucu ayakta değilse ekranda yükleme yazısından başka bir şey
-görünmüyordu. Harita tek başına çalışıyor.
+Açılıştaki gezilebilir vadi. İlk sürüm 16 px Tiny-* setiyle kurulmuştu; kullanıcıya
+fazla basit geldi. 212 Kenney paketinin tamamı tarandı (8 paralel ajan, envanter
+`araclar/karo-indeks/` altında) ve omurga **Kenney RPG Base**'e (64 px, vektör
+çizim) taşındı. Harita da büyütüldü.
 
 | Ne | Değer |
 |---|---|
-| Boyut | 180 × 130 karo = 23.400 hücre, 3 katman |
-| Karo sayfaları | Kenney CC0 — Tiny Farm (ekin/hayvan), Tiny Town (arazi/yapı), Tiny Battle (su) |
-| Bölge | 7 — orman, tren garı, ev, tarla, depo, maden ocağı, market |
-| Arazi | Nehir + köprü, 3 karo genişliğinde yol ağı, toprak avlular |
-| Üretim | Deterministik (`Tohum = 20260821`) — aynı tohum aynı vadi |
+| Boyut | **512 × 320 karo = 163.840 hücre** (ilk sürümün ~7 katı), 4 katman |
+| Karo seti | RPG Base (CC0) + `ek64.png` — eksikler RPG Base paletinden örneklenerek Python'la çizildi |
+| Bölge | 7 spec bölgesi + meyve bahçesi, iskele, sonbahar kuşağı |
+| Arazi | Göl + ada, iki nehir, korkuluklu kalas köprüler, yol ağı, tren hattı |
+| Binalar | Karodan kompoze: 3 duvar malzemesi × 2 çatı, kapı/pencere/vitrin kaplamaları |
+| Üretim | Deterministik (`Tohum = 20260821`) |
 
-**Üç sayfa neden gerekli oldu.** Tiny Farm kendi arka planını çim olarak çiziyor;
-içinde dikişsiz döşenebilecek tek bir zemin karosu **yok** — sayfada saf çim 16×16
-pencere sayısı sıfır. Çim sandığım karoların dördünde de çepeçevre koyu kontur vardı
-ve harita baştan başa koyu ızgara çıktı. Tiny Town'ın 0 numaralı karosu %100 saf çim,
-12–38 arası tam bir 3×3 yol autotile'ı; Tiny Battle'da da 18–56 arası su/kıyı
-autotile'ı var. Üç sayfada da çim rengi **tam olarak** rgb(132,198,105) — renk
-normalizasyonu gerekmedi.
+**Teknik çekirdek.** RPG Base piksel sanatı değil; Bilinear + mipmap şart. Atlasta
+komşu karolar Bilinear'da birbirine sızdığı için karolar yüklenirken kenarları
+taşırılarak (extrude) 8 px oluklu bir çalışma-anı atlasına kopyalanır
+(`Karo64.cs`). Kapı/pencereler duvar karolarının üstüne binen saydam kaplamalar
+olduğundan dördüncü bir Tilemap katmanı (`NesneUst`) eklendi.
 
-**Ölçüldü, tahmin edilmedi.** Autotile blokları her karonun dört kenarındaki pikseller
-çim/toprak/su diye tek tek sayılarak çıkarıldı. Aynı şekilde `Cakil` (43) ve saf taş
-(109) ayrımı da ölçümle bulundu: 43 çim üstüne serpilmiş bir yamadır, geniş alana
-döşenince meydan puantiyeli duvar kâğıdına dönüyordu.
+**Ölçüm disiplini sürdü.** Beş yanlış tahmin görüntü ölçümüyle yakalandı: 162
+saçak sağı değil üçgen alınlık yarısıydı (çatının ucu çapraz kesiliyordu); 111
+duvar ortasıydı, sağ kenar 112; mavi gövdenin kendi kaidesi yok, taş kaideyi
+paylaşıyor; kıvrımlı çatı panelleri (140/142) gövdede dikiş üretiyor, gövde tek
+karodan döşenir; kahve çatı toprak avluyla ton tona kaybolur — toprak zeminde
+çatı arduvaz olur. Hepsi `araclar/karo-indeks/` görüntüleriyle belgeli.
 
-**Bitki örtüsü kümelenir.** Her karoya bağımsız zar atmak 23.400 karo boyunca aynı
-yoğunlukta konfeti üretiyordu. Değer gürültüsüyle koruluk / çayır / açık arazi ayrımı
-çıkıyor, gezerken manzara değişiyor.
+**Render klonu.** Kullanıcının Unity editörü açıkken başsız render alınamıyor
+(tek örnek kilidi). Doğrulama render'ları `%TEMP%\amorland-render-klon` altındaki
+klon projede koşuyor; `robocopy -MIR` ile eşitleniyor.
 
-Bilinen eksik: bölgeye **dokunma bağlı değil**. Bölge kayıtları
-(`VadiHaritasi.Bolgeler`) hazır; tıklama eklendiğinde `Oyun.BolgeyeGit` çağrılacak.
+Bilinen eksik: bölgeye dokunma bağlı değil (kayıtlar hazır, `Oyun.BolgeyeGit`
+bekliyor); tren yok, hat ve gar var.
 
 ---
 
