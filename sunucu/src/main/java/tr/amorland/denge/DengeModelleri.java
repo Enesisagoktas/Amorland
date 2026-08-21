@@ -22,6 +22,8 @@ public final class DengeModelleri {
   // ---------------------------------------------------------------- urunler.json
 
   @JsonIgnoreProperties(ignoreUnknown = true)
+  public record AcilisTohumOdulu(int adet) {}
+
   public record Acilis(String tip, int seviye) {
     public boolean seviyeOduluMu() {
       return "seviye_odulu".equals(tip);
@@ -110,6 +112,7 @@ public final class DengeModelleri {
       MarketAlisOrani marketAlisOrani,
       TrenFiyat trenFiyat,
       Manifesto manifesto,
+      AcilisTohumOdulu acilisTohumOdulu,
       BaslangicUrunKurali baslangicUrunKurali) {}
 
   // ---------------------------------------------------------------- uretim.json

@@ -294,7 +294,11 @@ namespace Amorland.Arayuz
         /// <summary>Ilerleme cubugunun dis genisligi. <c>CubukAyarla</c> ic genislik ister.</summary>
         private const float CubukGenislik = 120f;
 
-        /// <summary>Dikey dilimde ilk 5 sayfanin metni. Gerisi perde perde yazilir (A.8).</summary>
+        /// <summary>
+        /// 20 sayfanin tamami (B.21 — "birlikte yapilanlar defteri"). Ton B.1'den:
+        /// kisa, nesne odakli, her sayfada "iki kisilik is" motifi. Ara sahne yok,
+        /// diyalog yok — hikaye TAMAMEN bu sayfalarda yasar.
+        /// </summary>
         private static readonly Dictionary<int, string> Sayfalar = new Dictionary<int, string>
         {
             { 1, "Bu vadide hiçbir iş tek başına görülmez.\n\nTren manifestosu iki imza ister. "
@@ -302,7 +306,35 @@ namespace Amorland.Arayuz
             { 2, "İlk hasat.\n\nToprak verdiğini geri aldığın gün, vadi seni tanımaya başlar." },
             { 3, "Depo açıldı.\n\nBurada bıraktıkların ona ulaşır. O da sana bırakabilir." },
             { 4, "İkinci imza.\n\nManifesto iki isim ister. Çağırdığın kişi aynı vadiye düşer." },
-            { 5, "Tren yıllar sonra ilk kez durdu.\n\nVadinin dışarıyla bağlantısı geri geldi." }
+            { 5, "Tren yıllar sonra ilk kez durdu.\n\nVadinin dışarıyla bağlantısı geri geldi." },
+            { 6, "Market yeniden açıldı.\n\nTezgâhların tozunu aldık. İlk müşteri bir kelebekti; "
+                 + "bir şey almadı ama herkese haber verdi." },
+            { 7, "Ormanın yolu açıldı.\n\nAğaçlar iki kişiyle konuşur: biri tutar, biri keser. "
+                 + "Tek başına gidenin baltası küser." },
+            { 8, "Kümes tıkırdıyor.\n\nYumurtayı kim toplarsa kahvaltıyı öbürü kurar. "
+                 + "Kural değil; öyle güzel." },
+            { 9, "Maden kapısı gıcırdayarak açıldı.\n\nAşağısı karanlık. Feneri tutan el, "
+                 + "kazmayı sallayan elden cesurdur." },
+            { 10, "İlk metal alet.\n\nDemir ateşi ister, ateş sabrı, sabır iki kişiyi." },
+            { 11, "Asansör çalışıyor.\n\nHalatı birlikte çektik. Aşağı inen, yukarıda birinin "
+                  + "beklediğini bilerek iner." },
+            { 12, "Madenin ikinci katı.\n\nDuvarda eski bir yazı: 'Daha derine yalnız inme.' "
+                  + "Altında iki isim; okunmuyor artık." },
+            { 13, "Değirmen döndü.\n\nUn kokusu vadiye yayıldı. Tren dursaydı, "
+                  + "buradan ekmek alırdı." },
+            { 14, "Ahır doldu.\n\nİnek kimseyi beklemez; ama iki kişiyle sağım "
+                  + "şarkı gibi gider." },
+            { 15, "Köprü tamam.\n\nİki yakayı bağlayan kalaslar değil, kalasları "
+                  + "birlikte taşıyan omuzlardır." },
+            { 16, "Ormanın derinliği.\n\nEn yaşlı ağacın gövdesinde bir oyma: bir kalp, "
+                  + "iki harf. Kim bilir kaç yıllık." },
+            { 17, "Ev büyüdü.\n\nOda değil aslında büyüyen; masaya iki sandalye daha sığdı." },
+            { 18, "Dördüncü kat.\n\nCevher burada parlıyor. Yukarıdan bir ses: "
+                  + "'Yeter, çık artık.' İyi ki var o ses." },
+            { 19, "Büyük manifesto masada.\n\nİki imza yeri. Mürekkep hazır. "
+                  + "Vadi nefesini tuttu." },
+            { 20, "Tren düdüğü.\n\nAmorland tarifeye geri döndü. Defterin son sayfası: "
+                  + "iki isim, yan yana.\n\n(İkinci imza için bir yer her zaman ayrılmıştır.)" }
         };
 
         public DefterEkrani(Transform kanvas, DunyaDurumu durum)

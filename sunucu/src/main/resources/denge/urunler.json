@@ -304,6 +304,11 @@
   "sinirliAdet": true,
   "not": "Sinirsiz olursa market anlamsizlasir."
  },
+ "acilisTohumOdulu": {
+  "$kaynak": "B.16 tempo motoru — yeni urun acilinca oyuncu onu EKEBILMELI",
+  "$turetim": "Seviyeyle acilan urunun tohumu baska hicbir kaynaktan edinilemiyordu (market Sv6, para Sv5): acilis kutlamasi bos bir vaatti. Atlanan seviyede acilan HER urunden bu kadar tohum verilir.",
+  "adet": 4
+ },
  "baslangicUrunKurali": {
   "$aciklama": "v0.4: Baslangic urunleri hasatta 1 urun + 1 tohum verir. Market urunleri vermez.",
   "urunler": [

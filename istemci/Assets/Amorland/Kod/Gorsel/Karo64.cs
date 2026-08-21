@@ -424,6 +424,24 @@ namespace Amorland.Gorsel
             return _uzunAgaclar[Mathf.Clamp(tur, 0, 2)];
         }
 
+        private static Sprite _buyukKuyu;
+
+        /// <summary>Buyuk kuyu (64x128, agac sayfasi 4. sutun; ayak pivotlu).
+        /// Oyuncu bulgusu: tek karoluk kuyu ana etkilesim nesnesi icin kucuktu.</summary>
+        public static Sprite BuyukKuyuSprite()
+        {
+            if (_buyukKuyu == null)
+            {
+                var doku = Resources.Load<Texture2D>("harita2d64/agaclar64");
+                if (doku == null) return null;
+                _buyukKuyu = Sprite.Create(
+                    doku, new Rect(3 * KaroPiksel, 0, KaroPiksel, KaroPiksel * 2),
+                    new Vector2(0.5f, 0.06f), PikselBirim, 0, SpriteMeshType.FullRect);
+                _buyukKuyu.name = "buyuk_kuyu";
+            }
+            return _buyukKuyu;
+        }
+
         /// <summary>3x3 blok autotile secimi. Bayrak = "komsu ayni malzeme mi".</summary>
         public static int Dokuz(int[,] blok, bool kuzey, bool guney, bool bati, bool dogu)
         {

@@ -58,7 +58,7 @@ class Cizer:
         self.TAS = ortalama(sheet, 91)          # gri tas duvar
         self.sheet = sheet
         # Uzun agac sayfasi: 3 sutun x 64 genislik, 128 boy (tek parca agaclar).
-        self.agac_sayfasi = Image.new("RGBA", (3 * T, 2 * T), (0, 0, 0, 0))
+        self.agac_sayfasi = Image.new("RGBA", (4 * T, 2 * T), (0, 0, 0, 0))
         self.agac_sutun = 0
 
     def kanvas(self, i):
@@ -910,6 +910,53 @@ class Cizer:
         katman = katman.filter(ImageFilter.GaussianBlur(0.6))
         self.yapistir(i, katman)
 
+    def buyuk_kuyu(self):
+        """Buyuk kuyu — 64x128 TEK PARCA (agac sayfasi 4. sutun).
+
+        Oyuncu bulgusu: tek karoluk kuyu oyunun ana etkilesim nesnesi icin
+        cok kucuktu. Agaclarla ayni dil: ayak-pivotlu GameObject, Y-sortlu.
+        Kiremit cati (landmark kirmizisi) + makara + ipte kova + parlak su."""
+        kanvas = Image.new("RGBA", (T, 2 * T), (0, 0, 0, 0))
+        d = ImageDraw.Draw(kanvas)
+        tas = ton(self.TAS, 0.94)
+        cati = (200, 72, 60)
+        direk = ton(self.AHSAP, 0.72)
+
+        # govde golgesi bilezik alti (yumusak degil, dekor golge zaten var)
+        # bilezik: genis dis + on yuz + ic su
+        d.ellipse([4, 86, 60, 122], fill=ton(tas, 0.6) + (255,))
+        d.ellipse([4, 78, 60, 114], fill=tas + (255,), outline=ton(tas, 0.5) + (255,), width=2)
+        d.ellipse([11, 84, 53, 108], fill=(46, 38, 40, 255))
+        d.ellipse([14, 87, 50, 105], fill=(88, 168, 188, 255))
+        d.ellipse([18, 89, 46, 97], fill=(140, 210, 224, 255))
+        d.rectangle([24, 91, 27, 94], fill=(250, 250, 246, 255))
+        d.rectangle([38, 96, 40, 98], fill=(250, 250, 246, 255))
+        # tas derzleri on yuzde
+        for ax in (14, 30, 46):
+            d.arc([4, 78, 60, 114], 30 + ax * 2, 46 + ax * 2, fill=ton(tas, 0.66) + (255,), width=2)
+
+        # direkler
+        d.rectangle([8, 34, 15, 100], fill=direk + (255,), outline=ton(direk, 0.6) + (255,))
+        d.rectangle([49, 34, 56, 100], fill=direk + (255,), outline=ton(direk, 0.6) + (255,))
+
+        # kiremit cati + krem sacak + sirt cizgisi
+        d.polygon([(32, 6), (0, 40), (64, 40)], fill=ton(cati, 0.78) + (255,))
+        d.polygon([(32, 12), (7, 40), (57, 40)], fill=cati + (255,))
+        d.rectangle([0, 38, 63, 42], fill=(246, 234, 210, 255))
+        d.line([(32, 8), (32, 14)], fill=ton(cati, 1.2) + (255,), width=3)
+
+        # makara + ip + ipte sallanan ahsap kova
+        d.ellipse([27, 44, 37, 54], fill=ton(direk, 0.8) + (255,))
+        d.ellipse([30, 47, 34, 51], fill=ton(self.KREM, 0.8) + (255,))
+        d.line([(32, 49), (32, 74)], fill=(60, 50, 44, 255), width=2)
+        d.rounded_rectangle([25, 72, 39, 84], 3,
+                            fill=ton(self.AHSAP, 0.85) + (255,),
+                            outline=ton(self.AHSAP, 0.55) + (255,))
+        d.rectangle([26, 73, 38, 75], fill=ton(self.AHSAP, 1.05) + (255,))
+
+        self.agac_sayfasi.alpha_composite(kanvas, (self.agac_sutun * T, 0))
+        self.agac_sutun += 1
+
     def golge(self, i):
         """Yumusak elips golge — agac/hayvan/esya altina, Dekor katmanina.
 
@@ -1532,6 +1579,7 @@ def main():
     c.uzun_agac(74, 75, 200, koyu=True)    # sutun 0: koyu kavak
     c.uzun_agac(76, 77, 204, koyu=False)   # sutun 1: cam
     c.uzun_agac(78, 79, 202, koyu=False)   # sutun 2: turuncu (sonbahar)
+    c.buyuk_kuyu()                          # sutun 3: buyuk kuyu
     c.vitrin(80)
     c.saman_yigini(81)
     c.agac_koyu(82, 180, guc=0.8)   # buyuk yesil cali koyu (hayalet cali duzeltmesi)

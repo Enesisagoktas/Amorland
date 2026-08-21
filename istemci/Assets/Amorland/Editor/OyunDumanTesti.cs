@@ -217,6 +217,22 @@ namespace Amorland.EditorAraclari
             var durum = Durum(etkilesim);
             if (durum == null || durum.Ben == null) return;
             if (string.IsNullOrEmpty(etkilesim.SeciliTohum)) return;   // HUD ilk tohumu secmis olmali
+            // Acilis mektubu ilk giriste acilir — gercek UI tiklamasiyla kapatilir
+            // (hikaye kapisinin calistigi da boylece test edilir).
+            var mektup = GameObject.Find("MektupEkrani");
+            if (mektup != null)
+            {
+                var devam = mektup.transform.Find("Mektup/Ic/Devam");
+                if (devam != null)
+                {
+                    UnityEngine.EventSystems.ExecuteEvents.Execute(
+                        devam.gameObject,
+                        new UnityEngine.EventSystems.PointerEventData(
+                            UnityEngine.EventSystems.EventSystem.current),
+                        UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+                    _rapor.Add("   mektup acildi ve DEVAM tiklamasiyla kapatildi");
+                }
+            }
             _tohumBaslangic = durum.EnvanterAdet(etkilesim.SeciliTohum);
             durum.Red += (kod, mesaj) => _rapor.Add("   RED: " + kod + " — " + mesaj);
             AdimGec("dunya kuruldu, oturum ve senkron geldi; secili tohum "

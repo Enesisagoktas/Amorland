@@ -121,6 +121,16 @@ public class IlerlemeServisi {
    * tutulmaz — oyuncunun seviyesi degistiginde otomatik gecerli olur.
    */
   private void seviyeOdulleriniUygula(Vadi vadi, UUID oyuncuId, int yeniSeviye, DegisimYazici yazici) {
+    // Yeni seviyede acilan urunlerin tohumu verilir: acilis kutlamasi somut
+    // olsun — tohumsuz acilim "sadece bugday ekiyoruz" cikmaziydi (oyuncu
+    // bulgusu; tohumlarin baska edinme yolu yoktu).
+    int tohumOdul = denge.urunlerDosyasi().acilisTohumOdulu().adet();
+    for (var urun : denge.urunlerDosyasi().urunler()) {
+      if (urun.acilis() == null || urun.acilis().seviye() != yeniSeviye) continue;
+      int yeni = dunya.envanterDegistir(vadi.id(), oyuncuId, urun.tohumEsyaId(), tohumOdul);
+      yazici.envanter(new DunyaModeli.EnvanterSatiri(oyuncuId, urun.tohumEsyaId(), yeni));
+    }
+
     int oncekiKaro = denge.tarlaKaroSayisi(yeniSeviye - 1);
     int yeniKaro = denge.tarlaKaroSayisi(yeniSeviye);
     if (yeniKaro > oncekiKaro) {

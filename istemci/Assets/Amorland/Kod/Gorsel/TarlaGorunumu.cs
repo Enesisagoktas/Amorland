@@ -259,8 +259,14 @@ namespace Amorland.Gorsel
         private void KuyuKur()
         {
             var golge = KuyuNesnesi("KuyuGolge", Karo64.Al(Sayfa64.Ek, Karo64.Golge), 1);
-            golge.localScale = new Vector3(1.1f, 0.9f, 1f);
-            KuyuNesnesi("Kuyu", Karo64.Al(Sayfa64.Ek, Karo64.Kuyu), 2);
+            golge.localScale = new Vector3(1.5f, 0.8f, 1f);
+            golge.localPosition += new Vector3(0f, 0.2f, 0f);
+            // Buyuk tek parca kuyu (oyuncu bulgusu: "kuyu cok kucuk") — agaclarla
+            // ayni dil: ayak pivotu + Y-sort, karakter onunden/arkasindan gecer.
+            var kuyu = KuyuNesnesi("Kuyu", Karo64.BuyukKuyuSprite(), 2);
+            var sr = kuyu.GetComponent<SpriteRenderer>();
+            sr.spriteSortPoint = SpriteSortPoint.Pivot;
+            kuyu.localPosition += new Vector3(0f, -0.28f, 0f);
         }
 
         private Transform KuyuNesnesi(string ad, Sprite sprite, int sira)

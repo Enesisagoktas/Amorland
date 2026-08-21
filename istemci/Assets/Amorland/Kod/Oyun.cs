@@ -399,6 +399,13 @@ namespace Amorland
 
             _ogretici = gameObject.AddComponent<OgreticiAkisi>();
             _ogretici.Kur(_durum, _denge, _ustKanvas.transform, _hud, _efekt);
+
+            // Hikayenin kapisi: ilk giriste Saffet'in mektubu (B.1). Bir kez
+            // gosterilir; sonrasini defter sayfalari anlatir.
+            if (!MektupEkrani.Okundu)
+            {
+                new MektupEkrani(_ustKanvas.transform);
+            }
         }
 
         private void IzgarayiKur()
