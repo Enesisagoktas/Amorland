@@ -42,6 +42,45 @@ ses altyapısı + yer tutucu ses seti.
 | Ses — 16'lık havuz, ±%8 pitch, 3 varyasyon, etiket başına 3 kanal, kuyrukta %75 | ✅ derleniyor |
 | Haptik — Android `VibrationEffect`, iOS `UIFeedbackGenerator`, kapatılabilir | ✅ derleniyor |
 | Öğretici — parlayan hedef + tek satır, modal yok | ✅ derleniyor |
+| **Vadi haritası** — 180×130 karo, 3 Tilemap katmanı, 7 bölge | ✅ **çalışıyor, görüntüsü var** |
+| **Haritada gezinme** — sürükle / WASD / tekerlek / çimdik, sınır kenetli | ✅ **çalışıyor** |
+
+---
+
+## 1b. Vadi haritası
+
+Açılışta gelen ekran artık vadi haritası. `Onyukleyici.AcilisModu` varsayılan olarak
+`Vadi`; "Oyuna gir" düğmesi `Oyun`'a geçiriyor. Sebep: `Oyun` açılışta sunucuya
+bağlanıyor ve sunucu ayakta değilse ekranda yükleme yazısından başka bir şey
+görünmüyordu. Harita tek başına çalışıyor.
+
+| Ne | Değer |
+|---|---|
+| Boyut | 180 × 130 karo = 23.400 hücre, 3 katman |
+| Karo sayfaları | Kenney CC0 — Tiny Farm (ekin/hayvan), Tiny Town (arazi/yapı), Tiny Battle (su) |
+| Bölge | 7 — orman, tren garı, ev, tarla, depo, maden ocağı, market |
+| Arazi | Nehir + köprü, 3 karo genişliğinde yol ağı, toprak avlular |
+| Üretim | Deterministik (`Tohum = 20260821`) — aynı tohum aynı vadi |
+
+**Üç sayfa neden gerekli oldu.** Tiny Farm kendi arka planını çim olarak çiziyor;
+içinde dikişsiz döşenebilecek tek bir zemin karosu **yok** — sayfada saf çim 16×16
+pencere sayısı sıfır. Çim sandığım karoların dördünde de çepeçevre koyu kontur vardı
+ve harita baştan başa koyu ızgara çıktı. Tiny Town'ın 0 numaralı karosu %100 saf çim,
+12–38 arası tam bir 3×3 yol autotile'ı; Tiny Battle'da da 18–56 arası su/kıyı
+autotile'ı var. Üç sayfada da çim rengi **tam olarak** rgb(132,198,105) — renk
+normalizasyonu gerekmedi.
+
+**Ölçüldü, tahmin edilmedi.** Autotile blokları her karonun dört kenarındaki pikseller
+çim/toprak/su diye tek tek sayılarak çıkarıldı. Aynı şekilde `Cakil` (43) ve saf taş
+(109) ayrımı da ölçümle bulundu: 43 çim üstüne serpilmiş bir yamadır, geniş alana
+döşenince meydan puantiyeli duvar kâğıdına dönüyordu.
+
+**Bitki örtüsü kümelenir.** Her karoya bağımsız zar atmak 23.400 karo boyunca aynı
+yoğunlukta konfeti üretiyordu. Değer gürültüsüyle koruluk / çayır / açık arazi ayrımı
+çıkıyor, gezerken manzara değişiyor.
+
+Bilinen eksik: bölgeye **dokunma bağlı değil**. Bölge kayıtları
+(`VadiHaritasi.Bolgeler`) hazır; tıklama eklendiğinde `Oyun.BolgeyeGit` çağrılacak.
 
 ---
 
@@ -53,10 +92,11 @@ ses altyapısı + yer tutucu ses seti.
 | Bütünlük — çalışma zamanı | **22/22 geçti** (26 yasak + 8 mimari kural) |
 | Bütünlük — statik | **16/16 geçti** |
 | Protokol — canlı sunucu | **32/32 geçti** (Unity dışından, gerçek WebSocket) |
-| Unity C# derlemesi — stub | **0 hata** (iki girdi kolunda da) |
 | Unity C# derlemesi — **gerçek Unity DLL'leri** | **0 hata** (iki girdi kolunda da) |
 | Unity projesi açılışı + paket çözümü | **0 hata** (URP 17.3.0, Input System 1.20.0, Newtonsoft 3.2.2) |
 | `Amorland > Kurulumu Çalıştır` | **başarılı** — sahne, yön, girdi, ses politikası, URP |
+| Vadi haritası — başsız render | **9 PNG** (tam vadi + 7 bölge + köprü) |
+| Play ekranı — gerçek `VadiSahnesi` yolu | **1 PNG**, kamera/etiket/arayüz dahil |
 
 Hepsini tekrar koşmak için:
 

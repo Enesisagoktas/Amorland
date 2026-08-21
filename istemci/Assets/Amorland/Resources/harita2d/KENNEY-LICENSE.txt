@@ -1,0 +1,23 @@
+	Amorland harita karo sayfalari — kaynak ve lisans
+
+	Uc sayfa da Kenney (www.kenney.nl) tarafindan uretilmistir ve
+	Creative Commons Zero (CC0) ile dagitilir.
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+			------------------------------
+
+	tinyfarm.png  <- Tiny Farm (1.0)    — ekin, hayvan, ciftlik esyasi
+	kasaba.png    <- Tiny Town (1.0)    — cim/yol arazisi, agac, cit, yapi, maden agzi
+	su.png        <- Tiny Battle (1.0)  — su/kiyi autotile'lari
+
+	Ucu de ayni 16x16 izgarayi ve ayni paleti kullanir; cim rengi her
+	uc sayfada da tam olarak rgb(132,198,105)'tir. Bu yuzden birlikte
+	dikissiz calisirlar — renk normalizasyonu GEREKMEZ.
+
+			------------------------------
+
+	Bu icerik kisisel, egitsel ve ticari projelerde serbestce kullanilir.
+	Kenney'i veya www.kenney.nl'i anmak destek olur (zorunlu degil).
+
+	Donate:   http://support.kenney.nl
+	Patreon:  http://patreon.com/kenney/

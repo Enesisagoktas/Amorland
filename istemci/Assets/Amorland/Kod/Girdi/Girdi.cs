@@ -133,6 +133,42 @@ namespace Amorland.Girdi
 
         private static float _oncekiCimdik = -1f;
 
+        /// <summary>
+        /// Klavye yon girdisi (WASD / ok tuslari), -1..1 araliginda normalize.
+        ///
+        /// Mobilde klavye yoktur; masaustunde harita gezerken parmakla surukleme
+        /// yerine tus kullanmak cok daha rahat oldugu icin ikisi de destekleniyor.
+        /// </summary>
+        public static Vector2 Yon()
+        {
+            Vector2 y = Vector2.zero;
+#if ENABLE_INPUT_SYSTEM
+            var k = Keyboard.current;
+            if (k == null) return y;
+            if (k.wKey.isPressed || k.upArrowKey.isPressed) y.y += 1f;
+            if (k.sKey.isPressed || k.downArrowKey.isPressed) y.y -= 1f;
+            if (k.aKey.isPressed || k.leftArrowKey.isPressed) y.x -= 1f;
+            if (k.dKey.isPressed || k.rightArrowKey.isPressed) y.x += 1f;
+#else
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) y.y += 1f;
+            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) y.y -= 1f;
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) y.x -= 1f;
+            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) y.x += 1f;
+#endif
+            return y.sqrMagnitude > 1f ? y.normalized : y;
+        }
+
+        /// <summary>Fare tekerlegi dikey degisimi. Tekerlek yoksa 0.</summary>
+        public static float Tekerlek()
+        {
+#if ENABLE_INPUT_SYSTEM
+            var f = Mouse.current;
+            return f == null ? 0f : f.scroll.ReadValue().y;
+#else
+            return Input.mouseScrollDelta.y;
+#endif
+        }
+
         /// <summary>UI uzerindeyse dunya girdisi islenmemeli.</summary>
         public static bool UiUzerinde(Vector2 ekranNoktasi)
         {

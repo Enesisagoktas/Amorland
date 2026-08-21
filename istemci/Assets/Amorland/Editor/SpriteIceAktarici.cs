@@ -15,10 +15,19 @@ namespace Amorland.EditorAraclari
     public class SpriteIceAktarici : AssetPostprocessor
     {
         private const string Klasor = "/Resources/sprite/";
+        private const string KaroKlasoru = "/Resources/harita2d/";
 
         private void OnPreprocessTexture()
         {
-            if (assetPath == null || assetPath.Replace('\\', '/').IndexOf(Klasor) < 0) return;
+            string y = assetPath == null ? null : assetPath.Replace('\\', '/');
+            if (y == null) return;
+
+            if (y.IndexOf(KaroKlasoru) >= 0)
+            {
+                KaroSayfasi();
+                return;
+            }
+            if (y.IndexOf(Klasor) < 0) return;
 
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;
@@ -30,6 +39,33 @@ namespace Amorland.EditorAraclari
             ti.alphaIsTransparency = true;
             ti.textureCompression = TextureImporterCompression.Uncompressed;
             ti.maxTextureSize = 512;
+            ti.sRGBTexture = true;
+        }
+
+        /// <summary>
+        /// Karo sayfasi (Tiny Farm tilemap) ayarlari.
+        ///
+        /// ⚠ <see cref="TextureImporter.npotScale"/> BURADAKI HER SEYIN ANAHTARI.
+        /// Sayfa 192x176 — ikinin kuvveti degil. Unity varsayilani onu en yakin
+        /// kuvvete OLCEKLER; 16 px'lik karo izgarasi kayar ve harita tamamen yanlis
+        /// karolarla dosenir. Ilk denemede butun zemin ahir duvari cikti.
+        ///
+        /// Nokta filtre ve sikistirmasiz doku de sart: piksel sanati bilineer
+        /// filtreyle bulanir, sikistirma ise karo kenarlarinda kirli piksel birakir.
+        /// </summary>
+        private void KaroSayfasi()
+        {
+            var ti = (TextureImporter)assetImporter;
+            ti.textureType = TextureImporterType.Sprite;
+            ti.spriteImportMode = SpriteImportMode.Single;
+            ti.spritePixelsPerUnit = 16f;
+            ti.npotScale = TextureImporterNPOTScale.None;
+            ti.mipmapEnabled = false;
+            ti.filterMode = FilterMode.Point;
+            ti.wrapMode = TextureWrapMode.Clamp;
+            ti.alphaIsTransparency = true;
+            ti.textureCompression = TextureImporterCompression.Uncompressed;
+            ti.maxTextureSize = 2048;
             ti.sRGBTexture = true;
         }
     }
