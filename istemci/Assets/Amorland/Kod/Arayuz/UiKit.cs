@@ -64,8 +64,31 @@ namespace Amorland.Arayuz
 
         // ------------------------------------------------------------------ temel
 
+        /// <summary>
+        /// Sahnede EventSystem yoksa kurar. UI tiklamasinin ON KOSULU: vadi
+        /// sahnesi uc kanvas kurup bunu unutunca butun butonlar olu kalmisti
+        /// (oyuncu bulgusu — secim ekraninda hicbir sey tiklanamiyordu; klavye
+        /// calisiyordu cunku Girdi EventSystem'den gecmez). Kanvas kuran herkes
+        /// bunu bedavaya alir; kok nesneye baglanmaz ki sahne yikimlarinda yasasin.
+        /// </summary>
+        public static void EventSystemGarantile()
+        {
+            if (UnityEngine.EventSystems.EventSystem.current != null) return;
+            if (UnityEngine.Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() != null) return;
+            var go = new GameObject("EventSystem");
+            go.AddComponent<UnityEngine.EventSystems.EventSystem>();
+#if ENABLE_INPUT_SYSTEM
+            // ⚠ InputSystemUIInputModule UnityEngine.EventSystems'te DEGIL,
+            // UnityEngine.InputSystem.UI ad alanindadir.
+            go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+#else
+            go.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+#endif
+        }
+
         public static Canvas Kanvas(string ad, int sira)
         {
+            EventSystemGarantile();
             var go = new GameObject(ad);
             var kanvas = go.AddComponent<Canvas>();
             kanvas.renderMode = RenderMode.ScreenSpaceOverlay;

@@ -182,8 +182,23 @@ namespace Amorland.EditorAraclari
         {
             var vadi = UnityEngine.Object.FindObjectOfType<VadiSahnesi>();
             if (vadi == null) return;
-            vadi.SecimUygula(false);
-            AdimGec("vadi acildi, karakter secildi");
+            // ⚠ SecimUygula'yi dogrudan cagirmak EventSystem eksigini KACIRDI
+            // (oyuncu bulgusu: secim ekraninda hicbir buton tiklanamiyordu).
+            // Test artik gercek UI yolundan gecer: EventSystem var mi + butona
+            // gercek pointer tiklamasi isliyor mu.
+            if (UnityEngine.EventSystems.EventSystem.current == null)
+            {
+                Bitir(false, "EventSystem yok — UI tiklanamaz (secim ekrani olu)");
+                return;
+            }
+            var buton = GameObject.Find("Sec_Çiftçi");
+            if (buton == null) return;
+            UnityEngine.EventSystems.ExecuteEvents.Execute(
+                buton,
+                new UnityEngine.EventSystems.PointerEventData(
+                    UnityEngine.EventSystems.EventSystem.current),
+                UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+            AdimGec("vadi acildi, secim BUTONUNA tiklandi (gercek UI yolu)");
         }
 
         private static void AdimOyunaGec()
