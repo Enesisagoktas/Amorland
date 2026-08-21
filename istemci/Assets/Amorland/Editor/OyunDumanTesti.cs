@@ -169,6 +169,8 @@ namespace Amorland.EditorAraclari
                 case 8: AdimToplaOnayi(); break;
                 case 9: AdimKuyu(); break;
                 case 10: AdimKovaOnayi(); break;
+                case 11: AdimHasatBekle(); break;
+                case 12: AdimHasatOnayi(); break;
             }
         }
 
@@ -284,8 +286,35 @@ namespace Amorland.EditorAraclari
             if (durum.Ben.KovaKapasite <= 0) return;
             if (durum.Ben.KovaKalan < durum.Ben.KovaKapasite) return;
             EkranGoruntusuAl("duman-2-kuyu.png");
-            Bitir(true, "SUNUCU ONAYLI kova dolumu " + durum.Ben.KovaKalan + "/"
-                        + durum.Ben.KovaKapasite + " — ek/sula/kuyu dongusu tam");
+            AdimGec("SUNUCU ONAYLI kova dolumu " + durum.Ben.KovaKalan + "/" + durum.Ben.KovaKapasite);
+        }
+
+        private static double _sonHasatDenemesi;
+
+        private static void AdimHasatBekle()
+        {
+            // Bugday 15 sn'de olgunlasir (oyuncu istegiyle hizlandi) — test artik
+            // TAM donguyu oynayabiliyor: olgunlasinca gercek dokunusla hasat.
+            var tarla = UnityEngine.Object.FindObjectOfType<Amorland.Gorsel.TarlaGorunumu>();
+            var durum = Durum(UnityEngine.Object.FindObjectOfType<EtkilesimYoneticisi>());
+            var karo = durum.Karo(0, 0);
+            if (karo == null || karo.Bos) { Bitir(false, "hasat oncesi karo bos kaldi"); return; }
+            if (!tarla.Olgun(karo)) return;
+            if (EditorApplication.timeSinceStartup - _sonHasatDenemesi < 3.0) return;
+            _sonHasatDenemesi = EditorApplication.timeSinceStartup;
+            Dokun(new Vector2Int(0, 0));
+            AdimGec("bugday OLGUNLASTI, hasat dokunusu yapildi");
+        }
+
+        private static void AdimHasatOnayi()
+        {
+            var durum = Durum(UnityEngine.Object.FindObjectOfType<EtkilesimYoneticisi>());
+            var karo = durum.Karo(0, 0);
+            if (karo != null && !karo.Bos) return;
+            if (durum.EnvanterAdet("bugday") <= 0) return;
+            EkranGoruntusuAl("duman-4-hasat.png");
+            Bitir(true, "SUNUCU ONAYLI hasat: bugday x" + durum.EnvanterAdet("bugday")
+                        + " — ek/sula/topla/kuyu/HASAT dongusu TAM");
         }
 
         // ------------------------------------------------------------- yardimcilar

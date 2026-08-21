@@ -96,6 +96,23 @@ public class DunyaKurucu {
   }
 
   /**
+   * Eksik baslangic ekipmanini tamamlar (idempotent, her baglantida ucuz).
+   *
+   * <p>Kova duzeltmesinden ONCE acilan hesaplar kovasiz kalmisti ve sulamaya
+   * ulasamiyordu; istemcideki ogretici de kovasiz hesapta kuyu adiminda
+   * kilitleniyordu (oyuncu bulgusu). Gecmis hesaplar girista iyilestirilir.
+   */
+  public void baslangicSetiniTamamla(UUID vadiId, UUID oyuncuId) {
+    var eldekiler = new java.util.HashSet<String>();
+    for (var a : dunya.aletler(vadiId, oyuncuId)) eldekiler.add(a.aletId());
+    for (String aletId : denge.turetilmisDosyasi().baslangicDurumu().aletler()) {
+      if (eldekiler.contains(aletId)) continue;
+      dunya.aletYaz(vadiId, oyuncuId, aletId, 0);
+      dunya.kovaYaz(vadiId, oyuncuId, denge.turetilmisDosyasi().baslangicDurumu().kovaKapasitesi());
+    }
+  }
+
+  /**
    * Bolgedeki yabani kaynaklari kurar.
    *
    * <p>Bunlar alet kilitlenmesine karsi guvenlik agidir (B.14): hicbiri alet gerektirmez,

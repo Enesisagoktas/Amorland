@@ -234,8 +234,13 @@ namespace Amorland.Gorsel
             return Mathf.Clamp(asama, 0, n - 1);
         }
 
+        // ⚠ Olgunluk SURE ile olculur, asamayla degil: "son asamaya girdi = olgun"
+        // kurali istemciyi surenin 3/4'unde parlatiyordu; sunucu tam sureyi
+        // bekledigi icin oyuncu parlayan urune dokunup HENUZ_OLGUN_DEGIL reddi
+        // yiyordu (duman testi yakaladi — 15 sn'lik bugdayda 3.75 sn, 300 sn'lik
+        // uretimde 75 sn erken parlama demekti).
         public bool Olgun(Karo karo) =>
-            !karo.Bos && karo.SulandiAt != null && BuyumeAsamasi(karo) >= _denge.BuyumeAsamaSayisi - 1;
+            !karo.Bos && karo.SulandiAt != null && KalanSn(karo) <= 0;
 
         /// <summary>Kalan sure (saniye). Negatifse olgun.</summary>
         public double KalanSn(Karo karo)

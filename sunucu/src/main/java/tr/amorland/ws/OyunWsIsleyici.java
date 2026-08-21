@@ -162,6 +162,9 @@ public class OyunWsIsleyici extends TextWebSocketHandler {
     }
 
     oyuncular.sonGorulmeGuncelle(oyuncuId, simdi);
+    // Gecmis hesaplarin eksik baslangic ekipmani girista tamamlanir (senkron
+    // paketinden ONCE: yeni kova ayni pakette istemciye gider).
+    vadiServisi.baslangicSetiniTamamla(vadi.id(), oyuncuId);
     if (vadi.ciftMi()) {
       vadiler.partnerSonGorulmeYaz(vadi.id(), simdi);
       // Partner dondugunde tek imza modu ANINDA duser (B.7).

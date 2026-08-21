@@ -990,16 +990,24 @@ namespace Amorland.Gorsel
         private void CitCevir(RectInt a)
         {
             int kapi = a.xMin + a.width / 2;
+            // ⚠ Cit ENGELDIR (oyuncu bulgusu: "citlerin uzerinden geciliyor").
+            // Kapi boslugu ve cit konulamayan hucreler gecilir kalir.
             for (int x = a.xMin; x < a.xMax; x++)
             {
                 if (Mathf.Abs(x - kapi) > 1 && Musait(x, a.yMin))
+                {
                     Dekor(x, a.yMin, Rpg(x == a.xMin ? Karo64.CitSolBas
                                         : (x == a.xMax - 1 ? Karo64.CitSagBas
                                         : Karo64.Sec(Karo64.CitOrta, _r))));
+                    _engel[x, a.yMin] = true;
+                }
                 if (Musait(x, a.yMax - 1))
+                {
                     Dekor(x, a.yMax - 1, Rpg(x == a.xMin ? Karo64.CitSolBas
                                             : (x == a.xMax - 1 ? Karo64.CitSagBas
                                             : Karo64.Sec(Karo64.CitOrta, _r))));
+                    _engel[x, a.yMax - 1] = true;
+                }
             }
             // Dikey kenarlar cift rayli dikey cit karosuyla. ⚠ Musait degil
             // Icerde kontrolu: cicek/ot dekoru hucreyi 'dolu' yapinca cit
@@ -1008,9 +1016,15 @@ namespace Amorland.Gorsel
             for (int y = a.yMin + 1; y < a.yMax - 1; y++)
             {
                 if (Icerde(a.xMin, y) && !_su[a.xMin, y] && !_engel[a.xMin, y])
+                {
                     Dekor(a.xMin, y, Ek(Karo64.CitDikeyKaro));
+                    _engel[a.xMin, y] = true;
+                }
                 if (Icerde(a.xMax - 1, y) && !_su[a.xMax - 1, y] && !_engel[a.xMax - 1, y])
+                {
                     Dekor(a.xMax - 1, y, Ek(Karo64.CitDikeyKaro));
+                    _engel[a.xMax - 1, y] = true;
+                }
             }
         }
 

@@ -140,8 +140,11 @@ namespace Amorland.Ogretici
             _adimlar.Add(new Adim
             {
                 Metin = "Kovan azaldı. Kuyuya dokun — karakterin doldurur.",
-                Kosul = d => d.Ben != null && d.Ben.KovaKapasite > 0
-                             && d.Ben.KovaKalan >= d.Ben.KovaKapasite,
+                // ⚠ Kovasiz hesap (eski kayit) bu adimda KILITLENIYORDU ve akis
+                // "sirasiz" gorunuyordu (oyuncu bulgusu) — kovasizsa adim atlanir;
+                // sunucu iyilestirmesi zaten girista kova verir.
+                Kosul = d => d.Ben != null && (d.Ben.KovaKapasite <= 0
+                             || d.Ben.KovaKalan >= d.Ben.KovaKapasite),
                 Hedef = new Vector2(TarlaGorunumu.KuyuKonumu.x, TarlaGorunumu.KuyuKonumu.y)
             });
             _adimlar.Add(new Adim

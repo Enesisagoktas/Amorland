@@ -170,6 +170,11 @@ public class VadiServisi {
    * Partner donerse ANINDA normale doner. <b>Bildirim gitmez</b> (B.7 kirmizi cizgi).
    */
   @Transactional
+  /** Giris aninda eksik baslangic ekipmanini tamamlar (bkz. DunyaKurucu). */
+  public void baslangicSetiniTamamla(java.util.UUID vadiId, java.util.UUID oyuncuId) {
+    kurucu.baslangicSetiniTamamla(vadiId, oyuncuId);
+  }
+
   public boolean tekImzaModunuTazele(Vadi vadi) {
     if (!vadi.ciftMi()) return true;
     var pt = denge.ilerlemeDosyasi().partnerTerk();
