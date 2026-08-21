@@ -165,8 +165,10 @@ namespace Amorland.EditorAraclari
                 case 4: AdimEkOnayi(); break;
                 case 5: AdimSula(); break;
                 case 6: AdimSulaOnayi(); break;
-                case 7: AdimKuyu(); break;
-                case 8: AdimKovaOnayi(); break;
+                case 7: AdimTopla(); break;
+                case 8: AdimToplaOnayi(); break;
+                case 9: AdimKuyu(); break;
+                case 10: AdimKovaOnayi(); break;
             }
         }
 
@@ -253,6 +255,21 @@ namespace Amorland.EditorAraclari
             EkranGoruntusuAl("duman-3-sulama.png");
             AdimGec("SUNUCU ONAYLI sulama; kova " + durum.Ben.KovaKalan
                     + "/" + durum.Ben.KovaKapasite);
+        }
+
+        private static void AdimTopla()
+        {
+            Dokun(new Vector2Int(-2, 1));
+            AdimGec("tarla kenarindaki dala toplama dokunusu");
+        }
+
+        private static void AdimToplaOnayi()
+        {
+            // Oyuncu bulgusu dogrulamasi: "odun elime gelmiyor" — sunucu onayli
+            // envanter artisi olculur.
+            var durum = Durum(UnityEngine.Object.FindObjectOfType<EtkilesimYoneticisi>());
+            if (durum.EnvanterAdet("odun") <= 0) return;
+            AdimGec("SUNUCU ONAYLI toplama: odun x" + durum.EnvanterAdet("odun"));
         }
 
         private static void AdimKuyu()

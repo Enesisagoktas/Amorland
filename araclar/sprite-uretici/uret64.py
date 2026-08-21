@@ -20,6 +20,10 @@ from PIL import Image, ImageDraw, ImageFilter
 KOK = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 KAYNAK = os.path.join(KOK, "varliklar", "kenney", "paket", "rpg-base", "Spritesheet", "RPGpack_sheet.png")
 CIKTI = os.path.join(KOK, "istemci", "Assets", "Amorland", "Resources", "harita2d64", "ek64.png")
+# Uzun agaclar TEK PARCA sprite (64x128, 3 sutun): iki karoya bolmek motorda
+# yatay dikis + derinlik hatasi uretiyordu (oyuncu bulgusu) — agaclar artik
+# tilemap'e degil GameObject'e gider, sayfasi ayridir.
+AGAC_CIKTI = os.path.join(KOK, "istemci", "Assets", "Amorland", "Resources", "harita2d64", "agaclar64.png")
 KONTAK = os.path.join(KOK, "araclar", "karo-indeks", "ek64-kontak.png")
 
 T = 64
@@ -53,6 +57,9 @@ class Cizer:
         self.KREM = ortalama(sheet, 64)         # krem duvar
         self.TAS = ortalama(sheet, 91)          # gri tas duvar
         self.sheet = sheet
+        # Uzun agac sayfasi: 3 sutun x 64 genislik, 128 boy (tek parca agaclar).
+        self.agac_sayfasi = Image.new("RGBA", (3 * T, 2 * T), (0, 0, 0, 0))
+        self.agac_sutun = 0
 
     def kanvas(self, i):
         return (i % SUT) * T, (i // SUT) * T
@@ -125,9 +132,12 @@ class Cizer:
         a = kuru.copy()
         # ⚠ (0.60,0.65,0.80) 'yanik cukur' okunuyordu (L %36 dusus, vadinin en
         # sert zemin kontrasti). Nem farki %19'a indirildi ve maviye kaydirildi.
-        a[..., 0] *= 0.78
-        a[..., 1] *= 0.82
-        a[..., 2] *= 1.02
+        # Oyuncu bulgusu: "suladim mi anlamiyorum" — nem farki %19'dan ~%30'a
+        # cikti, mavi pay artti. Onceki denetimin "yanik cukur" uyarisiyla denge:
+        # koyu ama kizil degil, ISLAK mavi-kahve.
+        a[..., 0] *= 0.68
+        a[..., 1] *= 0.74
+        a[..., 2] *= 1.00
         # Kenar rampasi: hucre siniri bicak gibi kesiyordu — 3 px'te kuruya karisir.
         yy, xx = np.mgrid[0:T, 0:T]
         kenar = np.minimum(np.minimum(xx, T - 1 - xx), np.minimum(yy, T - 1 - yy))
@@ -139,9 +149,10 @@ class Cizer:
         d = ImageDraw.Draw(self.im)
         import random
         r = random.Random(41)
-        for _ in range(4):
-            px, py = x + r.randint(8, 54), y + r.randint(8, 54)
-            d.rectangle([px, py, px + 1, py + 1], fill=(196, 224, 236, 255))
+        for _ in range(6):
+            px, py = x + r.randint(6, 54), y + r.randint(6, 54)
+            d.rectangle([px, py, px + 2, py + 2], fill=(196, 228, 240, 255))
+            d.rectangle([px, py, px, py], fill=(236, 248, 252, 255))
 
     def surulu(self, i):
         """Surulmus tarla — USTTEN bakis.
@@ -1357,10 +1368,11 @@ class Cizer:
         kn[:, :, :3] = np2.clip(kn[:, :, :3] * (1.0 + 0.12 * vm[:, :, None]), 0, 255)
         kanvas = Image.fromarray(kn.astype("uint8"), "RGBA")
 
-        x, y = self.kanvas(ust_i)
-        self.im.alpha_composite(kanvas.crop((0, 0, T, T)), (x, y))
-        x, y = self.kanvas(alt_i)
-        self.im.alpha_composite(kanvas.crop((0, T, T, 2 * T)), (x, y))
+        # ⚠ Iki karoya BOLUNMEZ artik: bolme, motorda agaclari yatay kesip
+        # dikis ve derinlik hatasi uretiyordu (oyuncu bulgusu). Tek parca tuval
+        # agac sayfasina yazilir; 74-79 karolari EMEKLI (bos birakilir).
+        self.agac_sayfasi.alpha_composite(kanvas, (self.agac_sutun * T, 0))
+        self.agac_sutun += 1
     def vitrin(self, i):
         """Dukkan vitrini. Denetim: rpg-base cam karolari duvarla ayni renkti;
         gok mavisi cam + capraz parilti + krem cerceve."""
@@ -1517,9 +1529,9 @@ def main():
     c.agac_koyu(72, 220)   # TopYesil koyu
     c.agac_koyu(73, 221)   # TopYesilInce koyu
     # Uzun (2 karo) agaclar — 2.5D derinlik icin
-    c.uzun_agac(74, 75, 200, koyu=True)    # koyu kavak uzun (alt, ust)
-    c.uzun_agac(76, 77, 204, koyu=False)   # teal cam uzun
-    c.uzun_agac(78, 79, 202, koyu=False)   # turuncu kavak uzun (sonbahar)
+    c.uzun_agac(74, 75, 200, koyu=True)    # sutun 0: koyu kavak
+    c.uzun_agac(76, 77, 204, koyu=False)   # sutun 1: cam
+    c.uzun_agac(78, 79, 202, koyu=False)   # sutun 2: turuncu (sonbahar)
     c.vitrin(80)
     c.saman_yigini(81)
     c.agac_koyu(82, 180, guc=0.8)   # buyuk yesil cali koyu (hayalet cali duzeltmesi)
@@ -1561,6 +1573,8 @@ def main():
 
     os.makedirs(os.path.dirname(CIKTI), exist_ok=True)
     c.im.save(CIKTI)
+    c.agac_sayfasi.save(AGAC_CIKTI)
+    print("agaclar :", AGAC_CIKTI)
 
     # Kontak tablosu: 4x buyutulmus, koyu zeminde, indeks etiketli.
     O = 4

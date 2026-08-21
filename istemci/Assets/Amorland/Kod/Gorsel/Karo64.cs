@@ -392,6 +392,38 @@ namespace Amorland.Gorsel
 
         public static Sprite Al(Sayfa64 sayfa, int indeks) => Al(new Karo64Kimlik(sayfa, indeks));
 
+        private static Sprite[] _uzunAgaclar;
+
+        /// <summary>
+        /// Uzun agac TEK PARCA sprite'i (64x128; 0 kavak, 1 cam, 2 turuncu).
+        ///
+        /// ⚠ Iki karoya bolunmus surum EMEKLI (74-79): bolme, motorda yatay dikis
+        /// ve derinlik hatasi uretiyordu (oyuncu bulgusu — "agaclar ortadan kesik").
+        /// Agaclar artik tilemap'e degil ayak-pivotlu GameObject'e gider; kamera
+        /// Y-sort'u derinligi dogal cozer. Pivot (0.5, 0.11) = govde tabani.
+        /// </summary>
+        public static Sprite UzunAgacSprite(int tur)
+        {
+            if (_uzunAgaclar == null)
+            {
+                var doku = Resources.Load<Texture2D>("harita2d64/agaclar64");
+                if (doku == null)
+                {
+                    Debug.LogError("[Amorland] Agac sayfasi yok: Resources/harita2d64/agaclar64");
+                    return null;
+                }
+                _uzunAgaclar = new Sprite[3];
+                for (int i = 0; i < 3; i++)
+                {
+                    _uzunAgaclar[i] = Sprite.Create(
+                        doku, new Rect(i * KaroPiksel, 0, KaroPiksel, KaroPiksel * 2),
+                        new Vector2(0.5f, 0.11f), PikselBirim, 0, SpriteMeshType.FullRect);
+                    _uzunAgaclar[i].name = "uzun_agac_" + i;
+                }
+            }
+            return _uzunAgaclar[Mathf.Clamp(tur, 0, 2)];
+        }
+
         /// <summary>3x3 blok autotile secimi. Bayrak = "komsu ayni malzeme mi".</summary>
         public static int Dokuz(int[,] blok, bool kuzey, bool guney, bool bati, bool dogu)
         {

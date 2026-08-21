@@ -190,6 +190,7 @@ namespace Amorland.Arayuz
                     bosIc, "Yazi", "Çanta boş.", UiKit.YaziGovde, Palet.UiKoyuYaziSolgun,
                     TextAnchor.MiddleCenter);
                 UiKit.Doldur(bos.rectTransform);
+                AletleriEkle();
                 return;
             }
 
@@ -203,6 +204,55 @@ namespace Amorland.Arayuz
             });
 
             foreach (var e in satirlar) SatirEkle(e);
+            AletleriEkle();
+        }
+
+        /// <summary>
+        /// Aletler bolumu. Oyuncu bulgusu: "kova dolu diyor ama envanterimde
+        /// kova bile yok" — aletler ayri tabloda yasiyor ve cantada hic
+        /// gosterilmiyordu. B.6: "aletler envanterde durur".
+        /// </summary>
+        private void AletleriEkle()
+        {
+            var aletler = new List<Ag.AletDurumu>();
+            foreach (var a in _durum.Aletler.Values)
+            {
+                if (a.Sahip == _durum.BenimId) aletler.Add(a);
+            }
+            if (aletler.Count == 0) return;
+
+            var baslik = UiKit.Yazi(
+                _liste, "AletBaslik", "Aletler", UiKit.YaziKucuk, Palet.UiKoyuYaziSolgun,
+                TextAnchor.MiddleLeft, true);
+            UiKit.Boyut(baslik.gameObject, 0f, 26f);
+
+            foreach (var a in aletler)
+            {
+                RectTransform ic;
+                EkranParcasi.Satir(_liste, "Alet_" + a.AletId, Palet.ParsomenKoyu, 56f, out ic);
+                var dizi = UiKit.YatayDizi(ic, 10f, 10);
+                dizi.childForceExpandHeight = false;
+                dizi.childAlignment = TextAnchor.MiddleLeft;
+
+                EkranParcasi.Ikon(ic, "Ikon",
+                    a.AletId.Contains("kova") ? Sekil.Damla() : Sekil.Elmas(),
+                    Palet.UiAltinKoyu, 26f);
+
+                var ad = UiKit.Yazi(
+                    ic, "Ad", _denge.EsyaAdi(a.AletId), UiKit.YaziGovde, Palet.UiKoyuYazi,
+                    TextAnchor.MiddleLeft, true);
+                UiKit.Boyut(ad.gameObject, 200f, 30f).flexibleWidth = 1f;
+
+                string durumMetni = a.MaksDayaniklilik > 0
+                    ? "Dayanıklılık " + a.Dayaniklilik + "/" + a.MaksDayaniklilik
+                    : "Eskimez";
+                var durum = UiKit.Yazi(
+                    ic, "Durum", durumMetni, UiKit.YaziKucuk,
+                    a.MaksDayaniklilik > 0 && a.Dayaniklilik * 5 < a.MaksDayaniklilik
+                        ? Palet.UiKirmiziKoyu : Palet.UiKoyuYaziSolgun,
+                    TextAnchor.MiddleRight);
+                UiKit.Boyut(durum.gameObject, 190f, 30f);
+            }
         }
 
         private static int KategoriSirasi(string kategori)

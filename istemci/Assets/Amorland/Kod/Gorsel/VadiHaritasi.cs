@@ -57,7 +57,8 @@ namespace Amorland.Gorsel
 
         public readonly List<Bolge> Bolgeler = new List<Bolge>();
 
-        private Tilemap _zemin, _dekor, _nesne, _nesneUst, _nesneTepe;
+        private Tilemap _zemin, _dekor, _nesne, _nesneUst;
+        private Transform _agacKok;
         private System.Random _r;
 
         private bool[,] _su;        // gol + nehirler
@@ -122,11 +123,6 @@ namespace Amorland.Gorsel
             _dekor.RefreshAllTiles();
             _nesne.RefreshAllTiles();
             _nesneUst.RefreshAllTiles();
-            // ⚠ NesneTepe listeye SONRADAN eklendi ve refresh'i unutulmustu:
-            // bassiz renderda chunk mesh'lerinin yarisi guncellenmeden ciziliyor,
-            // uzun agac tepelerinin ~%51'i gorunmuyordu (denetim bulgusu; veri
-            // tamdi, KesikAgacDokumu 5435/5435). Katman ekleyen REFRESH de ekler.
-            _nesneTepe.RefreshAllTiles();
         }
 
         private void KatmanlariKur()
@@ -144,9 +140,12 @@ namespace Amorland.Gorsel
             // dururken (bir alt hucre) dogru sekilde onde cizilir.
             _nesne = Katman("Nesne", 2, bireysel: true);
             _nesneUst = Katman("NesneUst", 2, bireysel: true);
-            // Kanopi tepeleri: her zaman ONDE — karakter govdenin arkasindayken
-            // kanopinin altindan gecmis gibi gorunur.
-            _nesneTepe = Katman("NesneTepe", 4);
+            // ⚠ Uzun agaclar TILEMAP'TE DEGIL: iki karoya bolmek yatay dikis +
+            // derinlik hatasi uretiyordu (oyuncu bulgusu). Tek parca sprite'li
+            // GameObject'ler bu kokun altinda durur; ayak pivotu + kameranin
+            // Y-sort ekseni derinligi karakterle ayni kuraldan cozer.
+            _agacKok = new GameObject("Agaclar").transform;
+            _agacKok.SetParent(transform, false);
         }
 
         private Tilemap Katman(string ad, int sira, bool bireysel = false)
@@ -1196,7 +1195,6 @@ namespace Amorland.Gorsel
                     var h = new Vector3Int(x, y, 0);
                     _nesne.SetTile(h, null);
                     _nesneUst.SetTile(h, null);
-                    _nesneTepe.SetTile(h, null);
                     if (y > a.yMax) continue;   // kanopi satiri: yalniz tepe temizligi
                     _dekor.SetTile(h, null);
                     _dolu[x, y] = false;
@@ -1312,19 +1310,22 @@ namespace Amorland.Gorsel
         private void UzunAgac(int x, int y, int tur)
         {
             if (!Icerde(x, y) || !Icerde(x, y + 1)) return;
-            // Kanopi hucresi onceden doluysa (mantar, kutuk...) agac dikilmez:
-            // kanopi dekoru gomup 'bosa yerlesim' uretiyordu (denetim).
+            // Kanopi hucresi onceden doluysa (mantar, kutuk...) agac dikilmez.
             if (_dolu[x, y + 1]) return;
-            int alt = tur == 0 ? Karo64.UzunKavakAlt : (tur == 1 ? Karo64.UzunCamAlt : Karo64.UzunTuruncuAlt);
-            int ust = alt + 1;
-            // ⚠ Uzun agacta varyant kaydirma YOK: alt/ust iki ayri karo — kaydirma
-            // ikilisinde gorunum sorunlari dogurdu; govdeli agacta izgara hissi
-            // zaten dusuk.
-            const int varyant = 0;
+            Sprite sprite = Karo64.UzunAgacSprite(tur);
+            if (sprite == null) return;
             if (_dekor.GetTile(new Vector3Int(x, y, 0)) == null)
-                Koy(_dekor, x, y, Ek(Karo64.Golge), varyant);
-            Koy(_nesne, x, y, Ek(alt), varyant);
-            Koy(_nesneTepe, x, y + 1, Ek(ust), varyant);
+                Koy(_dekor, x, y, Ek(Karo64.Golge));
+            var go = new GameObject("Agac");
+            go.transform.SetParent(_agacKok, false);
+            // Ayak, hucre zeminine basar (golge elipsinin merkezi); Y-sort AYAGA
+            // gore yapilir ki karakter govdenin altindayken ONDE, ustundeyken
+            // ARKADA cizilsin — kanopiyi hep one alan eski katman hilesi yok.
+            go.transform.localPosition = new Vector3(x + 0.5f, y + 0.26f, 0f);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 2;
+            sr.spriteSortPoint = SpriteSortPoint.Pivot;
             _dolu[x, y] = true;
             _dolu[x, y + 1] = true;
             _engel[x, y] = true;

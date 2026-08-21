@@ -24,6 +24,7 @@ namespace Amorland.Ogretici
         private DunyaDurumu _durum;
         private DengeVerisi _denge;
         private Hud _hud;
+        private EfektYoneticisi _efekt;
 
         private RectTransform _serit;
         private Text _yazi;
@@ -43,15 +44,20 @@ namespace Amorland.Ogretici
         {
             public string Metin;
             public Func<DunyaDurumu, bool> Kosul;
+
+            /// <summary>Dunyada gosterilecek hedef (ziplayan altin ok); yoksa null.</summary>
+            public Vector2? Hedef;
         }
 
         private readonly List<Adim> _adimlar = new List<Adim>();
 
-        public void Kur(DunyaDurumu durum, DengeVerisi denge, Transform kanvas, Hud hud)
+        public void Kur(
+            DunyaDurumu durum, DengeVerisi denge, Transform kanvas, Hud hud, EfektYoneticisi efekt)
         {
             _durum = durum;
             _denge = denge;
             _hud = hud;
+            _efekt = efekt;
 
             SeritKur(kanvas);
             AdimlariKur();
@@ -113,52 +119,52 @@ namespace Amorland.Ogretici
 
         private void AdimlariKur()
         {
-            // Tek satir, emir kipi, aciklama yok. "Dokun, ekilir."
+            // Tek satir, emir kipi + DUNYADA ZIPLAYAN OK (oyuncu bulgusu: "nasil
+            // ekecegim, nasil su dolduracagim belli degil" — metin tek basina
+            // yetmiyor, hedef dunyada gosterilir). Akis kova-dolu baslangica gore:
+            // ek -> sula -> kuyu -> dal -> hasat -> depo -> partner. Eski ilk iki
+            // adim (defter/bolge) oyuncunun elinde olmayan sunucu isaretlerine
+            // bagliydi; kaldirildi.
             _adimlar.Add(new Adim
             {
-                Metin = "Evdeki defteri aç: Defter butonuna dokun.",
-                Kosul = d => d.IsaretVar("defter:1")
+                Metin = "Altın okun gösterdiği boş karoya dokun — karakterin yürür ve tohum eker.",
+                Kosul = d => d.IsaretVar("ilk:ilk_ekim"),
+                Hedef = new Vector2(0f, 0f)
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Tarlaya git: Harita > Tarla.",
-                Kosul = d => d.IsaretVar("bolge:tarla")
+                Metin = "Ektiğin karoya BİR DAHA dokun — sular. Islak toprak koyulaşır.",
+                Kosul = d => d.IsaretVar("ilk:ilk_sulama"),
+                Hedef = new Vector2(0f, 0f)
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Boş karoya dokun. Karakterin yürür, çapalar ve eker.",
-                Kosul = d => d.IsaretVar("ilk:ilk_ekim")
+                Metin = "Kovan azaldı. Kuyuya dokun — karakterin doldurur.",
+                Kosul = d => d.Ben != null && d.Ben.KovaKapasite > 0
+                             && d.Ben.KovaKalan >= d.Ben.KovaKapasite,
+                Hedef = new Vector2(TarlaGorunumu.KuyuKonumu.x, TarlaGorunumu.KuyuKonumu.y)
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Ahşap kova yap: Harita > Ev > Basit tezgâh (8 odun). "
-                        + "Odun için tarla kenarındaki dallara dokun.",
-                Kosul = d => d.AletVar("ahsap_kova")
+                Metin = "Parlayan dallara dokun — odun topla, çantana girer.",
+                Kosul = d => d.EnvanterAdet("odun") > 0,
+                Hedef = new Vector2(-2f, 1f)
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Kuyuya dokun, kovayı doldur.",
-                Kosul = d => d.Ben != null && d.Ben.KovaKalan > 0
+                Metin = "Buğday 5 dakikada büyür; PARLAYINCA dokun — hasat.",
+                Kosul = d => d.IsaretVar("ilk:ilk_hasat"),
+                Hedef = new Vector2(0f, 0f)
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Ektiğin karoyu sula. Sulanmayan ürün büyümez.",
-                Kosul = d => d.IsaretVar("ilk:ilk_sulama")
-            });
-            _adimlar.Add(new Adim
-            {
-                Metin = "Buğday 5 dakikada büyür. Bu arada dalları topla — bekleme boş geçmez.",
-                Kosul = d => d.IsaretVar("ilk:ilk_hasat")
-            });
-            _adimlar.Add(new Adim
-            {
-                Metin = "İlk hasat tamam. Depoya boşalt: Çanta > Depoya boşalt.",
+                Metin = "Hasadı depoya taşı: Çanta > Depoya boşalt.",
                 Kosul = d => d.IsaretVar("ilk:ilk_depoya_bosaltma")
             });
             // ⚠ Kilit tasi (B.18 ~10:00): ogreticinin GERCEK hedefi bu satir.
             _adimlar.Add(new Adim
             {
-                Metin = "Bu vadide hiçbir iş tek başına görülmez. Sv 3'te eşini çağırabilirsin.",
+                Metin = "Bu vadide hiçbir iş tek başına görülmez. Sv 3'te eşin için sol üst kapsüle dokun.",
                 Kosul = d => d.Ben != null && d.Ben.Seviye >= 3
             });
         }
@@ -182,13 +188,31 @@ namespace Amorland.Ogretici
         private void AdimGoster()
         {
             _serit.gameObject.SetActive(true);
-            _yazi.text = _adimlar[_adim].Metin;
+            _yazi.text = (_adim + 1) + "/" + _adimlar.Count + "  ·  " + _adimlar[_adim].Metin;
+            if (_efekt != null) _efekt.HedefOku(_adimlar[_adim].Hedef);
+            StopAllCoroutines();
+            StartCoroutine(SeritPulse());
+        }
+
+        /// <summary>Yeni adim dikkat cekmeli: serit kisa bir nefes alir.</summary>
+        private System.Collections.IEnumerator SeritPulse()
+        {
+            float t = 0f;
+            while (t < 0.35f)
+            {
+                t += Time.deltaTime;
+                float o = 1f + 0.08f * Mathf.Sin(t / 0.35f * Mathf.PI);
+                _serit.localScale = new Vector3(o, o, 1f);
+                yield return null;
+            }
+            _serit.localScale = Vector3.one;
         }
 
         private void Bitir()
         {
             _adim = -1;
             _serit.gameObject.SetActive(false);
+            if (_efekt != null) _efekt.HedefOku(null);
             PlayerPrefs.SetInt(TamamlandiAnahtari, 1);
             PlayerPrefs.Save();
         }

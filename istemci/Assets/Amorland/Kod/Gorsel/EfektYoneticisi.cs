@@ -43,10 +43,11 @@ namespace Amorland.Gorsel
             Sacilim(dunya, new Color(0.62f, 0.45f, 0.28f), 3, 0.35f, 0.9f);
         }
 
-        /// <summary>Sulama: yukari sicrayip dusen uc mavi damla.</summary>
+        /// <summary>Sulama: yukari sicrayip dusen damlalar. Oyuncu bulgusu:
+        /// uc kucuk damla gozden kaciyordu — alti iri damla + uzun omur.</summary>
         public void SuSicramasi(Vector2 dunya)
         {
-            Sacilim(dunya, new Color(0.45f, 0.76f, 0.86f), 3, 0.45f, 1.6f);
+            Sacilim(dunya, new Color(0.45f, 0.76f, 0.86f), 6, 0.6f, 2.0f, 1.6f);
         }
 
         /// <summary>Hasat/toplama: urun ikonu ziplar, buyur ve sonup kaybolur.</summary>
@@ -77,12 +78,14 @@ namespace Amorland.Gorsel
 
         // ------------------------------------------------------------------ ic
 
-        private void Sacilim(Vector2 merkez, Color renk, int adet, float sure, float hiz)
+        private void Sacilim(
+            Vector2 merkez, Color renk, int adet, float sure, float hiz, float boyut = 1f)
         {
             for (int i = 0; i < adet; i++)
             {
                 var go = new GameObject("Zerre");
                 go.transform.position = new Vector3(merkez.x, merkez.y + 0.15f, 0f);
+                go.transform.localScale = Vector3.one * boyut;
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = NoktaSprite();
                 sr.color = renk;
@@ -148,6 +151,63 @@ namespace Amorland.Gorsel
                 yield return null;
             }
             if (yazi != null) Destroy(yazi.gameObject);
+        }
+
+        private Transform _hedefOku;
+        private OkSalinimi _hedefOkSalinimi;
+        private static Sprite _okOrnegi;
+
+        /// <summary>
+        /// Ogretici hedef oku: dunyadaki hedefin ustunde ziplayan altin ucgen.
+        /// null = gizle. Oyuncu bulgusu: tek satirlik ipucu yetmiyor, "NEREYE
+        /// dokunacagim" dunyada gosterilmeli.
+        /// </summary>
+        public void HedefOku(Vector2? dunya)
+        {
+            if (dunya == null)
+            {
+                if (_hedefOku != null) _hedefOku.gameObject.SetActive(false);
+                return;
+            }
+            if (_hedefOku == null)
+            {
+                var go = new GameObject("HedefOku");
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = OkSprite();
+                sr.sortingOrder = 6;
+                _hedefOkSalinimi = go.AddComponent<OkSalinimi>();
+                _hedefOku = go.transform;
+            }
+            _hedefOku.gameObject.SetActive(true);
+            _hedefOkSalinimi.Taban = new Vector3(dunya.Value.x, dunya.Value.y + 1.05f, 0f);
+        }
+
+        private static Sprite OkSprite()
+        {
+            if (_okOrnegi != null) return _okOrnegi;
+            const int B = 24;
+            var doku = new Texture2D(B, B, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear
+            };
+            var altin = new Color(1f, 0.83f, 0.35f);
+            var kontur = new Color(0.42f, 0.28f, 0.1f);
+            for (int y = 0; y < B; y++)
+            {
+                for (int x = 0; x < B; x++)
+                {
+                    // Asagi bakan ucgen: genislik yukaridan asagi daralir.
+                    float yariGenislik = (y / (float)B) * (B / 2f - 1f);
+                    float m = Mathf.Abs(x - B / 2f + 0.5f);
+                    Color c = new Color(0, 0, 0, 0);
+                    if (m < yariGenislik - 1.5f) c = altin;
+                    else if (m < yariGenislik + 0.5f) c = kontur;
+                    doku.SetPixel(x, B - 1 - y, c);
+                }
+            }
+            doku.Apply();
+            _okOrnegi = Sprite.Create(doku, new Rect(0, 0, B, B), new Vector2(0.5f, 0f), B * 1.4f);
+            return _okOrnegi;
         }
 
         private static Sprite NoktaSprite()

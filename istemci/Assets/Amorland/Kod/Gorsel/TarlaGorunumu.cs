@@ -89,6 +89,29 @@ namespace Amorland.Gorsel
             StartCoroutine(KirmiziFlas(new Vector3Int(x, ky, 0)));
         }
 
+        /// <summary>
+        /// Sulama ani: karo MAVI yanip normale cozulur. Oyuncu bulgusu:
+        /// "suladim mi sulamadim mi anlamiyorum" — kalici islak ton yetmiyordu,
+        /// sulamanin ANI da gorunur olmali.
+        /// </summary>
+        public void SulamaDalgasi(Vector2Int karo)
+        {
+            StartCoroutine(RenkFlas(new Vector3Int(karo.x, karo.y, 0),
+                new Color(0.55f, 0.85f, 1f), 0.6f));
+        }
+
+        private System.Collections.IEnumerator RenkFlas(Vector3Int hucre, Color renk, float sure)
+        {
+            float t = 0f;
+            while (t < sure)
+            {
+                t += Time.deltaTime;
+                _zemin.SetColor(hucre, Color.Lerp(renk, Color.white, t / sure));
+                yield return null;
+            }
+            _zemin.SetColor(hucre, Color.white);
+        }
+
         private System.Collections.IEnumerator KirmiziFlas(Vector3Int hucre)
         {
             var kirmizi = new Color(1f, 0.45f, 0.4f);

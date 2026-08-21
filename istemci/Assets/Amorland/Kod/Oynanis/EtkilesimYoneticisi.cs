@@ -307,6 +307,7 @@ namespace Amorland.Oynanis
                     IyimserSulama(niyet.ClientActionId, hedef);
                     _ses.Cal(SesEtiketi.Sulama, kuyruktaMi);
                     _efekt.SuSicramasi(hedef);
+                    _tarla.SulamaDalgasi(hedef);
                     _karakter.EylemHopu();
                     break;
 
@@ -333,6 +334,7 @@ namespace Amorland.Oynanis
                     _ses.Cal(SesEtiketi.Toplama, kuyruktaMi);
                     if (!kuyruktaMi) Haptik.Haptik.Calistir(Haptik.Haptik.Desen.CokHafif);
                     _efekt.UrunZiplamasi(hedef, Karo64.Al(Sayfa64.Ek, Karo64.DevrikKutuk));
+                    _efekt.UcanYazi(hedef, ToplamaYazisi(dugum.Tur), Palet.UiAltin);
                     _karakter.EylemHopu();
                     break;
 
@@ -362,6 +364,17 @@ namespace Amorland.Oynanis
             const int Kaydirma = 8;
             if (hedef.x < Kaydirma) return false;
             return _durum.Karo(hedef.x - Kaydirma, hedef.y, partner.Id) != null;
+        }
+
+        private static string ToplamaYazisi(string tur)
+        {
+            switch (tur)
+            {
+                case "dal": return "+Odun";
+                case "tas_parca": return "+Taş parçası";
+                case "yem_otu": return "+Yem otu";
+                default: return "+Topladın";
+            }
         }
 
         private Dugum DugumBul(Vector2Int hedef)

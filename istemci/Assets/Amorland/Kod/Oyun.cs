@@ -398,7 +398,7 @@ namespace Amorland
             _ses.OrtamBaslat(SesEtiketi.OrtamTarla);
 
             _ogretici = gameObject.AddComponent<OgreticiAkisi>();
-            _ogretici.Kur(_durum, _denge, _ustKanvas.transform, _hud);
+            _ogretici.Kur(_durum, _denge, _ustKanvas.transform, _hud, _efekt);
         }
 
         private void IzgarayiKur()
