@@ -62,6 +62,7 @@ namespace Amorland
         private SohbetEkrani _sohbet;
         private TrenEkrani _tren;
         private MarketEkrani _market;
+        private NotTahtasiEkrani _notTahtasi;
         private GirisEkrani _giris;
         private Bildirimler _bildirimler;
         private BaglantiPerdesi _perde;
@@ -357,13 +358,26 @@ namespace Amorland
             _durum.OyunOlayi += OlayIsle;
             _durum.SohbetMesaji += (gonderen, metin) =>
             {
+                // Ifade tekerlegi ayni kanaldan "ifade:" onekiyle gelir (B.9):
+                // ayri mesaj tipi acmak sunucuya icerik bilgisi sizdirirdi.
+                if (metin.StartsWith("ifade:"))
+                {
+                    IfadeBalonu(benim: false, metin.Substring("ifade:".Length));
+                    return;
+                }
                 // Gonderen adiyla goster: kimden geldigi belirsiz mesaj, cift
                 // oyununda sohbet degil sistem bildirimi gibi okunur.
                 string ad = _durum.Oyuncular.TryGetValue(gonderen, out var o) ? o.Ad : "Eşin";
                 _bildirimler.Goster(ad + ": " + metin);
             };
             _durum.NotTahtasi += (gonderen, sablon, nesne) =>
-                _bildirimler.Goster("Not tahtası: " + sablon + (nesne != null ? " (" + nesne + ")" : ""));
+            {
+                string kimden = _durum.Oyuncular.TryGetValue(gonderen, out var k) ? k.Ad : "Eşin";
+                _bildirimler.Goster(
+                    kimden + " tahtaya yazdı: " + NotTahtasiEkrani.Metin(sablon, NesneAdi(nesne)),
+                    false, 8f);
+                _ses.Cal(SesEtiketi.UiOnay);
+            };
 
             _tarla.Kur(_durum, _denge);
 
@@ -521,6 +535,22 @@ namespace Amorland
                 Gonder("sat", null, new NiyetEk { EsyaId = esya, Adet = adet });
             _market.AlIstegi += (esya, adet) =>
                 Gonder("satin_al", null, new NiyetEk { EsyaId = esya, Adet = adet });
+
+            _notTahtasi = new NotTahtasiEkrani(_ustKanvas.transform, _durum, _denge);
+            _notTahtasi.Gonder += (sablon, nesne) =>
+            {
+                _baglanti.NotTahtasi(sablon, nesne);
+                // Kendi notumun da onayini gorurum: "asildi mi?" belirsiz kalmaz.
+                _bildirimler.Goster("Tahtaya asıldı: " + NotTahtasiEkrani.Metin(sablon, NesneAdi(nesne)));
+            };
+            _sohbet.NotTahtasi += () => _notTahtasi.Ac();
+            _sohbet.Ifade += ifadeId =>
+            {
+                _baglanti.SohbetGonder("ifade:" + ifadeId);
+                // Kendi balonum aninda ucar (iyimser istemci); partnerinki
+                // SohbetMesaji uzerinden gelir.
+                IfadeBalonu(benim: true, ifadeId);
+            };
             _sohbet = new SohbetEkrani(_ustKanvas.transform);
             _sohbet.Gonder += metin => _baglanti.SohbetGonder(metin);
             // Kusluk manuel bir ILETISIM jestidir (B.8): sohbet panelinden yonetilir.
@@ -651,6 +681,36 @@ namespace Amorland
                 if (s.Basarili) _tren.Goster(s.Veri);
                 else _bildirimler.Goster("Tren panosu alınamadı: " + s.HataMesaji, uyari: true);
             });
+        }
+
+        /// <summary>Not tahtasi nesnesi esya DA bolge DE olabilir — adi dogru sozlukten cozulur.</summary>
+        private string NesneAdi(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            return _denge.BolgeAcilisSeviyesi(id) < 99 ? _denge.BolgeAdi(id) : _denge.EsyaAdi(id);
+        }
+
+        /// <summary>
+        /// Ifade balonu: konusanin BASININ USTUNDE ucar (B.9 tekerlek). Gorsel
+        /// sahnede yoksa (partner baska bolgede) bildirime duser — ifade kaybolmaz.
+        /// </summary>
+        private void IfadeBalonu(bool benim, string ifadeId)
+        {
+            string yazi = SohbetEkrani.IfadeAdi(ifadeId);
+            Transform kok = benim
+                ? (_karakter != null ? _karakter.transform : null)
+                : _partnerGorsel;
+            if (kok == null || !kok.gameObject.activeInHierarchy)
+            {
+                if (!benim)
+                {
+                    var p = _durum.Partner;
+                    _bildirimler.Goster((p != null ? p.Ad : "Eşin") + ": " + yazi);
+                }
+                return;
+            }
+            _efekt.UcanYazi((Vector2)kok.position + new Vector2(0f, 1.35f), yazi, Palet.KapsulAltin);
+            if (!benim) _ses.Cal(SesEtiketi.UiOnay);
         }
 
         private void BolgeyeGit(string bolgeId)

@@ -24,13 +24,40 @@ namespace Amorland.Arayuz
         public event Action<string> Gonder;
         public event Action KuslukDegistir;
 
+        /// <summary>Ifade tekerlegi secimi (B.9): parametre ifade kimligi.</summary>
+        public event Action<string> Ifade;
+
+        /// <summary>Not tahtasini ac.</summary>
+        public event Action NotTahtasi;
+
+        // Spec B.9 "Ifade tekerlegi (8 — fazlasi parmakla iskalanir)" — birebir.
+        private static readonly (string Id, string Ad)[] Ifadeler =
+        {
+            ("selam", "Selam!"),
+            ("tesekkur", "Teşekkür!"),
+            ("evet", "Evet"),
+            ("hayir", "Hayır"),
+            ("yardim", "Yardım!"),
+            ("bekle", "Bekle"),
+            ("harika", "Harika!"),
+            ("barisalim", "Barışalım"),
+        };
+
+        /// <summary>Ifade kimligini gorunen yaziya cevirir (balon iki tarafta ayni).</summary>
+        public static string IfadeAdi(string id)
+        {
+            foreach (var i in Ifadeler)
+            {
+                if (i.Id == id) return i.Ad;
+            }
+            return id;
+        }
+
         private static readonly string[] HazirMesajlar =
         {
-            "Selam!",
             "Sulamayı ben alırım.",
             "Hasat hazır, gel!",
             "Depoya bir bak.",
-            "Kuyudayım.",
             "Mola verelim mi?",
         };
 
@@ -41,6 +68,28 @@ namespace Amorland.Arayuz
             var dikey = UiKit.Panel(_panel.Icerik, "Dikey", Color.clear);
             UiKit.Doldur(dikey);
             UiKit.DikeyDizi(dikey, 8f, 12);
+
+            // Ifade tekerlegi: 2x4, tek dokunus — panel kapanir, balon ucar.
+            for (int i = 0; i < Ifadeler.Length; i += 4)
+            {
+                var ifadeSatir = UiKit.Panel(dikey, "Ifade" + i, Color.clear);
+                UiKit.Boyut(ifadeSatir.gameObject, 0f, 42f);
+                var ifadeDizi = UiKit.YatayDizi(ifadeSatir, 8f, 0);
+                ifadeDizi.childForceExpandWidth = true;
+
+                for (int j = i; j < Mathf.Min(i + 4, Ifadeler.Length); j++)
+                {
+                    string ifadeId = Ifadeler[j].Id;
+                    var ib = UiKit.DuzButon(ifadeSatir, "I" + j, Ifadeler[j].Ad, () =>
+                    {
+                        Ifade?.Invoke(ifadeId);
+                        _panel.Kapat();
+                    });
+                    UiKit.Boyut(ib.gameObject, 0f, 40f).flexibleWidth = 1f;
+                }
+            }
+
+            EkranParcasi.Ayirac(dikey);
 
             // Hazir mesajlar iki sutunlu satirlar halinde
             for (int i = 0; i < HazirMesajlar.Length; i += 2)
@@ -82,6 +131,13 @@ namespace Amorland.Arayuz
             UiKit.Boyut(gonderButon.gameObject, 130f, 50f);
 
             EkranParcasi.Ayirac(dikey);
+
+            var notButon = UiKit.AhsapButon(dikey, "NotTahtasi", "Not Tahtası", () =>
+            {
+                NotTahtasi?.Invoke();
+                _panel.Kapat();
+            });
+            UiKit.Boyut(notButon.gameObject, 0f, 44f);
 
             // Kusluk: iletisim jesti — buton yazisi Ac()'ta duruma gore ayarlanir.
             _kuslukButon = UiKit.AhsapButon(dikey, "Kusluk", "", () =>
