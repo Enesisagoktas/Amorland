@@ -283,6 +283,8 @@ namespace Amorland.Gorsel
         /// <summary>Oyun parseli evreleri: ekim aninda filiz, sulaninca islak zemin.</summary>
         public const int Filiz = 88;
         public const int SuruluIslak = 89;
+        /// <summary>Hazir/olgun piriltisi (B.18: hazir kaynak PARLAR).</summary>
+        public const int Parilti = 90;
 
         /// <summary>
         /// Oyuncu koyluleri (satir 8-9): 4 cift rengi x (erkek|kadin) x 3 kare.

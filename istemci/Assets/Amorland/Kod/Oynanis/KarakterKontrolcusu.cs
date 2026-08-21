@@ -119,6 +119,30 @@ namespace Amorland.Oynanis
             if (_sr != null && _kareDur != null) _sr.sprite = _kareDur;
         }
 
+        /// <summary>
+        /// Eylem ani: minik ez-ve-zipla. Ekme/sulama/hasat "elle yapilmis"
+        /// hissini karakterin govdesinden verir; iskelet animasyonu gerekmez.
+        /// </summary>
+        public void EylemHopu()
+        {
+            if (_gorsel != null) StartCoroutine(HopCoroutine());
+        }
+
+        private System.Collections.IEnumerator HopCoroutine()
+        {
+            float t = 0f;
+            while (t < 0.18f && _gorsel != null)
+            {
+                t += Time.deltaTime;
+                float o = t / 0.18f;
+                // once hafif ezilme, sonra tasma: sin egrisiyle tek gecis
+                float s = 1f + 0.14f * Mathf.Sin(o * Mathf.PI);
+                _gorsel.localScale = new Vector3(2f - s, s, 1f);
+                yield return null;
+            }
+            if (_gorsel != null) _gorsel.localScale = Vector3.one;
+        }
+
         /// <summary>Durusta gorseli yumusakca tabana oturtur (~0.1 sn).</summary>
         private void DinlenYumusat()
         {

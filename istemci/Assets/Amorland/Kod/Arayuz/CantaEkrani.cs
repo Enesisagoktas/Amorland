@@ -169,7 +169,7 @@ namespace Amorland.Arayuz
             // ve "dikkat" tonunu kaybediyordu.
             _ozet.color = kullanilan >= ben.CantaSlot ? Palet.UiKirmiziKoyu : Palet.UiKoyuYaziSolgun;
             _secimYazi.text = SecilenEsya != null
-                ? "Seçili: " + _denge.EsyaAdi(SecilenEsya) + " — hedefe dokun"
+                ? "Seçili: " + _denge.EsyaAdi(SecilenEsya)
                 : "";
 
             for (int i = _liste.childCount - 1; i >= 0; i--)

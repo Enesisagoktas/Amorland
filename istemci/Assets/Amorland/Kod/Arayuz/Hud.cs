@@ -49,6 +49,7 @@ namespace Amorland.Arayuz
         public event Action DefterAcildi;
         public event Action AyarlarAcildi;
         public event Action SohbetAcildi;
+        public event Action PartnerTiklandi;
 
         private class TohumSlotu
         {
@@ -69,6 +70,7 @@ namespace Amorland.Arayuz
 
         private const float XpGenislik = 186f;
         private const int TohumSlotSayisi = 4;
+        private int _sonXp = -1;
 
         public string SeciliTohum { get; private set; }
 
@@ -100,6 +102,15 @@ namespace Amorland.Arayuz
                 kok, "Oyuncu", Palet.KapsulZemin, Palet.KapsulCerceve, out ic, 26, 3f);
             UiKit.Sabitle(kapsul, 0f, 1f, 14f, -12f, 296f, 84f);
             UiKit.GolgeEkle(kapsul, 26, 14, 4f);
+
+            // Kapsul tiklanir: partner yokken davet, varken mesaj panelinin kapisi
+            // (denetim: davet ekrani hicbir yerden acilamiyordu — olu koddu).
+            var kapsulImg = kapsul.gameObject.GetComponent<Image>();
+            kapsulImg.raycastTarget = true;
+            var kapsulButon = kapsul.gameObject.AddComponent<Button>();
+            kapsulButon.targetGraphic = kapsulImg;
+            kapsulButon.transition = Selectable.Transition.None;
+            kapsulButon.onClick.AddListener(() => PartnerTiklandi?.Invoke());
 
             _partnerYazi = UiKit.KonturluYazi(
                 ic, "Ad", "", UiKit.YaziGovde, Color.white, TextAnchor.UpperLeft, true, 1.4f);
@@ -253,6 +264,7 @@ namespace Amorland.Arayuz
         {
             var dugmeler = new[]
             {
+                new object[] { "Sohbet", "Mesaj", (Action)(() => SohbetAcildi?.Invoke()) },
                 new object[] { "Canta", "Çanta", (Action)(() => CantaAcildi?.Invoke()) },
                 new object[] { "Harita", "Harita", (Action)(() => HaritaAcildi?.Invoke()) },
                 new object[] { "Defter", "Defter", (Action)(() => DefterAcildi?.Invoke()) },
@@ -264,8 +276,9 @@ namespace Amorland.Arayuz
                 var b = UiKit.AhsapButon(
                     kok, (string)dugmeler[i][0], (string)dugmeler[i][1], (Action)dugmeler[i][2]);
                 var rt = b.GetComponent<RectTransform>();
-                // 86 px buton + 94 px adim: yazi kenara 4 px kala dayanmasin (UI denetimi).
-                UiKit.Sabitle(rt, 1f, 0f, -14f - (dugmeler.Length - 1 - i) * 94f, 14f, 86f, 62f);
+                // 80 px buton + 86 px adim: 5. dugme (Mesaj) gelince genislik
+                // daraldi — tohum cubuguyla cakismadan 16 px pay kalir.
+                UiKit.Sabitle(rt, 1f, 0f, -14f - (dugmeler.Length - 1 - i) * 86f, 14f, 80f, 62f);
                 b.GetComponentInChildren<Text>().fontSize = UiKit.YaziKucuk;
             }
 
@@ -300,6 +313,10 @@ namespace Amorland.Arayuz
             }
 
             _seviyeYazi.text = "Seviye " + ben.Seviye;
+            // XP kazanci ucan "+N" ile kutlanir: bar sessizce dolunca odul hissi
+            // kayboluyordu (B.22 ailesi: her kazancin gorunur ani olur).
+            if (_sonXp >= 0 && ben.Xp > _sonXp) XpUcur(ben.Xp - _sonXp);
+            _sonXp = ben.Xp;
             float oran = ben.SonrakiSeviyeXp > 0 ? ben.Xp / (float)ben.SonrakiSeviyeXp : 1f;
             UiKit.CubukAyarla(_xpDolgu, oran, XpGenislik - 4f);
             _xpYazi.text = ben.SonrakiSeviyeXp > 0 ? ben.Xp + " / " + ben.SonrakiSeviyeXp : "";
@@ -334,6 +351,32 @@ namespace Amorland.Arayuz
             _depoYazi.text = "Depo 0/3";
             _depoYazi.color = Color.white;
             TohumCubugunuTazele();
+        }
+
+        private void XpUcur(int kazanc)
+        {
+            var yazi = UiKit.KonturluYazi(
+                _xpYazi.transform.parent, "XpKazanc", "+" + kazanc + " XP",
+                UiKit.YaziKucuk, Palet.UiAltin, TextAnchor.MiddleCenter, true, 1.4f);
+            var rt = yazi.rectTransform;
+            UiKit.Sabitle(rt, 0.5f, 0.5f, 0f, 0f, 120f, 24f);
+            StartCoroutine(XpYaziUcur(yazi));
+        }
+
+        private System.Collections.IEnumerator XpYaziUcur(UnityEngine.UI.Text yazi)
+        {
+            float t = 0f;
+            var rt = yazi.rectTransform;
+            Color c = yazi.color;
+            while (t < 1f && yazi != null)
+            {
+                t += Time.deltaTime;
+                rt.anchoredPosition = new Vector2(0f, -6f - 30f * t);
+                c.a = 1f - t * t;
+                yazi.color = c;
+                yield return null;
+            }
+            if (yazi != null) Destroy(yazi.gameObject);
         }
 
         private int BenimSlotSayisi()

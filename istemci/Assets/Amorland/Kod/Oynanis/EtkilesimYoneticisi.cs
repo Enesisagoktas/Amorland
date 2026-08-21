@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Amorland.Ag;
@@ -31,6 +32,7 @@ namespace Amorland.Oynanis
         private KarakterKontrolcusu _karakter;
         private TarlaGorunumu _tarla;
         private SesYoneticisi _ses;
+        private EfektYoneticisi _efekt;
 
         /// <summary>Tohum secici (4 slot). Bos ise ekim yapilmaz, sadece sula/hasat.</summary>
         public string SeciliTohum;
@@ -40,6 +42,8 @@ namespace Amorland.Oynanis
         private Transform _isaretKok;
         private Sprite _isaretSprite;
 
+        private Coroutine _eylemCoroutine;
+        private Eylem _kuyrukEylemi;
         private bool _boyamaModu;
         private Vector2 _basmaNoktasi;
         private float _basmaAni;
@@ -63,8 +67,10 @@ namespace Amorland.Oynanis
             KameraYoneticisi kamera,
             KarakterKontrolcusu karakter,
             TarlaGorunumu tarla,
-            SesYoneticisi ses)
+            SesYoneticisi ses,
+            EfektYoneticisi efekt)
         {
+            _efekt = efekt;
             _durum = durum;
             _denge = denge;
             _baglanti = baglanti;
@@ -170,6 +176,7 @@ namespace Amorland.Oynanis
 
         private void DokunmaHedefi(Vector2Int karo)
         {
+            EylemIptal();
             // Partnerin parseli GORUNUR ama dokunulamaz (B.7). Sessizce hicbir sey
             // yapmamak "oyun beni dinlemiyor" hissi verir; sebebi soylenir.
             if (PartnerParseliMi(karo))
@@ -182,6 +189,8 @@ namespace Amorland.Oynanis
             if (eylem == Eylem.Yok)
             {
                 // Eylem yoksa yine de yuru: harita gezmek de bir eylem.
+                // Buyuyen karoysa kalan sure ucar (B.18 "Sayac" ani).
+                BuyumeBilgisiGoster(karo);
                 _hedefBekliyor = false;
                 _karakter.Yuru(karo);
                 return;
@@ -198,12 +207,47 @@ namespace Amorland.Oynanis
 
             if (_kuyrukIsleniyor)
             {
-                KuyrugoIsle();
+                _eylemCoroutine = StartCoroutine(KuyrukAdimi());
                 return;
             }
             if (!_hedefBekliyor) return;
             _hedefBekliyor = false;
-            EylemiUygula(_bekleyenHedef, kuyruktaMi: false);
+            _eylemCoroutine = StartCoroutine(GecikmeliEylem(_bekleyenHedef));
+        }
+
+        /// <summary>
+        /// B.6 eylem suresi: karakter karoya varinca eylem denge suresi kadar
+        /// "yapilir" (hop + bekleme), niyet SONRA gider. Yeni dokunus coroutine'i
+        /// iptal eder — animasyon kilidi yoktur, oyuncu kapana kisilmaz.
+        /// Sifir sureli eylem mitralyoz hissi veriyordu (denetim).
+        /// </summary>
+        private IEnumerator GecikmeliEylem(Vector2Int hedef)
+        {
+            _karakter.EylemHopu();
+            yield return new WaitForSeconds(EylemSuresi(EylemBelirle(hedef)));
+            EylemiUygula(hedef, kuyruktaMi: false);
+        }
+
+        private float EylemSuresi(Eylem eylem)
+        {
+            switch (eylem)
+            {
+                case Eylem.Ek: return _denge.EkmeSn;
+                case Eylem.Sula: return _denge.SulamaSn;
+                case Eylem.Hasat: return _denge.HasatSn;
+                case Eylem.Topla: return _denge.ToplamaSn;
+                case Eylem.KovaDoldur: return _denge.KovaDoldurmaSn;
+                default: return 0f;
+            }
+        }
+
+        private void EylemIptal()
+        {
+            if (_eylemCoroutine != null)
+            {
+                StopCoroutine(_eylemCoroutine);
+                _eylemCoroutine = null;
+            }
         }
 
         // ------------------------------------------------------------------ baglam kurali
@@ -254,17 +298,32 @@ namespace Amorland.Oynanis
                         "ek", NiyetHedef.Karo(hedef.x, hedef.y), new NiyetEk { UrunId = urun.Id });
                     IyimserEkim(niyet.ClientActionId, hedef, urun.Id);
                     _ses.Cal(SesEtiketi.Ekme, kuyruktaMi);
+                    _efekt.ToprakPufu(hedef);
+                    _karakter.EylemHopu();
                     break;
 
                 case Eylem.Sula:
                     niyet = Niyet.Olustur("sula", NiyetHedef.Karo(hedef.x, hedef.y));
                     IyimserSulama(niyet.ClientActionId, hedef);
                     _ses.Cal(SesEtiketi.Sulama, kuyruktaMi);
+                    _efekt.SuSicramasi(hedef);
+                    _karakter.EylemHopu();
                     break;
 
                 case Eylem.Hasat:
                     niyet = Niyet.Olustur("hasat", NiyetHedef.Karo(hedef.x, hedef.y));
+                    IyimserHasat(niyet.ClientActionId, hedef);
                     _ses.Cal(SesEtiketi.Hasat, kuyruktaMi);
+                    if (!kuyruktaMi) Haptik.Haptik.Calistir(Haptik.Haptik.Desen.CokHafif);
+                    Karo hasatKaro = _durum.Karo(hedef.x, hedef.y);
+                    if (hasatKaro != null && !hasatKaro.Bos)
+                    {
+                        _efekt.UrunZiplamasi(hedef, Karo64.Al(Sayfa64.Ek,
+                            Karo64.UrunOlgun[TarlaGorunumu.UrunGorseli(hasatKaro.UrunId)]));
+                        _efekt.UcanYazi(hedef, "+" + _denge.EsyaAdi(hasatKaro.UrunId),
+                            Palet.UiAltin);
+                    }
+                    _karakter.EylemHopu();
                     break;
 
                 case Eylem.Topla:
@@ -272,11 +331,17 @@ namespace Amorland.Oynanis
                     if (dugum == null) return;
                     niyet = Niyet.Olustur("topla", NiyetHedef.Dugum(dugum.Bolge, dugum.X, dugum.Y));
                     _ses.Cal(SesEtiketi.Toplama, kuyruktaMi);
+                    if (!kuyruktaMi) Haptik.Haptik.Calistir(Haptik.Haptik.Desen.CokHafif);
+                    _efekt.UrunZiplamasi(hedef, Karo64.Al(Sayfa64.Ek, Karo64.DevrikKutuk));
+                    _karakter.EylemHopu();
                     break;
 
                 case Eylem.KovaDoldur:
                     niyet = Niyet.Olustur("kova_doldur");
                     _ses.Cal(SesEtiketi.Kova, kuyruktaMi);
+                    _efekt.SuSicramasi(hedef);
+                    _efekt.UcanYazi(hedef, "Kova doldu", new Color(0.55f, 0.8f, 0.9f));
+                    _karakter.EylemHopu();
                     break;
 
                 default:
@@ -332,6 +397,39 @@ namespace Amorland.Oynanis
                 });
         }
 
+        /// <summary>
+        /// Hasat gorseli ANINDA bosalir (kural 7): efekt oynarken bitkinin dikili
+        /// kalmasi "cift urun" gorunumu veriyordu (denetim). Yeniden veren urunun
+        /// ara evresini sunucu Degisim'le duzeltir; red gelirse 0.2 sn'de geri sarar.
+        /// </summary>
+        private void IyimserHasat(string clientActionId, Vector2Int hedef)
+        {
+            Karo mevcut = _durum.Karo(hedef.x, hedef.y);
+            if (mevcut == null) return;
+            _durum.KaroTahmini(
+                clientActionId,
+                new Karo
+                {
+                    ParselSahibi = mevcut.ParselSahibi,
+                    X = mevcut.X,
+                    Y = mevcut.Y,
+                    UrunId = null,
+                    EkildiAt = null,
+                    SulandiAt = null,
+                    HasatSayaci = 0
+                });
+        }
+
+        private void BuyumeBilgisiGoster(Vector2Int hedef)
+        {
+            Karo k = _durum.Karo(hedef.x, hedef.y);
+            if (k == null || k.Bos || k.SulandiAt == null || _tarla.Olgun(k)) return;
+            double kalan = _tarla.KalanSn(k);
+            if (kalan <= 0 || kalan >= double.MaxValue) return;
+            _efekt.UcanYazi(hedef, Arayuz.UiKit.SureMetni(kalan),
+                new Color(0.72f, 0.9f, 0.5f));
+        }
+
         private void IyimserSulama(string clientActionId, Vector2Int hedef)
         {
             Karo mevcut = _durum.Karo(hedef.x, hedef.y);
@@ -360,7 +458,12 @@ namespace Amorland.Oynanis
             if (karo == _sonBoyananKaro) return;
             _sonBoyananKaro = karo;
 
-            if (EylemBelirle(karo) == Eylem.Yok) return;
+            Eylem e = EylemBelirle(karo);
+            if (e == Eylem.Yok) return;
+            // B.6: boyama AYNI eylemi kuyruklar — ilk gecerli karo eylemi kilitler.
+            // Karisik kuyruk, sularken istemeden tohum ekiyordu (denetim).
+            if (_kuyruk.Count == 0) _kuyrukEylemi = e;
+            else if (e != _kuyrukEylemi) return;
             if (_kuyruk.Contains(karo)) return;
 
             _kuyruk.Add(karo);
@@ -377,15 +480,17 @@ namespace Amorland.Oynanis
         {
             if (_kuyruk.Count == 0) return;
             _kuyrukIsleniyor = true;
+            // Haptik yalniz ILK ve SON eylemde (B.23).
+            Haptik.Haptik.KuyrukIlk(Haptik.Haptik.Desen.CokHafif);
             _karakter.Yuru(_kuyruk[0]);
         }
 
-        private void KuyrugoIsle()
+        private IEnumerator KuyrukAdimi()
         {
             if (_kuyruk.Count == 0)
             {
-                _kuyrukIsleniyor = false;
-                return;
+                KuyrukBitir();
+                yield break;
             }
 
             Vector2Int hedef = _kuyruk[0];
@@ -396,19 +501,33 @@ namespace Amorland.Oynanis
                 _kuyrukIsaretleri.RemoveAt(0);
             }
 
-            // Kuyruk eyleminde ses %75, haptik SADECE ilk ve son (B.23).
-            EylemiUygula(hedef, kuyruktaMi: true);
+            // Durum bu arada degistiyse (partner sulamis olabilir) karo atlanir:
+            // kuyruk yalnizca kilitlenen eylemi uygular (B.6).
+            if (EylemBelirle(hedef) == _kuyrukEylemi)
+            {
+                _karakter.EylemHopu();
+                yield return new WaitForSeconds(EylemSuresi(_kuyrukEylemi));
+                // Kuyruk eyleminde ses %75, haptik SADECE ilk ve son (B.23).
+                EylemiUygula(hedef, kuyruktaMi: true);
+            }
 
             if (_kuyruk.Count == 0)
             {
-                _kuyrukIsleniyor = false;
-                return;
+                KuyrukBitir();
+                yield break;
             }
             _karakter.Yuru(_kuyruk[0]);
         }
 
+        private void KuyrukBitir()
+        {
+            _kuyrukIsleniyor = false;
+            Haptik.Haptik.KuyrukSon(Haptik.Haptik.Desen.CokHafif);
+        }
+
         private void KuyrugoTemizle()
         {
+            EylemIptal();
             _kuyruk.Clear();
             foreach (var g in _kuyrukIsaretleri) UnityEngine.Object.Destroy(g);
             _kuyrukIsaretleri.Clear();

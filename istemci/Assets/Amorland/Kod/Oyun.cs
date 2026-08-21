@@ -45,6 +45,7 @@ namespace Amorland
         private Izgara _izgara;
         private EtkilesimYoneticisi _etkilesim;
         private SesYoneticisi _ses;
+        private EfektYoneticisi _efekt;
 
         // --- arayuz
         private Canvas _oyunKanvasi;
@@ -58,6 +59,7 @@ namespace Amorland
         private HaritaEkrani _harita;
         private DavetEkrani _davet;
         private AyarlarEkrani _ayarlar;
+        private SohbetEkrani _sohbet;
         private GirisEkrani _giris;
         private Bildirimler _bildirimler;
         private BaglantiPerdesi _perde;
@@ -152,6 +154,8 @@ namespace Amorland
             var etkilesimGo = new GameObject("Etkilesim");
             etkilesimGo.transform.SetParent(transform, false);
             _etkilesim = etkilesimGo.AddComponent<EtkilesimYoneticisi>();
+
+            _efekt = etkilesimGo.AddComponent<EfektYoneticisi>();
         }
 
         private void ArayuzKur()
@@ -348,7 +352,13 @@ namespace Amorland
                 Haptik.Haptik.Calistir(Haptik.Haptik.Desen.Hata);
             };
             _durum.OyunOlayi += OlayIsle;
-            _durum.SohbetMesaji += (gonderen, metin) => _bildirimler.Goster(metin);
+            _durum.SohbetMesaji += (gonderen, metin) =>
+            {
+                // Gonderen adiyla goster: kimden geldigi belirsiz mesaj, cift
+                // oyununda sohbet degil sistem bildirimi gibi okunur.
+                string ad = _durum.Oyuncular.TryGetValue(gonderen, out var o) ? o.Ad : "Eşin";
+                _bildirimler.Goster(ad + ": " + metin);
+            };
             _durum.NotTahtasi += (gonderen, sablon, nesne) =>
                 _bildirimler.Goster("Not tahtası: " + sablon + (nesne != null ? " (" + nesne + ")" : ""));
 
@@ -378,7 +388,9 @@ namespace Amorland
             PartnerGorseliKur();
             HudKur();
 
-            _etkilesim.Kur(_durum, _denge, _baglanti, _kameraYoneticisi, _karakter, _tarla, _ses);
+            _efekt.Kur(_kamera, _oyunKanvasi);
+            _etkilesim.Kur(
+                _durum, _denge, _baglanti, _kameraYoneticisi, _karakter, _tarla, _ses, _efekt);
             _etkilesim.JoystickAktif = () => _joystick != null && _joystick.Aktif;
             _etkilesim.Bildirim += mesaj => _bildirimler.Goster(mesaj);
             _etkilesim.UzunBasildi += DaireselMenu;
@@ -490,7 +502,36 @@ namespace Amorland
             _harita = new HaritaEkrani(_ustKanvas.transform, _durum, _denge);
             _davet = new DavetEkrani(_ustKanvas.transform);
             _ayarlar = new AyarlarEkrani(_ustKanvas.transform, _ses);
+            _sohbet = new SohbetEkrani(_ustKanvas.transform);
+            _sohbet.Gonder += metin => _baglanti.SohbetGonder(metin);
+            // Kusluk manuel bir ILETISIM jestidir (B.8): sohbet panelinden yonetilir.
+            _sohbet.KuslukDegistir += () =>
+            {
+                bool aktif = _durum.Vadi != null && _durum.Vadi.KuslukAktif;
+                Gonder(aktif ? "kusluk_bitir" : "kusluk_baslat");
+            };
 
+            _hud.PartnerTiklandi += () =>
+            {
+                if (_durum.Partner != null)
+                {
+                    _sohbet.Ac(_durum.Vadi != null && _durum.Vadi.KuslukAktif, true);
+                }
+                else if (_durum.Ben != null && _durum.Ben.Seviye >= 3)
+                {
+                    _davet.Ac();
+                }
+                else
+                {
+                    _bildirimler.Goster("Partner daveti Seviye 3'te açılır.");
+                }
+                _ses.Cal(SesEtiketi.UiAcilis);
+            };
+            _hud.SohbetAcildi += () =>
+            {
+                _sohbet.Ac(_durum.Vadi != null && _durum.Vadi.KuslukAktif, _durum.Partner != null);
+                _ses.Cal(SesEtiketi.UiAcilis);
+            };
             _hud.CantaAcildi += () => { _canta.Ac(); _ses.Cal(SesEtiketi.UiAcilis); };
             _hud.HaritaAcildi += () => { _harita.Ac(); _ses.Cal(SesEtiketi.UiAcilis); };
             _hud.DefterAcildi += () => { _defter.Ac(); _ses.Cal(SesEtiketi.UiAcilis); };
@@ -609,14 +650,28 @@ namespace Amorland
             }
         }
 
-        /// <summary>Uzun bas -> dairesel menu. Belirsiz karolarda (B.6).</summary>
+        /// <summary>
+        /// Uzun bas -> karo inceleme. Ham enum adi sizdiriyordu (denetim);
+        /// simdi urun adi + durum + kalan sure Turkce soylenir.
+        /// </summary>
         private void DaireselMenu(Vector2Int karo)
         {
-            var eylem = _etkilesim.EylemBelirle(karo);
-            _bildirimler.Goster(
-                eylem == EtkilesimYoneticisi.Eylem.Yok
-                    ? "Burada yapılacak bir şey yok."
-                    : "Bu karoda: " + eylem);
+            var k = _durum.Karo(karo.x, karo.y);
+            if (k != null && !k.Bos)
+            {
+                string ad = _denge.EsyaAdi(k.UrunId);
+                if (_tarla.Olgun(k)) _bildirimler.Goster(ad + " — olgun, hasat et!");
+                else if (k.SulandiAt == null) _bildirimler.Goster(ad + " — susuz, sula.");
+                else _bildirimler.Goster(ad + " — " + UiKit.SureMetni(_tarla.KalanSn(k)) + " kaldı.");
+                return;
+            }
+            switch (_etkilesim.EylemBelirle(karo))
+            {
+                case EtkilesimYoneticisi.Eylem.Ek: _bildirimler.Goster("Boş karo — seçili tohumu ekebilirsin."); break;
+                case EtkilesimYoneticisi.Eylem.KovaDoldur: _bildirimler.Goster("Kuyu — kovayı doldur."); break;
+                case EtkilesimYoneticisi.Eylem.Topla: _bildirimler.Goster("Yabani kaynak — toplanabilir."); break;
+                default: _bildirimler.Goster("Burada yapılacak bir şey yok."); break;
+            }
         }
 
         private void OlayIsle(Ag.Olay olay)
@@ -628,6 +683,13 @@ namespace Amorland
                     _seviyeEkrani.Goster(seviye, SeviyeAcilimi(seviye));
                     _ses.Cal(SesEtiketi.SeviyeAtlama);
                     Haptik.Haptik.Calistir(Haptik.Haptik.Desen.UcluYukselen);
+                    // B.18 ~10:00: ogreticinin vardigi yer partner davetidir —
+                    // Sv 3 kutlamasindan sonra davet KENDILIGINDEN acilir
+                    // (kapatilabilir; sonra partner kapsulunden geri donulur).
+                    if (seviye == 3 && _durum.Partner == null)
+                    {
+                        StartCoroutine(DavetiGecikmeliAc());
+                    }
                     break;
 
                 case "defter_sayfasi":
@@ -656,8 +718,31 @@ namespace Amorland
                     break;
 
                 case "ilk_kez":
+                    // B.26 yasak 17: yalniz sesle bildirim olmaz — gorsel es art.
                     _ses.Cal(SesEtiketi.UiOnay);
+                    _bildirimler.Goster("İlk kez! " + IlkKezMetni(olay.Deger));
+                    Haptik.Haptik.Calistir(Haptik.Haptik.Desen.CokHafif);
                     break;
+            }
+        }
+
+        private IEnumerator DavetiGecikmeliAc()
+        {
+            yield return new WaitForSecondsRealtime(3f);
+            if (_durum.Partner == null) _davet.Ac();
+        }
+
+        private static string IlkKezMetni(string isaret)
+        {
+            switch (isaret)
+            {
+                case "ilk_ekim": return "İlk tohumun toprakta.";
+                case "ilk_sulama": return "İlk sulaman.";
+                case "ilk_hasat": return "İlk hasadın!";
+                case "ilk_toplama": return "İlk yabani toplaman.";
+                case "ilk_craft": return "İlk aletin!";
+                case "ilk_depo": return "Depoya ilk katkın.";
+                default: return "Yeni bir şey denedin, XP kazandın.";
             }
         }
 
@@ -698,6 +783,13 @@ namespace Amorland
                 return;
             }
             if (!_durum.PartnerKonumlari.TryGetValue(partner.Id, out WsKonum konum))
+            {
+                _partnerGorsel.gameObject.SetActive(false);
+                return;
+            }
+            // Partner baska bolgedeyse ham koordinati burada cizmek "hayalet
+            // avatar" uretir (denetim) — gizlenir.
+            if (!string.IsNullOrEmpty(konum.Bolge) && konum.Bolge != _aktifBolge)
             {
                 _partnerGorsel.gameObject.SetActive(false);
                 return;

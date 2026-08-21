@@ -874,6 +874,31 @@ class Cizer:
             gri = 0.78 + r.random() * 0.2
             taban = ton((176, 158, 138), gri)
             d.ellipse([cx, cy, cx + w, cy + h], fill=taban + (255,))
+    def parilti(self, i):
+        """Olgun urun / hazir dugum piriltisi: 4 uclu yildiz + iki mini yildiz.
+
+        Spec B.18: hazir kaynaklar PARLAR — 'neye dokunacagim' sorusunun
+        gorsel cevabi. Karonun ust-sag kosesinde durur ki urun gorseli
+        kapanmasin; cekirdek OPAK (alfa dersi), kenarlar yumusak."""
+        katman = Image.new("RGBA", (T, T), (0, 0, 0, 0))
+        d = ImageDraw.Draw(katman)
+
+        def yildiz(cx, cy, r):
+            d.polygon([(cx, cy - r), (cx + r // 3, cy - r // 3), (cx + r, cy),
+                       (cx + r // 3, cy + r // 3), (cx, cy + r),
+                       (cx - r // 3, cy + r // 3), (cx - r, cy),
+                       (cx - r // 3, cy - r // 3)], fill=(255, 244, 180, 235))
+            d.polygon([(cx, cy - r + 2), (cx + r // 4, cy - r // 4), (cx + r - 2, cy),
+                       (cx + r // 4, cy + r // 4), (cx, cy + r - 2),
+                       (cx - r // 4, cy + r // 4), (cx - r + 2, cy),
+                       (cx - r // 4, cy - r // 4)], fill=(255, 252, 235, 255))
+
+        yildiz(44, 16, 10)
+        yildiz(54, 30, 5)
+        yildiz(34, 26, 4)
+        katman = katman.filter(ImageFilter.GaussianBlur(0.6))
+        self.yapistir(i, katman)
+
     def golge(self, i):
         """Yumusak elips golge — agac/hayvan/esya altina, Dekor katmanina.
 
@@ -1520,6 +1545,7 @@ def main():
     # Oyun parseli evre karolari
     c.filiz(88)
     c.surulu_islak(89, kaynak=2)
+    c.parilti(90)
     # Satir 8-9: oyuncu koyluleri — 4 cift rengi x (erkek|kadin) x 3 kare.
     # Renkler turetilmis.json misafirHesap.renkler ile birebir:
     # 0 Kiremit #D9694A, 1 Yosun #5E8C55, 2 Gokyuzu #4A7FB5, 3 Bal #D9A441.

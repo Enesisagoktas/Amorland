@@ -39,6 +39,7 @@ namespace Amorland.Gorsel
         private DengeVerisi _denge;
         private Tilemap _zemin;   // parsel topragi — vadi Dekor katmaniyla ayni sirada
         private Tilemap _bitki;   // ekin/dugum — BIREYSEL, karakterle Y-sortlanir
+        private Tilemap _isaret;  // hazir/olgun piriltilari — her seyin ustunde
         private Transform _vurgu;
 
         private static readonly Dictionary<int, Tile> _karoOnbellek = new Dictionary<int, Tile>();
@@ -55,6 +56,8 @@ namespace Amorland.Gorsel
 
             _zemin = Katman("ParselZemin", 1, bireysel: false);
             _bitki = Katman("ParselBitki", 2, bireysel: true);
+            // Piriltilar kanopilerin bile ustunde: "hazir" sinyali asla ortulmez.
+            _isaret = Katman("ParselIsaret", 5, bireysel: false);
 
             KuyuKur();
             VurguKur();
@@ -62,16 +65,48 @@ namespace Amorland.Gorsel
             // Sunucudan her degisim geldiginde (ve iyimser tahmin geri sarildiginda)
             // tum parseller yeniden cizilir: ~60 hucre, fark takibi gerektirmez.
             _durum.DurumDegisti += _ => Tazele();
-            _durum.GeriSarildi += _ => Tazele();
+            _durum.GeriSarildi += GeriSarildi;
             Tazele();
         }
 
         // ------------------------------------------------------------------ cizim
 
+        /// <summary>
+        /// Red geri sarmasi: iyimser cizim geri alinirken karo kisa KIRMIZI yanar.
+        /// Sessiz geri alma "oyun beni dinlemedi" hissi veriyordu; flas, neyin
+        /// geri dondugunu gosterir (0.2 sn'lik yumusak geri sarmanin gorsel esi).
+        /// </summary>
+        private void GeriSarildi(string anahtar)
+        {
+            Tazele();
+            if (string.IsNullOrEmpty(anahtar)) return;
+            string[] p = anahtar.Split(':');
+            if (p.Length < 3) return;
+            if (!int.TryParse(p[p.Length - 2], out int kx)) return;
+            if (!int.TryParse(p[p.Length - 1], out int ky)) return;
+            string sahip = string.Join(":", p, 0, p.Length - 2);
+            int x = kx + (sahip == _durum.BenimId ? 0 : PartnerKaydirma);
+            StartCoroutine(KirmiziFlas(new Vector3Int(x, ky, 0)));
+        }
+
+        private System.Collections.IEnumerator KirmiziFlas(Vector3Int hucre)
+        {
+            var kirmizi = new Color(1f, 0.45f, 0.4f);
+            float t = 0f;
+            while (t < 0.35f)
+            {
+                t += Time.deltaTime;
+                _zemin.SetColor(hucre, Color.Lerp(kirmizi, Color.white, t / 0.35f));
+                yield return null;
+            }
+            _zemin.SetColor(hucre, Color.white);
+        }
+
         public void Tazele()
         {
             if (_durum == null || _bitki == null) return;
 
+            _isaret.ClearAllTiles();
             _bitki.ClearAllTiles();
             PedBas(0);
             PedBas(PartnerKaydirma);
@@ -110,6 +145,8 @@ namespace Amorland.Gorsel
 
             int g = UrunGorseli(karo.UrunId);
             int n = Mathf.Max(1, _denge.BuyumeAsamaSayisi);
+            // B.18: olgun urun PARLAR — hasada hazir karo uzaktan secilir.
+            if (Olgun(karo)) _isaret.SetTile(h, K(Sayfa64.Ek, Karo64.Parilti));
             int indeks;
             if (Olgun(karo)) indeks = Karo64.UrunOlgun[g];
             else if (karo.SulandiAt != null && BuyumeAsamasi(karo) * 2 >= n) indeks = Karo64.UrunGenc[g];
@@ -126,7 +163,11 @@ namespace Amorland.Gorsel
             else if (tur.Contains("cevher") || tur.Contains("maden")) indeks = Karo64.Cevher;
             else if (tur.Contains("tas") || tur.Contains("kaya")) indeks = Karo64.TasYigini;
             else indeks = Karo64.CaliKucukKoyu;   // yem_otu ve digerleri
-            _bitki.SetTile(new Vector3Int(dugum.X, dugum.Y, 0), K(Sayfa64.Ek, indeks));
+            var dh = new Vector3Int(dugum.X, dugum.Y, 0);
+            _bitki.SetTile(dh, K(Sayfa64.Ek, indeks));
+            // B.18: hazir yabani kaynak PARLAR — ogreticinin "3 kaynak parlar" ani.
+            if (dugum.Hazir(_durum.SunucuZamani))
+                _isaret.SetTile(dh, K(Sayfa64.Ek, Karo64.Parilti));
         }
 
         /// <summary>
@@ -134,7 +175,7 @@ namespace Amorland.Gorsel
         /// turuncu yumru / havuc). Gorsel yaklasiktir ama TUTARLIDIR: ayni urun
         /// her zaman ayni sprite ile cizilir.
         /// </summary>
-        private static int UrunGorseli(string urunId)
+        public static int UrunGorseli(string urunId)
         {
             switch (urunId)
             {
@@ -252,6 +293,8 @@ namespace Amorland.Gorsel
             {
                 t = ScriptableObject.CreateInstance<Tile>();
                 t.sprite = Karo64.Al(sayfa, indeks);
+                // Red flasi hucre rengini surebilsin (varsayilan LockColor engeller).
+                t.flags = TileFlags.None;
                 _karoOnbellek[anahtar] = t;
             }
             return t;
