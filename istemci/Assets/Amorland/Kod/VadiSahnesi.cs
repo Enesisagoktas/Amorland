@@ -48,7 +48,19 @@ namespace Amorland
         // Tren
         private Transform _tren;
         private const float TrenHizi = 5f;
-        private const float TrenY = 36.5f;
+
+        /// <summary>
+        /// Trenin dikey konumu — GOZLE DEGIL PIKSELLE hizalandi.
+        ///
+        /// Ray karosu dunya y [36,37) araligini kaplar; goruntu satiri r, dunya
+        /// y = 37 - r/64'e denk gelir. Olcum: alcak (yakin) rayin parlak sirti
+        /// 45-46. satirlarda, tum araclarin teker alti 60. satirda. Teker raya
+        /// ~2 px binerek otursun diye temas satiri 42 secildi:
+        ///   y_ray   = 37 - 42/64          = 36.344
+        ///   y_merkez= y_ray + (60-32)/64  = 36.78   (pivot sprite ortasi)
+        /// 36.5 (karo ortasi) kullanilinca tekerler rayin ALTINDA yuzuyordu.
+        /// </summary>
+        private const float TrenY = 36.78f;
 
         // Kelebekler: cicekli cayirlarda gezinen minik canlilik.
         private readonly List<Transform> _kelebekler = new List<Transform>();
