@@ -198,9 +198,22 @@ namespace Amorland.Gorsel
         {
             Avlu(Alan("market"), 6, 4, 6, 12);
             Avlu(Alan("depo"), 3, 2, 3, 9);
-            Avlu(Alan("tren"), 2, 8, 2, 6);
             Avlu(Alan("ev"), 2, 2, 2, 10);
+
+            // ⚠ Gar avlusu DAR: ilk denemede bolgenin tamamiydi ve ekranin tamami
+            // ciplak toprak cikti. Peronun ve ray yatağinin cevresiyle sinirli.
+            RectInt g = Alan("tren");
+            Avlu(new RectInt(g.xMin + 4, PeronY(g) - 3, g.width - 8, 14), 0, 0, 0, 0);
+
+            // Maden avlusu: ocak agzinin onundeki calisma alani.
+            Avlu(Alan("maden"), 6, 4, 6, 8);
         }
+
+        /// <summary>
+        /// Peronun y konumu. Hem avlu cizimi hem gar kurulumu buna bakar; iki yerde
+        /// ayri sayi tutulursa avlu peronu kacirir.
+        /// </summary>
+        private static int PeronY(RectInt trenAlani) => trenAlani.yMin + 10;
 
         /// <summary>Bolgenin ic dikdortgenini avlu yapar; kenari gurultuyle kirilir.</summary>
         private void Avlu(RectInt a, int solPay, int altPay, int sagPay, int ustPay)
@@ -366,15 +379,15 @@ namespace Amorland.Gorsel
         {
             RectInt a = Alan("maden");
 
-            // Tas yamac. ⚠ Cakil DEGIL: cakil cim uzerine serpilmis bir yamadir ve
-            // genis alana doseyince duzenli puantiye deseni cikiyor. Saf tas karosu
-            // (109) dikissizdir. Kenari gurultuyle kirilir ki dikdortgen gorunmesin.
-            for (int x = a.xMin + 4; x < a.xMax - 4; x++)
-                for (int y = a.yMin + 12; y < a.yMax; y++)
-                    if (Musait(x, y) && Gurultu(x, y, 7, 3) > 0.40f)
-                        Koy(_zemin, x, y, KaroSeti.TasZemin);
+            int mx = a.xMin + a.width / 2 - 1, my = a.yMax - 11;
 
-            int mx = a.xMin + a.width / 2 - 1, my = a.yMax - 7;
+            // Ocak agzinin arkasindaki KAYA YUZU. ⚠ Kucuk tutuluyor: saf tas karosunun
+            // (109) cime baglayan gecis karosu YOK, kenari merdiven gibi cikiyor. Genis
+            // alana doseyince gri kagit kesigi gibi duruyordu; ocak agzinin cevresiyle
+            // sinirli kalinca kaya yuzu olarak okunuyor. Zemin toprak avludur.
+            for (int x = mx - 4; x <= mx + 6; x++)
+                for (int y = my - 1; y <= my + 4; y++)
+                    if (Musait(x, y)) Koy(_zemin, x, y, KaroSeti.TasZemin);
             Blok(_nesne, KaroSeti.MadenAgzi, Sayfa.Kasaba, mx, my);
 
             // Ocak agzinin onunde calisma alani: kazma, varil, kasa, isci.
@@ -384,7 +397,16 @@ namespace Amorland.Gorsel
             Nesne(mx + 5, my - 2, new KaroKimlik(Sayfa.Kasaba, KaroSeti.Sepet));
             Nesne(mx + 1, my - 4, new KaroKimlik(Sayfa.Kasaba, KaroSeti.Koylu));
 
-            // Kayalik alanlar gurultuyle kumelenir; arasi acik kalir.
+            // Kaya yuzunun kenarina tas yigini: sert gecisi kirar.
+            for (int x = mx - 5; x <= mx + 7; x++)
+            {
+                if (Musait(x, my - 2) && _r.Next(100) < 62)
+                    Dekor(x, my - 2, new KaroKimlik(Sayfa.Ciftlik, KaroSeti.Sec(KaroSeti.Kaya, _r)));
+                if (Musait(x, my + 5) && _r.Next(100) < 48)
+                    Dekor(x, my + 5, new KaroKimlik(Sayfa.Ciftlik, KaroSeti.Sec(KaroSeti.Kaya, _r)));
+            }
+
+            // Kayalar gurultuyle kumelenir; arasi acik kalir.
             for (int x = a.xMin; x < a.xMax; x++)
             {
                 for (int y = a.yMin; y < a.yMax; y++)
@@ -481,14 +503,14 @@ namespace Amorland.Gorsel
         private void TrenGari()
         {
             RectInt a = Alan("tren");
-            int py = a.yMin + 10;
+            int py = PeronY(a);
 
-            // Peron: saf tas (109), cakil yamasi degil.
-            TasDose(new RectInt(a.xMin + 2, py, a.width - 4, 4));
+            // Peron: saf tas. Duz kenari burada DOGRU — peron insa edilmis bir yapidir,
+            // arazi degil. Zemininin geri kalani MeydanlariCiz tarafindan toprak dosendi.
+            TasDose(new RectInt(a.xMin + 6, py, a.width - 12, 3));
 
-            // Ray yatagi: dolu toprak serit, uzerinde duzenli traversler.
-            ToprakDose(new RectInt(a.xMin + 2, py + 5, a.width - 4, 2));
-            for (int x = a.xMin + 2; x < a.xMax - 2; x += 2)
+            // Ray: traversler toprak yatagin uzerinde. Yatak avlunun parcasi.
+            for (int x = a.xMin + 5; x < a.xMax - 5; x += 2)
                 Dekor(x, py + 5, new KaroKimlik(Sayfa.Kasaba, KaroSeti.CitYatay));
 
             // Gar binasi: tas govde + tas cepheli ek bina.
@@ -548,15 +570,6 @@ namespace Amorland.Gorsel
             for (int x = r.xMin; x < r.xMax; x++)
                 for (int y = r.yMin; y < r.yMax; y++)
                     if (Musait(x, y)) Koy(_zemin, x, y, KaroSeti.TasZemin);
-        }
-
-        /// <summary>Dikdortgeni dikissiz dolu toprakla doser (avlu, ray yatagi).</summary>
-        private void ToprakDose(RectInt r)
-        {
-            for (int x = r.xMin; x < r.xMax; x++)
-                for (int y = r.yMin; y < r.yMax; y++)
-                    if (Musait(x, y))
-                        Koy(_zemin, x, y, new KaroKimlik(Sayfa.Kasaba, KaroSeti.Sec(KaroSeti.ToprakDolu, _r)));
         }
 
         // ------------------------------------------------------------------ serpme
