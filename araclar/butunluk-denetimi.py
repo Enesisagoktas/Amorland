@@ -215,7 +215,9 @@ def istemci_yasak17_sadece_ses_degil():
     eksik = []
     for olay in kritik:
         # Olayin islendigi blokta hem ses hem gorsel geri bildirim olmali.
-        blok = re.search(r'case\s+"' + olay + r'"\s*:(.{0,400}?)break;', icerik, re.S)
+        # Pencere 900: seviye_atlama govdesi Sv3 davet otomatigiyle buyudu;
+        # 400'luk pencere case'i bulamayip yanlis "islenmiyor" veriyordu.
+        blok = re.search(r'case\s+"' + olay + r'"\s*:(.{0,900}?)break;', icerik, re.S)
         if not blok:
             eksik.append(olay + " (islenmiyor)")
             continue
