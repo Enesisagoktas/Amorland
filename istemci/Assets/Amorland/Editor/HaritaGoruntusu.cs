@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using Amorland.Gorsel;
 
 namespace Amorland.EditorAraclari
@@ -43,7 +44,7 @@ namespace Amorland.EditorAraclari
                 {
                     cop.Clear();
                     int sut = sayfa == Sayfa64.RpgBase ? 20 : 12;
-                    int sat = sayfa == Sayfa64.RpgBase ? 13 : 3;
+                    int sat = sayfa == Sayfa64.RpgBase ? 13 : 8;
                     const int aralik = 2;
 
                     for (int i = 0; i < sut * sat; i++)
@@ -210,6 +211,124 @@ namespace Amorland.EditorAraclari
             }
 
             if (Application.isBatchMode) EditorApplication.Exit(hata);
+        }
+
+        /// <summary>
+        /// Uzun agac IZOLE testi: harita olmadan, gercek katman duzeniyle
+        /// (Nesne=Individual order2, Tepe=Chunk order4, kamera Y-sort) dort
+        /// varyantta uzun agac dizer. Haritadaki "tepesi kesik agac" hatasinin
+        /// yerlesimde mi render duzeninde mi oldugunu ayirir.
+        /// </summary>
+        /// <summary>Haritada alt-karosu olup TEPE karosu olmayan uzun agaclari sayar.</summary>
+        public static void KesikAgacDokumu()
+        {
+            var cop = new List<GameObject>();
+            try
+            {
+                Karo64.Unut();
+                VadiHaritasi.OnbellegiTemizle();
+                var kokGo = new GameObject("V");
+                cop.Add(kokGo);
+                var harita = kokGo.AddComponent<VadiHaritasi>();
+                harita.Kur();
+
+                Tilemap nesne = null, tepe = null;
+                foreach (var tm in kokGo.GetComponentsInChildren<Tilemap>())
+                {
+                    if (tm.gameObject.name == "Nesne") nesne = tm;
+                    if (tm.gameObject.name == "NesneTepe") tepe = tm;
+                }
+
+                int alt = 0, eksik = 0;
+                var ornekler = new List<string>();
+                for (int x = 0; x < VadiHaritasi.En; x++)
+                {
+                    for (int y = 0; y < VadiHaritasi.Boy; y++)
+                    {
+                        var t = nesne.GetTile<Tile>(new Vector3Int(x, y, 0));
+                        if (t == null || t.sprite == null) continue;
+                        string ad = t.sprite.name;
+                        if (!ad.Contains("_74") && !ad.Contains("_76") && !ad.Contains("_78")) continue;
+                        alt++;
+                        var ust = tepe.GetTile<Tile>(new Vector3Int(x, y + 1, 0));
+                        if (ust == null)
+                        {
+                            eksik++;
+                            if (ornekler.Count < 12) ornekler.Add("(" + x + "," + y + ") " + ad);
+                        }
+                    }
+                }
+                Debug.Log("[Amorland] uzun agac alt=" + alt + " eksikTepe=" + eksik
+                          + " ornekler: " + string.Join(" | ", ornekler));
+            }
+            finally
+            {
+                foreach (var go in cop) if (go != null) UnityEngine.Object.DestroyImmediate(go);
+            }
+            if (Application.isBatchMode) EditorApplication.Exit(0);
+        }
+
+        public static void UzunAgacTesti()
+        {
+            string cikti = Arguman("-cikti");
+            if (string.IsNullOrEmpty(cikti)) cikti = Path.Combine(Path.GetTempPath(), "amorland-harita");
+            Directory.CreateDirectory(cikti);
+            var cop = new List<GameObject>();
+            try
+            {
+                Karo64.Unut();
+                VadiHaritasi.OnbellegiTemizle();
+
+                var kok = new GameObject("Test");
+                cop.Add(kok);
+                var grid = kok.AddComponent<Grid>();
+                grid.cellSize = new Vector3(1f, 1f, 0f);
+
+                Tilemap Yap(string ad, int sira, bool bireysel)
+                {
+                    var go = new GameObject(ad);
+                    go.transform.SetParent(kok.transform, false);
+                    var tm = go.AddComponent<Tilemap>();
+                    var tr = go.AddComponent<TilemapRenderer>();
+                    tr.sortingOrder = sira;
+                    tr.mode = bireysel ? TilemapRenderer.Mode.Individual : TilemapRenderer.Mode.Chunk;
+                    tr.sortOrder = TilemapRenderer.SortOrder.TopLeft;
+                    return tm;
+                }
+                var nesne = Yap("N", 2, true);
+                var tepe = Yap("T", 4, false);
+
+                var altlar = new[] { Karo64.UzunKavakAlt, Karo64.UzunCamAlt, Karo64.UzunTuruncuAlt };
+                for (int v = 0; v < 4; v++)
+                {
+                    for (int t = 0; t < 3; t++)
+                    {
+                        int x = t * 3, y = v * 4;
+                        var altTile = ScriptableObject.CreateInstance<Tile>();
+                        altTile.sprite = Karo64.Al(Sayfa64.Ek, altlar[t]);
+                        var ustTile = ScriptableObject.CreateInstance<Tile>();
+                        ustTile.sprite = Karo64.Al(Sayfa64.Ek, altlar[t] + 1);
+                        if (v > 0)
+                        {
+                            var m = Matrix4x4.Translate(new Vector3(
+                                v == 1 ? -0.16f : (v == 2 ? 0.14f : 0.05f),
+                                v == 1 ? 0.05f : (v == 2 ? -0.04f : 0.12f), 0f));
+                            altTile.transform = m;
+                            ustTile.transform = m;
+                        }
+                        nesne.SetTile(new Vector3Int(x, y, 0), altTile);
+                        tepe.SetTile(new Vector3Int(x, y + 1, 0), ustTile);
+                    }
+                }
+
+                Kare(cikti, "99-uzun-agac-testi.png", cop, new Vector2(4f, 8.5f), 9f, 1280, 720);
+                Debug.Log("[Amorland] Uzun agac testi yazildi.");
+            }
+            finally
+            {
+                foreach (var go in cop) if (go != null) UnityEngine.Object.DestroyImmediate(go);
+            }
+            if (Application.isBatchMode) EditorApplication.Exit(0);
         }
 
         public static void Uret()

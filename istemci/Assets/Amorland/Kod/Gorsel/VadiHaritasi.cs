@@ -568,24 +568,22 @@ namespace Amorland.Gorsel
             {
                 for (int y = a.yMin; y < a.yMax; y++)
                 {
-                    if (!Musait(x, y)) continue;
                     float kenar = Mathf.Min(Mathf.Min(x - a.xMin, a.xMax - 1 - x),
                                             Mathf.Min(y - a.yMin, a.yMax - 1 - y));
                     float sikilik = Gurultu(x, y, 15, 5);
-                    // Orman tabani: ic duz koyu (65), kenar bandi gecis karosu (36)
-                    // — duz karoyla biten leke merdiven kenarli dikdortgen gibi
-                    // okunuyordu (denetim bulgusu).
-                    if (sikilik > 0.50f && !_toprak[x, y])
+                    // ⚠ Taban basimi MUSAIT KONTROLUNDEN ONCE: taban zemin isidir,
+                    // hucrenin dolu olmasi onu ilgilendirmez. Eski sirada agac
+                    // kanopisinin isgal ettigi hucreye taban basilmiyor ve koyu
+                    // denizde agac basina bir ACIK KARE kaliyordu ("renk bozuklugu").
+                    if (sikilik > 0.50f && !_toprak[x, y] && !_su[x, y])
                     {
-                        // Kenar karosu YALNIZ gercek sinirda: kosul bandi butunuyle
-                        // kenar sayilinca koyu bolgenin icinde parlak kare cerceveler
-                        // olustu (kenar karonun disi acik cim cunku).
                         bool sinir = Gurultu(x, y + 1, 15, 5) <= 0.50f
                                      || Gurultu(x, y - 1, 15, 5) <= 0.50f
                                      || Gurultu(x - 1, y, 15, 5) <= 0.50f
                                      || Gurultu(x + 1, y, 15, 5) <= 0.50f;
                         Koy(_zemin, x, y, Ek(sinir ? Karo64.CimGolgeHafif : Karo64.OrmanTabani));
                     }
+                    if (!Musait(x, y)) continue;
                     float sans = Mathf.Lerp(8f, 74f, Mathf.Clamp01(kenar / 10f))
                                  * Mathf.Clamp01(sikilik * 1.6f);
                     if (_r.Next(100) >= sans) continue;
@@ -1239,7 +1237,10 @@ namespace Amorland.Gorsel
             if (!Icerde(x, y) || !Icerde(x, y + 1)) return;
             int alt = tur == 0 ? Karo64.UzunKavakAlt : (tur == 1 ? Karo64.UzunCamAlt : Karo64.UzunTuruncuAlt);
             int ust = alt + 1;
-            int varyant = ((x * 73856093) ^ (y * 19349663)) & 3;
+            // ⚠ Uzun agacta varyant kaydirma YOK: alt/ust iki ayri karo — kaydirma
+            // ikilisinde gorunum sorunlari dogurdu; govdeli agacta izgara hissi
+            // zaten dusuk.
+            const int varyant = 0;
             if (_dekor.GetTile(new Vector3Int(x, y, 0)) == null)
                 Koy(_dekor, x, y, Ek(Karo64.Golge), varyant);
             Koy(_nesne, x, y, Ek(alt), varyant);
