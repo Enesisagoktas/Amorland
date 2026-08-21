@@ -978,12 +978,14 @@ class Cizer:
         self.im.paste(Image.fromarray(np.clip(a, 0, 255).astype("uint8"), "RGBA"), (x, y))
 
     def uzun_agac(self, alt_i, ust_i, kaynak, koyu):
-        """2 karo boyunda agac: UST karo = agacin kendisi (kanopi), ALT karo =
-        cizilmis govde.
+        """2 karo boyunda agac — TEK tuval kurgusu.
 
-        ⚠ Ilk deneme 96px'e olcekleyip ortadan kirpmakti — kanopinin yanlari
-        duz kesildi. Klasik yontem dogrusu: kanopi sprite'i ustte, altina kalin
-        govde; kaynak karonun kendi mini govdesi govdenin tepesiyle ortusur.
+        ⚠ Onceki kurgu (ust karo = agacin tamami, alt karo = ayri cizilmis uzun
+        govde) "lolipop" uretti: kanopi govdeden kopuk duruyor, govde bir karo
+        boyunca ciplak direk gibi uzuyordu. Simdi 64x128 tek tuvalde once KISA
+        ve KALIN govde cizilir, kanopi ustune BINDIRILIR (kaynagin kendi mini
+        govdesini de orter), tuval sonra iki karoya bolunur — dikissiz, dogru
+        oranli (kanopi ~2/3, govde ~1/3).
         """
         import numpy as np
         k = self.karo_kopya(kaynak)
@@ -991,27 +993,28 @@ class Cizer:
             a = np.asarray(k).astype(np.float32)
             a[:, :, :3] *= 0.84
             k = Image.fromarray(np.clip(a, 0, 255).astype("uint8"), "RGBA")
-        x, y = self.kanvas(ust_i)
-        self.im.alpha_composite(k, (x, y))
 
-        # ⚠ Govde rengi ORNEKLENMEZ: kaynak karonun alt seridi kanopi doluydu,
-        # ornekleme yesil sapli mantarlar uretti. Sabit ahsap kabuk.
+        kanvas = Image.new("RGBA", (T, 2 * T), (0, 0, 0, 0))
+        d = ImageDraw.Draw(kanvas)
         govde = ton(self.AHSAP, 0.82)
-        x, y = self.kanvas(alt_i)
-        d = ImageDraw.Draw(self.im)
         koyu_g = ton(govde, 0.78)
         acik_g = ton(govde, 1.14)
-        # govde: hafif konik, tepesi karonun ustunde (kanopiyle birlesir)
-        d.polygon([(x + 26, y), (x + 38, y), (x + 40, y + 50), (x + 24, y + 50)],
-                  fill=govde + (255,))
-        # kok payandalari
-        d.polygon([(x + 24, y + 50), (x + 18, y + 56), (x + 28, y + 54)], fill=govde + (255,))
-        d.polygon([(x + 40, y + 50), (x + 46, y + 56), (x + 36, y + 54)], fill=govde + (255,))
-        d.rounded_rectangle([x + 20, y + 50, x + 44, y + 56], 3, fill=ton(govde, 0.9) + (255,))
-        # kabuk cizgileri + isik
-        d.line([x + 29, y + 4, x + 28, y + 48], fill=koyu_g + (255,), width=2)
-        d.line([x + 35, y + 8, x + 36, y + 44], fill=koyu_g + (255,), width=2)
-        d.line([x + 32, y + 2, x + 32, y + 50], fill=acik_g + (255,), width=1)
+        # kisa-kalin govde: kanopinin altindan cikar (satir 70..114)
+        d.polygon([(25, 70), (39, 70), (41, 106), (23, 106)], fill=govde + (255,))
+        d.polygon([(23, 104), (15, 113), (28, 109)], fill=govde + (255,))
+        d.polygon([(41, 104), (49, 113), (36, 109)], fill=govde + (255,))
+        d.rounded_rectangle([18, 106, 46, 113], 3, fill=ton(govde, 0.9) + (255,))
+        d.line([28, 74, 27, 104], fill=koyu_g + (255,), width=2)
+        d.line([36, 76, 37, 102], fill=koyu_g + (255,), width=2)
+        d.line([32, 72, 32, 106], fill=acik_g + (255,), width=1)
+        # kanopi govdenin ustune biner (satir 20..84) — kaynagin mini govdesi
+        # ve benim govdemin tepesi kanopinin altinda kalir
+        kanvas.alpha_composite(k, (0, 20))
+
+        x, y = self.kanvas(ust_i)
+        self.im.alpha_composite(kanvas.crop((0, 0, T, T)), (x, y))
+        x, y = self.kanvas(alt_i)
+        self.im.alpha_composite(kanvas.crop((0, T, T, 2 * T)), (x, y))
     def vitrin(self, i):
         """Dukkan vitrini. Denetim: rpg-base cam karolari duvarla ayni renkti;
         gok mavisi cam + capraz parilti + krem cerceve."""
