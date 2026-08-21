@@ -171,6 +171,10 @@ namespace Amorland.EditorAraclari
                 case 10: AdimKovaOnayi(); break;
                 case 11: AdimHasatBekle(); break;
                 case 12: AdimHasatOnayi(); break;
+                case 13: AdimSeviye2(); break;
+                case 14: AdimDepoyaGec(); break;
+                case 15: AdimDepoBosalt(); break;
+                case 16: AdimDepoOnayi(); break;
             }
         }
 
@@ -329,8 +333,111 @@ namespace Amorland.EditorAraclari
             if (karo != null && !karo.Bos) return;
             if (durum.EnvanterAdet("bugday") <= 0) return;
             EkranGoruntusuAl("duman-4-hasat.png");
-            Bitir(true, "SUNUCU ONAYLI hasat: bugday x" + durum.EnvanterAdet("bugday")
-                        + " — ek/sula/topla/kuyu/HASAT dongusu TAM");
+            AdimGec("SUNUCU ONAYLI hasat: bugday x" + durum.EnvanterAdet("bugday")
+                    + " — ek/sula/topla/kuyu/HASAT dongusu TAM");
+        }
+
+        private static double _sonDonguEylemi;
+
+        /// <summary>
+        /// Sv2'ye kadar gercek dongu: ek -> sula (gerekirse kuyu) -> hasat.
+        /// Ilk hasat ilk_kez(25) + defter sayfasi(75) getirdigi icin cogu kosuda
+        /// tek cevrim yeter; yetmezse dongu doner. Her GERCEK eylem zaman asimi
+        /// sayacini tazeler — bu bekleyis mesrudur, kilitlenme degildir.
+        /// Sv2'de acilisTohumOdulu (turp tohumu x4) SUNUCU ONAYLI dogrulanir:
+        /// "acilan urun ekilebilir olmali" kuralinin ucuna kadar testi.
+        /// </summary>
+        private static void AdimSeviye2()
+        {
+            var durum = Durum(UnityEngine.Object.FindObjectOfType<EtkilesimYoneticisi>());
+            if (durum.Ben.Seviye >= 2)
+            {
+                int turp = durum.EnvanterAdet("turp_tohum");
+                if (turp < 4) return; // odul satiri ayni Degisim'de gelmek uzere
+                EkranGoruntusuAl("duman-5-seviye2.png");
+                AdimGec("SUNUCU ONAYLI Sv" + durum.Ben.Seviye
+                        + " + acilis odulu turp_tohum x" + turp);
+                return;
+            }
+
+            if (EditorApplication.timeSinceStartup - _sonDonguEylemi < 2.0) return;
+            var tarla = UnityEngine.Object.FindObjectOfType<Amorland.Gorsel.TarlaGorunumu>();
+            var karo = durum.Karo(0, 0);
+            bool eylem = false;
+            if (karo == null || karo.Bos)
+            {
+                if (durum.EnvanterAdet("bugday_tohum") <= 0)
+                {
+                    Bitir(false, "Sv2 dongusunde tohum bitti — tohum geri verme kurali bozuk olabilir");
+                    return;
+                }
+                Dokun(new Vector2Int(0, 0));
+                eylem = true;
+            }
+            else if (karo.SulandiAt == null)
+            {
+                if (durum.Ben.KovaKalan > 0) Dokun(new Vector2Int(0, 0));
+                else Dokun(new Vector2Int(-4, 1));
+                eylem = true;
+            }
+            else if (tarla.Olgun(karo))
+            {
+                Dokun(new Vector2Int(0, 0));
+                eylem = true;
+            }
+            if (eylem)
+            {
+                _sonDonguEylemi = EditorApplication.timeSinceStartup;
+                _adimBaslangici = EditorApplication.timeSinceStartup;
+            }
+        }
+
+        private static void AdimDepoyaGec()
+        {
+            // Bolge gecisinin gercek yolu Oyun.BolgeyeGit — harita tiklamasi da
+            // ayni metoda iner; reflection arac, tasarim degil.
+            var oyun = UnityEngine.Object.FindObjectOfType<Amorland.Oyun>();
+            typeof(Amorland.Oyun)
+                .GetMethod("BolgeyeGit", BindingFlags.NonPublic | BindingFlags.Instance)
+                .Invoke(oyun, new object[] { "depo" });
+            AdimGec("depo bolgesine gecis istendi");
+        }
+
+        private static void AdimDepoBosalt()
+        {
+            // Bolge gecisi 0.6 sn kararmayla acilir; panel gelene kadar beklenir.
+            var panel = GameObject.Find("DepoEkrani");
+            if (panel == null || !panel.activeInHierarchy) return;
+            var bosalt = BulDerin(panel.transform, "Bosalt");
+            if (bosalt == null) { Bitir(false, "depo panelinde Bosalt butonu yok"); return; }
+            UnityEngine.EventSystems.ExecuteEvents.Execute(
+                bosalt.gameObject,
+                new UnityEngine.EventSystems.PointerEventData(
+                    UnityEngine.EventSystems.EventSystem.current),
+                UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+            AdimGec("depo paneli acildi, Bosalt GERCEK tiklamayla basildi");
+        }
+
+        private static void AdimDepoOnayi()
+        {
+            var durum = Durum(UnityEngine.Object.FindObjectOfType<EtkilesimYoneticisi>());
+            if (durum.Vadi == null || durum.Vadi.DepoDolu <= 0) return;
+            if (durum.EnvanterAdet("bugday") > 0) return; // urunler depoya tasinmali
+            EkranGoruntusuAl("duman-6-depo.png");
+            Bitir(true, "SUNUCU ONAYLI depo bosaltma: depoDolu=" + durum.Vadi.DepoDolu
+                        + "/" + durum.Vadi.DepoKapasitesi
+                        + " — tam dongu + Sv2 odulu + depo zinciri calisiyor");
+        }
+
+        private static Transform BulDerin(Transform kok, string ad)
+        {
+            if (kok.name == ad) return kok;
+            for (int i = 0; i < kok.childCount; i++)
+            {
+                var sonuc = BulDerin(kok.GetChild(i), ad);
+                if (sonuc != null) return sonuc;
+            }
+            return null;
         }
 
         // ------------------------------------------------------------- yardimcilar

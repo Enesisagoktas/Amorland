@@ -543,6 +543,8 @@ namespace Amorland
                 // Kendi notumun da onayini gorurum: "asildi mi?" belirsiz kalmaz.
                 _bildirimler.Goster("Tahtaya asıldı: " + NotTahtasiEkrani.Metin(sablon, NesneAdi(nesne)));
             };
+            _sohbet = new SohbetEkrani(_ustKanvas.transform);
+            _sohbet.Gonder += metin => _baglanti.SohbetGonder(metin);
             _sohbet.NotTahtasi += () => _notTahtasi.Ac();
             _sohbet.Ifade += ifadeId =>
             {
@@ -551,8 +553,6 @@ namespace Amorland
                 // SohbetMesaji uzerinden gelir.
                 IfadeBalonu(benim: true, ifadeId);
             };
-            _sohbet = new SohbetEkrani(_ustKanvas.transform);
-            _sohbet.Gonder += metin => _baglanti.SohbetGonder(metin);
             // Kusluk manuel bir ILETISIM jestidir (B.8): sohbet panelinden yonetilir.
             _sohbet.KuslukDegistir += () =>
             {
