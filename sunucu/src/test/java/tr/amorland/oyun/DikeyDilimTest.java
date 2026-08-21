@@ -428,4 +428,75 @@ class DikeyDilimTest extends TestTemeli {
     dunya.aletYaz(vadi.id(), oyuncuId, "ahsap_kova", 0);
     dunya.kovaYaz(vadi.id(), oyuncuId, 6);
   }
+
+  // ================================================================== tren + market (B.15)
+
+  @Autowired TrenServisi tren;
+
+  @Test
+  @DisplayName("Tren: Sv5 alti red; siparis karsilanir, altin yatar; ayni kart ikinciye SIPARIS_DOLDU")
+  void trenKarsilamaVeMarket() {
+    UUID o = oyuncuKur("cihaz-1", "Ada");
+    Vadi vadi = vadiServisi.kur(o);
+
+    OyunHatasi erken =
+        assertThrows(
+            OyunHatasi.class,
+            () -> niyet(o, vadi.id(), "tren_karsila", new Niyet.Hedef("gar", 0, 0, null), null));
+    assertEquals(RedKodu.SEVIYE_YETERSIZ, erken.kod(), "Para Sv5'te oyuna girer (B.15)");
+
+    oyuncular.seviyeVeXpYaz(o, 5, 0);
+    long sefer = tren.seferNo(sahteSaat().simdi());
+    var siparis = tren.siparisler(vadi, vadi.dunyaSeviyesi(), sefer).get(0);
+    dunya.envanterDegistir(vadi.id(), o, siparis.urunId(), siparis.miktar());
+
+    Degisim d = niyet(o, vadi.id(), "tren_karsila", new Niyet.Hedef("gar", 0, 0, null), null);
+
+    assertEquals(siparis.altinOdul(), dunya.altin(vadi.id(), o), "Odul tek seferde tam yatar");
+    assertEquals(0, dunya.envanterAdet(vadi.id(), o, siparis.urunId()), "Kismi yatirma yok, tam teslim");
+    assertTrue(d.olaylar().stream().anyMatch(x -> "tren_siparis_karsilandi".equals(x.tip())));
+
+    // C.5: ayni karta ikinci gelen kaybeder — birincil anahtar zorlar.
+    dunya.envanterDegistir(vadi.id(), o, siparis.urunId(), siparis.miktar());
+    OyunHatasi dolu =
+        assertThrows(
+            OyunHatasi.class,
+            () -> niyet(o, vadi.id(), "tren_karsila", new Niyet.Hedef("gar", 0, 0, null), null));
+    assertEquals(RedKodu.SIPARIS_DOLDU, dolu.kod());
+  }
+
+  @Test
+  @DisplayName("Market: sat sabit dusuk oranla aninda oder; satin_al tohum fiyatini duser")
+  void marketSatVeAl() {
+    UUID o = oyuncuKur("cihaz-1", "Ada");
+    Vadi vadi = vadiServisi.kur(o);
+    oyuncular.seviyeVeXpYaz(o, 5, 0);
+    dunya.envanterDegistir(vadi.id(), o, "bugday", 10);
+
+    niyet(o, vadi.id(), "sat", null, new Niyet.Ek(null, "bugday", 10, null));
+
+    var oran = denge.urunlerDosyasi().marketAlisOrani();
+    long satisGeliri =
+        Math.max(
+            1,
+            (long)
+                Math.floor(
+                    denge.urun("bugday").orElseThrow().tabanFiyat()
+                        * ((oran.min() + oran.max()) / 2.0)
+                        * 10));
+    assertEquals(satisGeliri, dunya.altin(vadi.id(), o), "B.15: market dusuk ve SABIT oranla alir");
+    assertEquals(0, dunya.envanterAdet(vadi.id(), o, "bugday"));
+
+    int tohumOnce = dunya.envanterAdet(vadi.id(), o, "bugday_tohum");
+    niyet(o, vadi.id(), "satin_al", null, new Niyet.Ek(null, "bugday_tohum", 2, null));
+    assertEquals(tohumOnce + 2, dunya.envanterAdet(vadi.id(), o, "bugday_tohum"));
+    long fiyat = 2L * denge.urun("bugday").orElseThrow().tohumFiyat();
+    assertEquals(satisGeliri - fiyat, dunya.altin(vadi.id(), o), "Tohum bedeli kasadan duser");
+
+    OyunHatasi kapali =
+        assertThrows(
+            OyunHatasi.class,
+            () -> niyet(o, vadi.id(), "satin_al", null, new Niyet.Ek(null, "domates_tohum", 1, null)));
+    assertEquals(RedKodu.SEVIYE_YETERSIZ, kapali.kod(), "Acilmamis urunun tohumu satilmaz");
+  }
 }

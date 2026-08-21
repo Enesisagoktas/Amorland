@@ -413,6 +413,37 @@ public class DunyaDeposu {
         Map.of("v", vadiId, "o", oyuncuId, "k", kalan));
   }
 
+  // ------------------------------------------------------------------ tren
+
+  public record TrenKarsilama(int kart, UUID oyuncuId) {}
+
+  /**
+   * Siparis karsilamayi ATOMIK yazar: birincil anahtar (vadi, sefer, kart)
+   * oldugu icin ayni karta ikinci INSERT 0 satir doner — C.5 "ilk ulasan
+   * kazanir" kurali veritabaninda zorlanir, yaris kosulu kalmaz.
+   */
+  public boolean trenKarsilamaYaz(
+      UUID vadiId, long seferNo, int kart, UUID oyuncuId, java.time.Instant simdi) {
+    int satir =
+        jdbc.update(
+            "INSERT INTO tren_karsilama (vadi_id, sefer_no, kart, oyuncu_id, karsilandi) "
+                + "VALUES (:v, :s, :k, :o, :t) ON CONFLICT (vadi_id, sefer_no, kart) DO NOTHING",
+            new MapSqlParameterSource()
+                .addValue("v", vadiId)
+                .addValue("s", seferNo)
+                .addValue("k", kart)
+                .addValue("o", oyuncuId)
+                .addValue("t", java.sql.Timestamp.from(simdi)));
+    return satir > 0;
+  }
+
+  public List<TrenKarsilama> trenKarsilananlar(UUID vadiId, long seferNo) {
+    return jdbc.query(
+        "SELECT kart, oyuncu_id FROM tren_karsilama WHERE vadi_id = :v AND sefer_no = :s",
+        Map.of("v", vadiId, "s", seferNo),
+        (rs, i) -> new TrenKarsilama(rs.getInt("kart"), rs.getObject("oyuncu_id", UUID.class)));
+  }
+
   // ------------------------------------------------------------------ isaretler
 
   public List<String> isaretler(UUID vadiId, UUID oyuncuId) {

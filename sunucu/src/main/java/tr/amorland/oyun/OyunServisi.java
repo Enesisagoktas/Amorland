@@ -51,6 +51,8 @@ public class OyunServisi {
   private final ObjectMapper mapper;
   private final Saat saat;
 
+  private final TrenServisi tren;
+
   public OyunServisi(
       DengeServisi denge,
       DunyaDeposu dunya,
@@ -61,7 +63,9 @@ public class OyunServisi {
       VadiDeposu vadiler,
       OyuncuDeposu oyuncular,
       ObjectMapper mapper,
-      Saat saat) {
+      Saat saat,
+      TrenServisi tren) {
+    this.tren = tren;
     this.denge = denge;
     this.dunya = dunya;
     this.kurucu = kurucu;
@@ -110,6 +114,9 @@ public class OyunServisi {
           case "bolgeye_gir" -> bolgeyeGir(vadi, oyuncu, niyet, yazici);
           case "kusluk_baslat" -> kuslukBaslat(vadi, oyuncu, simdi, yazici);
           case "kusluk_bitir" -> kuslukBitir(vadi, yazici);
+          case "tren_karsila" -> trenKarsila(vadi, oyuncu, niyet, simdi, yazici);
+          case "sat" -> sat(vadi, oyuncu, niyet, yazici);
+          case "satin_al" -> satinAl(vadi, oyuncu, niyet, yazici);
           default -> throw new OyunHatasi(RedKodu.BILINMEYEN, "Bilinmeyen niyet: " + niyet.tip());
         };
 
@@ -127,6 +134,114 @@ public class OyunServisi {
     revizyon.kaydet(vadi.id(), degisim);
     revizyon.eylemKaydet(niyet.clientActionId(), oyuncuId, vadi.id(), degisim);
     return degisim;
+  }
+
+  // ================================================================== tren + market (B.15)
+
+  private void paraKapisi(Oyuncu oyuncu) {
+    int esik = denge.ilerlemeDosyasi().paraninGirisi().ilkSeviye();
+    if (oyuncu.seviye() < esik) {
+      throw new OyunHatasi(
+          RedKodu.SEVIYE_YETERSIZ, "Para Sv " + esik + "'te oyuna girer. Tren gelince gorusuruz.");
+    }
+  }
+
+  /**
+   * Tren siparisi karsilama (B.15). Kismi yatirma YOK: tam miktar elde olmali.
+   * Ayni karta ikinci gelen SIPARIS_DOLDU alir (C.5 — birincil anahtar zorlar).
+   * Manifesto 3/3 dolarsa IKI oyuncu da bonus alir — "iki imza" mekanigi.
+   */
+  private int trenKarsila(Vadi vadi, Oyuncu oyuncu, Niyet n, Instant simdi, DegisimYazici y) {
+    paraKapisi(oyuncu);
+    long sefer = tren.seferNo(simdi);
+    var siparisler = tren.siparisler(vadi, vadi.dunyaSeviyesi(), sefer);
+    int kart = n.hedef() == null || n.hedef().x() == null ? -1 : n.hedef().x();
+    if (kart < 0 || kart >= siparisler.size()) {
+      throw new OyunHatasi(RedKodu.GECERSIZ_HEDEF, "Boyle bir siparis karti yok.");
+    }
+    TrenServisi.Siparis siparis = siparisler.get(kart);
+
+    int elde = dunya.envanterAdet(vadi.id(), oyuncu.id(), siparis.urunId());
+    if (elde < siparis.miktar()) {
+      throw new OyunHatasi(
+          RedKodu.KAYNAK_YETERSIZ,
+          denge.esyaAdi(siparis.urunId()) + " " + elde + "/" + siparis.miktar()
+              + " — siparis tam miktar ister, kismi yatirma yok.");
+    }
+    if (!dunya.trenKarsilamaYaz(vadi.id(), sefer, kart, oyuncu.id(), simdi)) {
+      throw new OyunHatasi(RedKodu.SIPARIS_DOLDU, "Bu siparisi partnerin kapmis bile.");
+    }
+
+    envanterYaz(vadi, oyuncu.id(), siparis.urunId(), -siparis.miktar(), y);
+    dunya.altinDegistir(vadi.id(), oyuncu.id(), siparis.altinOdul());
+    y.olay(DunyaModeli.Olay.trenSiparisi(kart));
+
+    int xp = siparis.xp();
+    xp += ilerleme.defterTetikle(vadi, oyuncu.id(), "bolge_acildi:gar", y);
+
+    // Manifesto tamam mi? (3/3) — tam doldurma bonusu IKI imzaya da yazilir.
+    if (dunya.trenKarsilananlar(vadi.id(), sefer).size()
+        >= denge.urunlerDosyasi().manifesto().siparisKartiSayisi()) {
+      int bonus = denge.urunlerDosyasi().manifesto().tamDoldurmaXpBonus();
+      xp += bonus;
+      y.olay(DunyaModeli.Olay.manifestoTamam());
+      UUID digerId = vadi.digerOyuncu(oyuncu.id());
+      if (digerId != null) {
+        oyuncular.bul(digerId).ifPresent(p -> ilerleme.xpEkle(vadi, p, bonus, y));
+      }
+    }
+    return xp;
+  }
+
+  /** Markete satis: ANINDA, dusuk ve SABIT oranla (B.15 — acil nakit muslugu). */
+  private int sat(Vadi vadi, Oyuncu oyuncu, Niyet n, DegisimYazici y) {
+    paraKapisi(oyuncu);
+    String esyaId = n.ek() == null ? null : n.ek().esyaId();
+    int adet = n.ek() == null || n.ek().adet() == null ? 1 : n.ek().adet();
+    if (adet <= 0) throw new OyunHatasi(RedKodu.GECERSIZ_HEDEF, "Gecersiz adet.");
+    Urun urun =
+        denge
+            .urun(esyaId)
+            .orElseThrow(
+                () -> new OyunHatasi(RedKodu.GECERSIZ_HEDEF, "Market yalnizca urun alir."));
+    int elde = dunya.envanterAdet(vadi.id(), oyuncu.id(), esyaId);
+    if (elde < adet) {
+      throw new OyunHatasi(RedKodu.ESYA_YOK, denge.esyaAdi(esyaId) + " " + elde + "/" + adet);
+    }
+    var oran = denge.urunlerDosyasi().marketAlisOrani();
+    long kazanc = (long) Math.floor(urun.tabanFiyat() * ((oran.min() + oran.max()) / 2.0) * adet);
+    envanterYaz(vadi, oyuncu.id(), esyaId, -adet, y);
+    dunya.altinDegistir(vadi.id(), oyuncu.id(), Math.max(1, kazanc));
+    return 0;
+  }
+
+  /** Marketten tohum alimi. Fiyat SABIT (tohumFiyat); acilmamis urun satilmaz. */
+  private int satinAl(Vadi vadi, Oyuncu oyuncu, Niyet n, DegisimYazici y) {
+    paraKapisi(oyuncu);
+    String esyaId = n.ek() == null ? null : n.ek().esyaId();
+    int adet = n.ek() == null || n.ek().adet() == null ? 1 : n.ek().adet();
+    if (esyaId == null || !esyaId.endsWith("_tohum") || adet <= 0) {
+      throw new OyunHatasi(RedKodu.GECERSIZ_HEDEF, "Market simdilik yalnizca tohum satar.");
+    }
+    String urunId = esyaId.substring(0, esyaId.length() - "_tohum".length());
+    Urun urun =
+        denge
+            .urun(urunId)
+            .orElseThrow(() -> new OyunHatasi(RedKodu.GECERSIZ_HEDEF, "Bilinmeyen tohum."));
+    if (urun.acilis() != null && oyuncu.seviye() < urun.acilis().seviye()) {
+      throw new OyunHatasi(
+          RedKodu.SEVIYE_YETERSIZ,
+          denge.esyaAdi(urunId) + " Sv " + urun.acilis().seviye() + "'te acilir.");
+    }
+    long fiyat = (long) urun.tohumFiyat() * adet;
+    long bakiye = dunya.altin(vadi.id(), oyuncu.id());
+    if (bakiye < fiyat) {
+      throw new OyunHatasi(
+          RedKodu.KAYNAK_YETERSIZ, "Altin yetmiyor: " + bakiye + "/" + fiyat + ".");
+    }
+    cantayaEkle(vadi, oyuncu, esyaId, adet, y);
+    dunya.altinDegistir(vadi.id(), oyuncu.id(), -fiyat);
+    return 0;
   }
 
   // ================================================================== tarla

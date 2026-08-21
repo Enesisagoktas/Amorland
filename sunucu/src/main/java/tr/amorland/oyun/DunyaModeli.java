@@ -127,6 +127,14 @@ public final class DunyaModeli {
     public static Olay depoDoldu() {
       return new Olay("depo_doldu", null, null);
     }
+
+    public static Olay trenSiparisi(int kart) {
+      return new Olay("tren_siparis_karsilandi", null, kart);
+    }
+
+    public static Olay manifestoTamam() {
+      return new Olay("manifesto_tamam", null, null);
+    }
   }
 
   /**
