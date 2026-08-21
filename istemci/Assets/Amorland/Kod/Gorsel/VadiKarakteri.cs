@@ -27,6 +27,7 @@ namespace Amorland.Gorsel
         private SpriteRenderer _sr;
         private Vector2? _hedef;
         private float _bobZamani;
+        private Sprite _kareDur, _kareA, _kareB;
 
         public Vector2 Konum => transform.position;
 
@@ -45,8 +46,11 @@ namespace Amorland.Gorsel
 
             var golge = new GameObject("Golge");
             golge.transform.SetParent(transform, false);
-            golge.transform.localPosition = new Vector3(0f, 0.42f, 0f);
-            golge.transform.localScale = new Vector3(0.8f, 0.7f, 1f);
+            // ⚠ 0.42'de elips (dokunun alt yarisinda) govdenin ARKASINA denk
+            // gelip hic gorunmuyordu — "vadide golge yok" bulgusunun koku.
+            // +0.20 = elips merkezi ayak cizgisinde.
+            golge.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+            golge.transform.localScale = new Vector3(0.95f, 0.6f, 1f);
             var gsr = golge.AddComponent<SpriteRenderer>();
             gsr.sprite = Karo64.Al(Sayfa64.Ek, Karo64.Golge);
             gsr.sortingOrder = 1;
@@ -54,6 +58,14 @@ namespace Amorland.Gorsel
 
         /// <summary>Dokunulan noktaya yuru.</summary>
         public void HedefKoy(Vector2 dunya) => _hedef = dunya;
+
+        /// <summary>Yuruyus kareleri: dur / adim A / adim B.</summary>
+        public void YurumeKareleri(Sprite dur, Sprite a, Sprite b)
+        {
+            _kareDur = dur;
+            _kareA = a;
+            _kareB = b;
+        }
 
         private void Update()
         {
@@ -93,12 +105,17 @@ namespace Amorland.Gorsel
             if (Mathf.Abs(yon.x) > 0.05f) _sr.flipX = yon.x < 0f;
             _bobZamani += Time.deltaTime * 11f;
             _gorsel.localPosition = new Vector3(0f, 0.5f + Mathf.Abs(Mathf.Sin(_bobZamani)) * 0.07f, 0f);
+            if (_kareA != null)
+            {
+                _sr.sprite = Mathf.FloorToInt(_bobZamani / Mathf.PI) % 2 == 0 ? _kareA : _kareB;
+            }
         }
 
         private void Dinlen()
         {
             _bobZamani = 0f;
             if (_gorsel != null) _gorsel.localPosition = new Vector3(0f, 0.5f, 0f);
+            if (_sr != null && _kareDur != null) _sr.sprite = _kareDur;
         }
 
         private bool Gecer(Vector2 p)

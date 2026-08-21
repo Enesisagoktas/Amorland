@@ -30,6 +30,7 @@ namespace Amorland.Oynanis
         private SpriteRenderer _sr;
         private float _gorselTabanY;
         private float _sallanmaFazi;
+        private Sprite _kareDur, _kareA, _kareB;
 
         /// <summary>Yol bitince cagrilir: bekleyen baglam eylemi burada tetiklenir.</summary>
         public event Action<Vector2Int> HedefeVarildi;
@@ -61,6 +62,7 @@ namespace Amorland.Oynanis
             if (_yol.Count == 0)
             {
                 _yuruyor = false;
+                Dinlen();
                 HedefeVarildi?.Invoke(Karo);
                 return;
             }
@@ -71,6 +73,61 @@ namespace Amorland.Oynanis
         {
             _yol.Clear();
             _yuruyor = false;
+            Dinlen();
+        }
+
+        /// <summary>Yuruyus kareleri: dur / adim A / adim B. Kurulumdan sonra verilir.</summary>
+        public void YurumeKareleri(Sprite dur, Sprite a, Sprite b)
+        {
+            _kareDur = dur;
+            _kareA = a;
+            _kareB = b;
+        }
+
+        /// <summary>
+        /// Joystick gibi DIS suruculer karakteri dogrudan tasirken her kare cagirir:
+        /// adim animasyonu ve zipirti yol bulucudan bagimsiz oynamaya devam eder.
+        /// </summary>
+        public void DisYuruyus()
+        {
+            _sallanmaFazi += Time.deltaTime * 11f;
+            GorselCanlandir();
+        }
+
+        private void GorselCanlandir()
+        {
+            if (_gorsel == null) return;
+            float y = Mathf.Abs(Mathf.Sin(_sallanmaFazi)) * 0.07f;
+            _gorsel.localPosition = new Vector3(0f, _gorselTabanY + y, 0f);
+            _gorsel.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(_sallanmaFazi) * 4f);
+            if (_sr != null && _kareA != null)
+            {
+                // ⚠ 4 fazli dongu: A -> dur -> B -> dur. Dur karesi dogal gecis
+                // karesidir (iki ayak basili, kollar notr, 1px daha uzun); dogrudan
+                // A<->B takasi el/ayak kutlesini tek karede isinlatiyordu (denetim).
+                // PI/4 ofseti A/B'yi zipirtinin dibine, dur'u tepesine ortalar.
+                int p = Mathf.FloorToInt((_sallanmaFazi + Mathf.PI / 4f) / (Mathf.PI / 2f)) % 4;
+                _sr.sprite = p == 0 ? _kareA : p == 2 ? _kareB : _kareDur;
+            }
+        }
+
+        private void Dinlen()
+        {
+            _sallanmaFazi = 0f;
+            // ⚠ Konum/egim SIFIRLANMAZ: zipirtinin tepesinde durunca tek karede
+            // yere isinlaniyordu (denetim). Update'teki DinlenYumusat oturtur.
+            if (_sr != null && _kareDur != null) _sr.sprite = _kareDur;
+        }
+
+        /// <summary>Durusta gorseli yumusakca tabana oturtur (~0.1 sn).</summary>
+        private void DinlenYumusat()
+        {
+            if (_gorsel == null) return;
+            _gorsel.localPosition = Vector3.MoveTowards(
+                _gorsel.localPosition, new Vector3(0f, _gorselTabanY, 0f),
+                0.9f * Time.deltaTime);
+            _gorsel.localRotation = Quaternion.RotateTowards(
+                _gorsel.localRotation, Quaternion.identity, 80f * Time.deltaTime);
         }
 
         private void SonrakiAdim()
@@ -78,6 +135,7 @@ namespace Amorland.Oynanis
             if (_yol.Count == 0)
             {
                 _yuruyor = false;
+                Dinlen();
                 HedefeVarildi?.Invoke(Karo);
                 return;
             }
@@ -89,13 +147,27 @@ namespace Amorland.Oynanis
             _yuruyor = true;
 
             // Yon: 2.5D'de karakter donmez, sprite yatay cevrilir.
+            // ⚠ Flip aninda faza PI eklenir: A, B'nin yaklasik aynasi oldugundan
+            // faz korunursa ayni bacak iki kez adim atmis gibi okunuyordu (denetim).
             Vector3 yon = _hedefKonum - _adimBaslangic;
-            if (Mathf.Abs(yon.x) > 0.05f && _sr != null) _sr.flipX = yon.x < 0f;
+            if (Mathf.Abs(yon.x) > 0.05f && _sr != null)
+            {
+                bool yeniFlip = yon.x < 0f;
+                if (_sr.flipX != yeniFlip)
+                {
+                    _sr.flipX = yeniFlip;
+                    _sallanmaFazi += Mathf.PI;
+                }
+            }
         }
 
         private void Update()
         {
-            if (!_yuruyor) return;
+            if (!_yuruyor)
+            {
+                DinlenYumusat();
+                return;
+            }
 
             // Capraz adim daha uzun: sure mesafeyle olceklenir, yoksa capraz kosmus olur.
             float mesafe = Vector3.Distance(_adimBaslangic, _hedefKonum);
@@ -110,15 +182,9 @@ namespace Amorland.Oynanis
             }
             transform.position = Vector3.Lerp(_adimBaslangic, _hedefKonum, _adimIlerleme);
 
-            // Yurume zipirtisi: poncik his — minik hoplama + hafif yalpalama.
-            if (_gorsel != null)
-            {
-                _sallanmaFazi += Time.deltaTime * 11f;
-                float y = Mathf.Abs(Mathf.Sin(_sallanmaFazi)) * 0.07f;
-                _gorsel.localPosition = new Vector3(0f, _gorselTabanY + y, 0f);
-                _gorsel.localRotation =
-                    Quaternion.Euler(0f, 0f, Mathf.Sin(_sallanmaFazi) * 4f);
-            }
+            // Yurume zipirtisi + adim kareleri: poncik his.
+            _sallanmaFazi += Time.deltaTime * 11f;
+            GorselCanlandir();
         }
     }
 }

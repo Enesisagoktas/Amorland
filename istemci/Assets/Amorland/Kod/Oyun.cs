@@ -355,16 +355,18 @@ namespace Amorland
             _tarla.Kur(_durum, _denge);
 
             // Karakter: vadi acilisinda secilen poncik koylu (2.5D sprite).
-            // Renk artik govdeyi boyamaz; hafif bir ton olarak biner — iki oyuncunun
-            // ayirt edilebilirligi (B.7) renk tonundan okunmaya devam eder.
-            Transform gorsel = KarakterSpriteKur(
-                _karakter.transform,
-                PlayerPrefs.GetString("vadi_karakter", "erkek") == "kadin",
-                _benimRenk);
+            // Cift rengi SPRITE'A islenmis (tulum/elbise, sapka bandi, fiyonk) —
+            // eski tum-govde tint'i yuzu de boyuyordu, kaldirildi (B.7 ayrim korunur).
+            bool benKadin = PlayerPrefs.GetString("vadi_karakter", "erkek") == "kadin";
+            Transform gorsel = KarakterSpriteKur(_karakter.transform, benKadin, _benimRenk);
 
             IzgarayiKur();
             _karakter.KaroBasinaSn = _denge.YurumeKaroSn;
             _karakter.Kur(gorsel, _izgara, new Vector3(1f, -2f, 0f));
+            _karakter.YurumeKareleri(
+                Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(benKadin, _benimRenk, 0)),
+                Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(benKadin, _benimRenk, 1)),
+                Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(benKadin, _benimRenk, 2)));
 
             _kameraYoneticisi.Pitch = _denge.KameraPitch;
             _kameraYoneticisi.YumusatmaSn = _denge.KameraYumusatma;
@@ -412,8 +414,11 @@ namespace Amorland
         {
             var golgeGo = new GameObject("Golge");
             golgeGo.transform.SetParent(kok, false);
-            golgeGo.transform.localPosition = new Vector3(0f, -0.06f, 0f);
-            golgeGo.transform.localScale = new Vector3(0.8f, 0.7f, 1f);
+            // ⚠ Golge elipsi DOKUNUN ALT YARISINDA cizili (merkez -0.22 birim,
+            // olculdu). Cocuk +0.20'de durur ki elips ayak cizgisine otursun;
+            // -0.06'da karakter havada suzuluyordu (denetim).
+            golgeGo.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+            golgeGo.transform.localScale = new Vector3(0.95f, 0.6f, 1f);
             var gsr = golgeGo.AddComponent<SpriteRenderer>();
             gsr.sprite = Karo64.Al(Sayfa64.Ek, Karo64.Golge);
             gsr.sortingOrder = 1;
@@ -422,12 +427,8 @@ namespace Amorland
             gorselGo.transform.SetParent(kok, false);
             gorselGo.transform.localPosition = new Vector3(0f, 0.5f, 0f);
             var sr = gorselGo.AddComponent<SpriteRenderer>();
-            sr.sprite = Karo64.Al(Sayfa64.Ek, kadin ? Karo64.KoyluKadin : Karo64.KoyluErkek);
+            sr.sprite = Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(kadin, renk, 0));
             sr.sortingOrder = 2;
-            if (_denge.Yuklendi)
-            {
-                sr.color = Color.Lerp(Color.white, _denge.OyuncuRengi(renk), 0.18f);
-            }
             return gorselGo.transform;
         }
 
@@ -455,9 +456,18 @@ namespace Amorland
                 Destroy(_partnerGovde.transform.GetChild(i).gameObject);
             }
             // Partnerin cinsiyet secimi istemcide bilinmez (sunucu saklamaz);
-            // gorsel ayrim icin benim secimimin TERSI cizilir + renk tonu (B.7).
-            bool benKadin = PlayerPrefs.GetString("vadi_karakter", "erkek") == "kadin";
-            KarakterSpriteKur(_partnerGovde.transform, !benKadin, renk);
+            // gorsel ayrim icin benim secimimin TERSI cizilir, kiyafeti KENDI rengi (B.7).
+            bool pKadin = PlayerPrefs.GetString("vadi_karakter", "erkek") != "kadin";
+            Transform pGorsel = KarakterSpriteKur(_partnerGovde.transform, pKadin, renk);
+            // Partner konumu Lerp ile disaridan suruldugu icin adim animasyonunu
+            // SpriteYurutucu olcerek oynatir.
+            var yurutucu = _partnerGovde.GetComponent<SpriteYurutucu>();
+            if (yurutucu == null) yurutucu = _partnerGovde.AddComponent<SpriteYurutucu>();
+            yurutucu.Kur(
+                pGorsel.GetComponent<SpriteRenderer>(), pGorsel,
+                Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(pKadin, renk, 0)),
+                Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(pKadin, renk, 1)),
+                Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(pKadin, renk, 2)));
             _partnerRenk = renk;
         }
 
@@ -731,6 +741,7 @@ namespace Amorland
                 else return;
             }
             _karakter.transform.position = new Vector3(aday.x, aday.y, 0f);
+            _karakter.DisYuruyus();
         }
 
         private bool KaroGecer(Vector2 konum) =>

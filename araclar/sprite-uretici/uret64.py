@@ -26,7 +26,7 @@ T = 64
 # ⚠ SAT artmadan yeni indeks EKLENMEZ: 12x6=72 karoyken koyu agaclar 71/72/73'e
 # cizildi ve 72-73 tuvalin DISINA dustu — PIL sessizce kirpti, Unity'de sprite
 # null donunce golge konup agac atlandi ("govdesiz golge" hatasi).
-SUT, SAT = 12, 8
+SUT, SAT = 12, 10
 
 
 def ortalama(sheet, indeks, kutu=(16, 16, 48, 48)):
@@ -272,25 +272,41 @@ class Cizer:
                           fill=(236, 138, 60, 255))
                 d.polygon([(cx - 3, cy + 3), (cx, cy + 3), (cx - 1, cy + 12)],
                           fill=(246, 172, 96, 255))
-    def _goz(self, d, cx, cy, w=7, h=8):
-        """Iri koyu goz + sol ustte beyaz isilti."""
+    def _goz(self, d, cx, cy, w=7, h=8, kirpik=0):
+        """Iri koyu goz + iki isilti (buyuk sol-ust, minik sag-alt: cizgi film gozu).
+
+        ⚠ Isiltilar OPAK on-karisimdir (_yanak dersinin aynisi): yari saydam
+        beyaz, gozun ortasinda zemine acilan pencereye donuyor ve karakter cim
+        ustunde yesil gozlu cikiyordu. kirpik=-1/+1 dis-ust koseye tek kirpik."""
         d.ellipse([cx - w // 2, cy - h // 2, cx + w // 2, cy + h // 2],
                   fill=(58, 48, 44, 255))
         d.ellipse([cx - w // 2 + 1, cy - h // 2 + 1, cx - w // 2 + 4, cy - h // 2 + 4],
-                  fill=(255, 255, 255, 235))
+                  fill=(240, 239, 238, 255))
+        d.ellipse([cx + w // 2 - 3, cy + h // 2 - 4, cx + w // 2 - 1, cy + h // 2 - 2],
+                  fill=(213, 211, 210, 255))
+        if kirpik:
+            ux = cx + kirpik * (w // 2 + 1)
+            d.line([ux, cy - h // 2 + 1, ux + kirpik, cy - h // 2 - 1],
+                   fill=(58, 48, 44, 255), width=1)
 
     def _yanak(self, d, cx, cy, taban, w=8, h=5, guc=0.55):
         """⚠ Opak karisim: ImageDraw alfa karistirmaz, yari saydam pikseli oldugu
         gibi yazar — yanaklar haritada altindaki zemini gosteren delige donerdi.
         Pembe, zemin rengiyle onceden karistirilip opak basilir."""
-        pembe = (240, 142, 150)
+        pembe = (246, 138, 146)
         renk = tuple(int(taban[k] * (1 - guc) + pembe[k] * guc) for k in range(3))
         d.ellipse([cx - w // 2, cy - h // 2, cx + w // 2, cy + h // 2],
                   fill=renk + (255,))
 
-    def _gulus(self, d, cx, cy, w=8):
-        d.arc([cx - w // 2, cy - 4, cx + w // 2, cy + 3], 25, 155,
-              fill=(122, 82, 70, 255), width=2)
+    def _gulus(self, d, cx, cy, w=6):
+        """Acik gulen agiz: koyu kontur + sicak kirmizi ic dolgu.
+
+        ⚠ Eski ic dolgusuz genis yay, uzaktan biyik/keci sakali gibi okunuyordu
+        (karakter denetimi). Kucuk ve DOLU agiz hem tatli hem nettir."""
+        d.pieslice([cx - w // 2, cy - 3, cx + w // 2, cy + 4], 0, 180,
+                   fill=(200, 90, 80, 255))
+        d.arc([cx - w // 2, cy - 3, cx + w // 2, cy + 4], 0, 180,
+              fill=(112, 70, 58, 255), width=1)
 
     # ------------------------------------------------------------ canlilar
 
@@ -387,53 +403,169 @@ class Cizer:
         self._yanak(d, x + 44, y + 31, gv, w=6, h=4)
 
     def koylu(self, i, kadin):
-        """Poncik koylu: koca kafa, minik govde; erkekte hasir sapka, kadinda cicek."""
+        """Vadi koylusu (NPC). Oyuncu varyantlariyla ayni cekirdekten cizilir."""
         x, y = self.kanvas(i)
+        # ⚠ NPC'ler SOLUK giyinir: doygun renkler oyuncu ciftine rezervedir,
+        # yoksa Gok cifti koy NPC'sinden ayirt edilemiyordu (denetim).
+        self._koylu_ciz(x, y, kadin,
+                        (120, 135, 152) if not kadin else (200, 140, 145), kare=0)
+
+    def oyuncu(self, i, kadin, kiyafet, kare):
+        """Oyuncu koylusu: kiyafet = ciftin sectigi renk, kare = dur/adim A/adim B."""
+        x, y = self.kanvas(i)
+        self._koylu_ciz(x, y, kadin, kiyafet, kare)
+
+    def _koylu_ciz(self, x, y, kadin, kiyafet, kare):
+        """Poncik koylu cekirdegi.
+
+        Tasarim kurallari (karakter cilasi turu):
+        - KOCA kafa (36 px), minik govde: sevimliligin iskeleti oran.
+        - Koyu-ton KONTUR (siyah degil): cim uzerinde siluet okunur, oyuncak
+          havasi bozulmaz.
+        - Kiyafet rengi PARAMETRE: oyuncunun sectigi cift rengi tulumu/elbiseyi
+          boyar — SpriteRenderer tint'i yuzu de boyadigi icin kaldirildi.
+        - kare 1/2 yuruyus adimlari: bacaklar acilir, kollar ters sallanir,
+          govde 1 px alcalir. flipX ile birlikte 2 kare tam dongudur.
+        - Yanaklar OPAK karisim (_yanak dersi: ImageDraw alfa karistirmaz).
+        """
         d = ImageDraw.Draw(self.im)
         ten = (248, 218, 186)
-        sac = (124, 86, 56) if not kadin else (92, 60, 42)
-        ust = (98, 142, 188) if not kadin else (216, 112, 122)
-        hasir = (228, 196, 120)
+        # ⚠ Konturlar koyu-sicak: acik ton konturlar surulu toprak ustunde
+        # siluet birakmiyordu (denetim: govde/zemin kontrasti 1.03-1.13).
+        ten_k = ton(ten, 0.56)
+        sac = (92, 60, 42) if kadin else (124, 86, 56)
+        krem = (246, 234, 210)
+        bot = (110, 82, 58)
+        bot_k = ton(bot, 0.7)
+        kiy_k = ton(kiyafet, 0.5)
+        pirinc = (230, 175, 70)
 
-        # govde: tombul, kucuk
-        if kadin:
-            d.polygon([(x + 24, y + 40), (x + 40, y + 40), (x + 44, y + 56), (x + 20, y + 56)],
-                      fill=ust + (255,))
+        yuru = kare in (1, 2)
+        # Yuruyus govdeyi 1 px alcaltir: minik "agirlik aktarma" hissi.
+        gy = 1 if yuru else 0
+
+        # -------- bacaklar (govdeden ONCE: govde ustlerini orter)
+        def bacak(x0, x1, y0, y1):
+            d.rounded_rectangle([x + x0, y + y0, x + x1, y + y1], 3, fill=bot + (255,))
+            d.rounded_rectangle([x + x0, y + y1 - 3, x + x1, y + y1], 2, fill=bot_k + (255,))
+            # bot ustu parlagi: tombul lastik cizme okumasi, tum karelerde sabit
+            d.rectangle([x + x0 + 2, y + y0 + 1, x + x1 - 2, y + y0 + 2],
+                        fill=ton(bot, 1.28) + (255,))
+
+        if kare == 0:
+            bacak(24, 31, 52, 61)
+            bacak(33, 40, 52, 61)
+        elif kare == 1:
+            bacak(20, 28, 53, 61)   # on bacak: ileri ve yere basar
+            bacak(35, 43, 51, 59)   # arka bacak: geride, havada
         else:
-            d.rounded_rectangle([x + 22, y + 40, x + 42, y + 56], 8, fill=ust + (255,))
-        # kol nublari
-        d.ellipse([x + 17, y + 42, x + 25, y + 50], fill=ust + (255,))
-        d.ellipse([x + 39, y + 42, x + 47, y + 50], fill=ust + (255,))
-        d.ellipse([x + 18, y + 46, x + 23, y + 51], fill=ten + (255,))
-        d.ellipse([x + 41, y + 46, x + 46, y + 51], fill=ten + (255,))
-        # ayaklar
-        d.rounded_rectangle([x + 24, y + 54, x + 31, y + 60], 3, fill=(96, 74, 58, 255))
-        d.rounded_rectangle([x + 33, y + 54, x + 40, y + 60], 3, fill=(96, 74, 58, 255))
+            bacak(20, 28, 51, 59)
+            bacak(35, 43, 53, 61)
 
-        # koca kafa
-        d.ellipse([x + 15, y + 6, x + 49, y + 40], fill=ten + (255,))
+        # -------- govde
+        if kadin:
+            # Elbise: asagi dogru aciliyor; etek ucu koyu bant.
+            d.polygon([(x + 24, y + 38 + gy), (x + 40, y + 38 + gy),
+                       (x + 45, y + 56 + gy), (x + 19, y + 56 + gy)],
+                      fill=kiyafet + (255,), outline=kiy_k + (255,))
+            d.polygon([(x + 20, y + 52 + gy), (x + 44, y + 52 + gy),
+                       (x + 45, y + 56 + gy), (x + 19, y + 56 + gy)],
+                      fill=ton(kiyafet, 0.72) + (255,))
+            # Krem onluk: DAR ve ALCAK — genis onluk elbiseyi yutuyordu ve
+            # cift rengi gogusten okunmuyordu (karakter cilasi denetimi).
+            d.polygon([(x + 28, y + 45 + gy), (x + 36, y + 45 + gy),
+                       (x + 38, y + 55 + gy), (x + 26, y + 55 + gy)],
+                      fill=krem + (255,), outline=ton(krem, 0.62) + (255,))
+            # Gogus ortasinda minik krem dugme: elbiseye dikis detayi.
+            d.ellipse([x + 31, y + 40 + gy, x + 33, y + 42 + gy], fill=krem + (255,))
+        else:
+            # Krem gomlek + kiyafet renkli tulum ve askilar.
+            d.rounded_rectangle([x + 21, y + 37 + gy, x + 43, y + 56 + gy], 9,
+                                fill=krem + (255,), outline=ton(krem, 0.62) + (255,), width=1)
+            d.rounded_rectangle([x + 21, y + 44 + gy, x + 43, y + 56 + gy], 7,
+                                fill=kiyafet + (255,), outline=kiy_k + (255,), width=1)
+            d.rectangle([x + 25, y + 37 + gy, x + 29, y + 46 + gy], fill=kiyafet + (255,))
+            d.rectangle([x + 35, y + 37 + gy, x + 39, y + 46 + gy], fill=kiyafet + (255,))
+            # On cep + iki dugme
+            d.rounded_rectangle([x + 28, y + 47 + gy, x + 36, y + 53 + gy], 2,
+                                fill=ton(kiyafet, 1.16) + (255,))
+            # ⚠ Pirinc dugme: koyu dugme kirmizi tulumda gorunmuyordu.
+            # "Altin dugmeli tulum = oyuncak ciftci" grameri.
+            d.ellipse([x + 25, y + 45 + gy, x + 28, y + 48 + gy], fill=pirinc + (255,))
+            d.ellipse([x + 36, y + 45 + gy, x + 39, y + 48 + gy], fill=pirinc + (255,))
+            d.point((x + 26, y + 46 + gy), fill=krem + (255,))
+            d.point((x + 37, y + 46 + gy), fill=krem + (255,))
+
+        # -------- kollar (yuruyuste ters sallanir)
+        kol = krem if not kadin else kiyafet
+        if kare == 0:
+            kol_sol = (15, 41, 24, 50)
+            kol_sag = (40, 41, 49, 50)
+        elif kare == 1:
+            kol_sol = (14, 44, 23, 53)   # on kol geride sallanir
+            kol_sag = (41, 38, 50, 47)
+        else:
+            kol_sol = (14, 38, 23, 47)
+            kol_sag = (41, 44, 50, 53)
+        for (kx0, ky0, kx1, ky1) in (kol_sol, kol_sag):
+            d.ellipse([x + kx0, y + ky0 + gy, x + kx1, y + ky1 + gy],
+                      fill=kol + (255,), outline=ton(kol, 0.6) + (255,))
+            # el: kucuk ten nub, kolun alt ucunda
+            d.ellipse([x + kx0 + 2, y + ky0 + 4 + gy, x + kx1 - 2, y + ky1 + gy],
+                      fill=ten + (255,))
+
+        # -------- koca kafa (kontur + cene golgesi)
+        d.ellipse([x + 14, y + 4 + gy, x + 50, y + 40 + gy],
+                  fill=ten + (255,), outline=ten_k + (255,), width=2)
+        d.pieslice([x + 17, y + 26 + gy, x + 47, y + 39 + gy], 30, 150,
+                   fill=ton(ten, 0.93) + (255,))
 
         if kadin:
-            # sac: tepe + iki yan topuz
-            d.pieslice([x + 14, y + 4, x + 50, y + 34], 180, 360, fill=sac + (255,))
-            d.ellipse([x + 10, y + 18, x + 22, y + 30], fill=sac + (255,))
-            d.ellipse([x + 42, y + 18, x + 54, y + 30], fill=sac + (255,))
-            # topuzda cicek
-            d.ellipse([x + 44, y + 17, x + 52, y + 25], fill=(240, 142, 150, 255))
-            d.ellipse([x + 47, y + 20, x + 49, y + 22], fill=(246, 220, 130, 255))
+            # Sac: tepe + iki yan topuz; sag topuzda KIYAFET renkli fiyonk.
+            d.pieslice([x + 13, y + 2 + gy, x + 51, y + 32 + gy], 180, 360,
+                       fill=sac + (255,))
+            d.ellipse([x + 8, y + 16 + gy, x + 21, y + 29 + gy],
+                      fill=sac + (255,), outline=ton(sac, 0.62) + (255,))
+            d.ellipse([x + 43, y + 16 + gy, x + 56, y + 29 + gy],
+                      fill=sac + (255,), outline=ton(sac, 0.62) + (255,))
+            # sac isiltisi
+            d.arc([x + 18, y + 5 + gy, x + 46, y + 27 + gy], 210, 290,
+                  fill=ton(sac, 1.35) + (255,), width=2)
+            # Fiyonk: PARLAK iki yuvarlak kulak + ayri dugum. Koyu sivri
+            # kanatlar koyu sacta alev/yaprak gibi okunuyordu (denetim); kulaklar
+            # dugumden 1px ayri durur ki "fiyonk grameri" seçilsin.
+            fk = ton(kiyafet, 1.18)
+            d.rounded_rectangle([x + 41, y + 12 + gy, x + 46, y + 20 + gy], 2,
+                                fill=fk + (255,))
+            d.rounded_rectangle([x + 50, y + 12 + gy, x + 55, y + 20 + gy], 2,
+                                fill=fk + (255,))
+            d.ellipse([x + 45, y + 13 + gy, x + 51, y + 19 + gy],
+                      fill=ton(kiyafet, 1.35) + (255,))
+            d.point((x + 47, y + 14 + gy), fill=krem + (255,))
         else:
-            # kisa sac + hasir sapka
-            d.pieslice([x + 16, y + 6, x + 48, y + 32], 180, 360, fill=sac + (255,))
-            d.ellipse([x + 10, y + 8, x + 54, y + 20], fill=ton(hasir, 0.88) + (255,))
-            d.ellipse([x + 19, y + 0, x + 45, y + 16], fill=hasir + (255,))
-            d.ellipse([x + 22, y + 1, x + 42, y + 10], fill=ton(hasir, 1.1) + (255,))
+            # Kisa sac + hasir sapka; sapka bandi KIYAFET renginde.
+            d.pieslice([x + 15, y + 5 + gy, x + 49, y + 31 + gy], 180, 360,
+                       fill=sac + (255,))
+            hasir = (228, 196, 120)
+            d.ellipse([x + 9, y + 8 + gy, x + 55, y + 21 + gy],
+                      fill=ton(hasir, 0.88) + (255,), outline=ton(hasir, 0.55) + (255,))
+            # ⚠ Tepe y+1'den baslar: y+0 karo sinirina tam oturuyordu ve
+            # extrude atlasta ust komsuya sizardi (SAT dersi ailesinden).
+            d.ellipse([x + 18, y + 1 + gy, x + 46, y + 16 + gy], fill=hasir + (255,))
+            # Bant giysiden bir kademe koyu: saman ustunde ancak boyle okunur.
+            d.rectangle([x + 18, y + 11 + gy, x + 46, y + 15 + gy],
+                        fill=ton(kiyafet, 0.8) + (255,))
+            d.ellipse([x + 22, y + 2 + gy, x + 42, y + 10 + gy],
+                      fill=ton(hasir, 1.1) + (255,))
 
-        # yuz: iri gozler + yanak + gulus
-        self._goz(d, x + 26, y + 25)
-        self._goz(d, x + 38, y + 25)
-        self._yanak(d, x + 19, y + 31, ten)
-        self._yanak(d, x + 45, y + 31, ten)
-        self._gulus(d, x + 32, y + 32)
+        # -------- yuz: iri isiltili gozler + yanak + gulus
+        self._goz(d, x + 26, y + 26 + gy, w=8, h=9, kirpik=-1 if kadin else 0)
+        self._goz(d, x + 38, y + 26 + gy, w=8, h=9, kirpik=1 if kadin else 0)
+        # Yanaklar siluet kenarindan iceri: en dis sutunda zemin kontrasti
+        # allik pembeyi yiyordu (denetim).
+        self._yanak(d, x + 21, y + 32 + gy, ten, guc=0.58)
+        self._yanak(d, x + 43, y + 32 + gy, ten, guc=0.58)
+        self._gulus(d, x + 32, y + 33 + gy)
 
     def direk(self, i):
         """Tek cit diregi: dikey cit kenarlari icin (rpg-base yalniz yatay cit verir)."""
@@ -1222,6 +1354,18 @@ def main():
     # Oyun parseli evre karolari
     c.filiz(88)
     c.surulu_islak(89, kaynak=2)
+    # Satir 8-9: oyuncu koyluleri — 4 cift rengi x (erkek|kadin) x 3 kare.
+    # Renkler turetilmis.json misafirHesap.renkler ile birebir:
+    # 0 Kiremit #D9694A, 1 Yosun #5E8C55, 2 Gokyuzu #4A7FB5, 3 Bal #D9A441.
+    # ⚠ Yosun cam-yesiline (cim tonundan uzak), Bal koyu kehribara cekildi:
+    # orijinal tonlar oyun zoomunda cimle ve hasir sapkayla kaynasiyordu
+    # (denetim: parlaklik kontrasti 1.07). Kimlik renkleri denge dosyasindaki
+    # UI renkleriyle AKRABA kalir ama zemin guvenligi onde gelir.
+    ciftRenkleri = [(217, 105, 74), (62, 128, 96), (74, 127, 181), (190, 128, 32)]
+    for r, renk in enumerate(ciftRenkleri):
+        for cinsiyet in (0, 1):
+            for kare in range(3):
+                c.oyuncu(96 + r * 6 + cinsiyet * 3 + kare, cinsiyet == 1, renk, kare)
 
     os.makedirs(os.path.dirname(CIKTI), exist_ok=True)
     c.im.save(CIKTI)

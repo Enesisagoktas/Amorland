@@ -137,8 +137,10 @@ namespace Amorland
             brt.anchoredPosition = new Vector2(0f, -18f);
             brt.sizeDelta = new Vector2(0f, 40f);
 
-            SecimSecenegi(ic, "Çiftçi", Karo64.KoyluErkek, -120f, () => SecimUygula(false));
-            SecimSecenegi(ic, "Çiftçi Kadın", Karo64.KoyluKadin, 120f, () => SecimUygula(true));
+            // Secim kartinda OYUNCU sprite'lari durur (vadide gercekten
+            // gorunecek olan), koy NPC'leri degil.
+            SecimSecenegi(ic, "Çiftçi", Karo64.Oyuncu(false, 0, 0), -120f, () => SecimUygula(false));
+            SecimSecenegi(ic, "Çiftçi Kadın", Karo64.Oyuncu(true, 0, 0), 120f, () => SecimUygula(true));
 
             _secimPaneli = (RectTransform)kanvas.transform.GetChild(0).parent;
             _secimPaneli = (RectTransform)kanvas.GetComponent<RectTransform>();
@@ -153,6 +155,23 @@ namespace Amorland
             rt.anchoredPosition = new Vector2(x, 26f);
             rt.sizeDelta = new Vector2(190f, 190f);
 
+            // ⚠ Pah bandi kapatilir: 190px kartta bandin sert alt kenari tam
+            // goz hizasindan geciyordu, karakter cam ardindaymis gibi okundu (denetim).
+            var pah = buton.transform.Find("Yuz/Pah");
+            if (pah != null) pah.gameObject.SetActive(false);
+
+            // Temas golgesi: sprite duz zeminde yuzuyordu; kucuk elips oturtur.
+            var golgeGo = new GameObject("Golge");
+            golgeGo.transform.SetParent(buton.transform, false);
+            var golgeImg = golgeGo.AddComponent<Image>();
+            golgeImg.sprite = Sekil.Daire();
+            golgeImg.color = new Color(0f, 0f, 0f, 0.22f);
+            golgeImg.raycastTarget = false;
+            var grt = golgeImg.rectTransform;
+            grt.anchorMin = new Vector2(0.5f, 0.5f); grt.anchorMax = new Vector2(0.5f, 0.5f);
+            grt.anchoredPosition = new Vector2(0f, -34f);
+            grt.sizeDelta = new Vector2(72f, 16f);
+
             var resimGo = new GameObject("Resim");
             resimGo.transform.SetParent(buton.transform, false);
             var img = resimGo.AddComponent<Image>();
@@ -160,7 +179,7 @@ namespace Amorland
             img.raycastTarget = false;
             var irt = img.rectTransform;
             irt.anchorMin = new Vector2(0.5f, 0.5f); irt.anchorMax = new Vector2(0.5f, 0.5f);
-            irt.anchoredPosition = new Vector2(0f, 18f);
+            irt.anchoredPosition = new Vector2(0f, 16f);
             irt.sizeDelta = new Vector2(110f, 110f);
 
             var yazi = UiKit.Yazi(buton.transform, "Ad", ad, UiKit.YaziGovde,
@@ -190,8 +209,11 @@ namespace Amorland
             Vector2 dogum = new Vector2(229.5f, 168.5f);
             for (int dy = 0; dy < 8; dy++)
                 if (_harita.Gecilebilir(229, 168 - dy)) { dogum.y = 168.5f - dy; break; }
-            _karakter.Kur(_harita, Karo64.Al(Sayfa64.Ek,
-                          kadin ? Karo64.KoyluKadin : Karo64.KoyluErkek), dogum);
+            _karakter.Kur(_harita, Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(kadin, 0, 0)), dogum);
+            _karakter.YurumeKareleri(
+                Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(kadin, 0, 0)),
+                Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(kadin, 0, 1)),
+                Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(kadin, 0, 2)));
 
             _gezgin.Takip = _karakter.transform;
             _gezgin.Odakla(dogum, 9f);

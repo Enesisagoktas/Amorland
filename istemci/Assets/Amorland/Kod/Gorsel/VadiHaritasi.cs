@@ -644,7 +644,7 @@ namespace Amorland.Gorsel
             GolgeliNesne(mx + 4, my - 1, Rpg(Karo64.KasaBuyuk));
             GolgeliNesne(mx + 5, my - 3, Rpg(Karo64.KasaKucuk));
             GolgeliNesne(mx + 6, my - 1, Rpg(Karo64.GriVaril));
-            Nesne(mx + 1, my - 4, Ek(Karo64.KoyluErkek));
+            GolgeliNesne(mx + 1, my - 4, Ek(Karo64.KoyluErkek));
             Nesne(mx - 1, my - 6, Rpg(Karo64.Sec(Karo64.Comlek, _r)));
 
             // Bolgenin geri kalani kirac: seyrek cali + varil/comlek.
@@ -756,7 +756,7 @@ namespace Amorland.Gorsel
                                  : Ek(Karo64.SandikKontrast));
                 }
             }
-            Nesne(mx - 12, my - 4, Ek(Karo64.KoyluErkek));
+            GolgeliNesne(mx - 12, my - 4, Ek(Karo64.KoyluErkek));
             Nesne(mx + 11, my - 2, Rpg(Karo64.KasaKucuk));
             Nesne(mx, my - 7, Ek(Karo64.SamanYigini));
             Nesne(a.xMin + a.width / 2, a.yMin - 2, Ek(Karo64.YonTabelasi));

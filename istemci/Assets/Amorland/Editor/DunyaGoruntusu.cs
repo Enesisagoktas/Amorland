@@ -62,6 +62,8 @@ namespace Amorland.EditorAraclari
             Kare(cikti, "03-oyun-genis.png", durum, denge, new Vector3(4f, 1f, 0f), 12f);
             // Vadi baglami: temizlenmis oyun alaninin vadiye oturusu.
             Kare(cikti, "04-oyun-vadi-baglam.png", durum, denge, new Vector3(4f, 2f, 0f), 26f);
+            // Y-sort kaniti: kuyunun kuzeyindeki karakter govdesi kuyu ARKASINDA.
+            Kare(cikti, "06-ysort-kuyu.png", durum, denge, new Vector3(-4f, 1.5f, 0f), 3f);
 
             Debug.Log("[Amorland] " + _uretilen + " dunya karesi uretildi, " + _hatalar.Count
                       + " hata. Klasor: " + cikti);
@@ -119,8 +121,15 @@ namespace Amorland.EditorAraclari
                 var tarla = tarlaGo.AddComponent<TarlaGorunumu>();
                 tarla.Kur(durum, denge);
 
-                KarakterKur(cop, kadin: false, new Vector3(1f, -2f, 0f));
-                KarakterKur(cop, kadin: true, new Vector3(10f, 5f, 0f));   // partner temsili
+                KarakterKur(cop, kadin: false, renk: 0, kare: 0, new Vector3(1f, -2f, 0f));
+                // Partner temsili: kendi rengi (gokyuzu), durus karesinde —
+                // hareketsiz karakterin adim ortasinda donmasi dogal durmuyordu.
+                KarakterKur(cop, kadin: true, renk: 2, kare: 0, new Vector3(10f, 5f, 0f));
+                // Y-sort dogrulamasi: kuyunun (-4,1) hemen kuzeyindeki karakter
+                // govdesi kuyu tarafindan kismen ortulmeli (05. kare bunu buyutur).
+                // Yarim karo yaklastirilir: tam karo mesafede sprite'lar bitisir
+                // ama ortusmez, Y-sort kaniti ancak ortusmede gorunur.
+                KarakterKur(cop, kadin: false, renk: 1, kare: 0, new Vector3(-4f, 1.05f, 0f));
 
                 cam.Render();
 
@@ -153,8 +162,96 @@ namespace Amorland.EditorAraclari
             }
         }
 
+        /// <summary>
+        /// Karakter defilesi: tum oyuncu varyantlari (4 renk x 2 cinsiyet x 3 kare)
+        /// + koy NPC ciftini tek karede, cim zemin uzerinde 4x buyuklukte cizer.
+        /// Sprite uretecindeki bir gerileme en hizli burada yakalanir.
+        /// </summary>
+        [MenuItem("Amorland/Karakter Defilesi Uret")]
+        public static void KarakterDefilesi()
+        {
+            _hatalar.Clear();
+            _uretilen = 0;
+            string cikti = Arguman("-cikti");
+            if (string.IsNullOrEmpty(cikti)) cikti = Path.Combine(Path.GetTempPath(), "amorland-dunya");
+            Directory.CreateDirectory(cikti);
+
+            Camera cam = null;
+            RenderTexture rt = null;
+            var cop = new List<GameObject>();
+            try
+            {
+                rt = new RenderTexture(Genislik, Yukseklik, 24, RenderTextureFormat.ARGB32)
+                {
+                    antiAliasing = 8
+                };
+                rt.Create();
+                var camGo = new GameObject("DefileKamera");
+                cop.Add(camGo);
+                cam = camGo.AddComponent<Camera>();
+                cam.orthographic = true;
+                cam.orthographicSize = 4.4f;
+                cam.nearClipPlane = 0.1f;
+                cam.farClipPlane = 50f;
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = new Color(0.42f, 0.60f, 0.31f);
+                cam.targetTexture = rt;
+                camGo.transform.position = new Vector3(0f, 0f, -10f);
+
+                // 5 satir: 4 cift rengi + NPC cifti. 6 sutun: erkek d/A/B + kadin d/A/B.
+                for (int renk = 0; renk < 4; renk++)
+                {
+                    for (int c = 0; c < 6; c++)
+                    {
+                        bool kadin = c >= 3;
+                        int kare = c % 3;
+                        var konum = new Vector3((c - 2.5f) * 1.5f, (1.5f - renk) * 1.75f, 0f);
+                        KarakterKur(cop, kadin, renk, kare, konum);
+                    }
+                }
+                NpcKur(cop, kadin: false, new Vector3(-0.75f, -3.6f, 0f));
+                NpcKur(cop, kadin: true, new Vector3(0.75f, -3.6f, 0f));
+
+                cam.Render();
+                RenderTexture onceki = RenderTexture.active;
+                RenderTexture.active = rt;
+                var tex = new Texture2D(Genislik, Yukseklik, TextureFormat.RGB24, false);
+                tex.ReadPixels(new Rect(0f, 0f, Genislik, Yukseklik), 0, 0);
+                tex.Apply();
+                RenderTexture.active = onceki;
+                File.WriteAllBytes(Path.Combine(cikti, "05-karakter-defilesi.png"), tex.EncodeToPNG());
+                UnityEngine.Object.DestroyImmediate(tex);
+                _uretilen++;
+                Debug.Log("[Amorland] Yazildi: 05-karakter-defilesi.png");
+            }
+            catch (Exception e)
+            {
+                _hatalar.Add("defile: " + e.GetType().Name + " — " + e.Message);
+                Debug.LogWarning("[Amorland] Defile cizilemedi: " + e);
+            }
+            finally
+            {
+                foreach (var go in cop) if (go != null) UnityEngine.Object.DestroyImmediate(go);
+                if (cam != null) cam.targetTexture = null;
+                if (rt != null) { rt.Release(); UnityEngine.Object.DestroyImmediate(rt); }
+            }
+
+            if (Application.isBatchMode) EditorApplication.Exit(_hatalar.Count == 0 ? 0 : 1);
+        }
+
+        private static void NpcKur(List<GameObject> cop, bool kadin, Vector3 konum)
+        {
+            SpriteNesnesi(cop, Karo64.Al(
+                Sayfa64.Ek, kadin ? Karo64.KoyluKadin : Karo64.KoyluErkek), konum);
+        }
+
         /// <summary>Oyuncu gorseli: Oyun.KarakterSpriteKur'un aynisi (golge + koylu).</summary>
-        private static void KarakterKur(List<GameObject> cop, bool kadin, Vector3 konum)
+        private static void KarakterKur(List<GameObject> cop, bool kadin, int renk, int kare, Vector3 konum)
+        {
+            SpriteNesnesi(cop, Karo64.Al(Sayfa64.Ek, Karo64.Oyuncu(kadin, renk, kare)), konum);
+        }
+
+        private static void SpriteNesnesi(List<GameObject> cop, Sprite sprite, Vector3 konum)
         {
             var kok = new GameObject("Karakter");
             cop.Add(kok);
@@ -162,8 +259,9 @@ namespace Amorland.EditorAraclari
 
             var golgeGo = new GameObject("Golge");
             golgeGo.transform.SetParent(kok.transform, false);
-            golgeGo.transform.localPosition = new Vector3(0f, -0.06f, 0f);
-            golgeGo.transform.localScale = new Vector3(0.8f, 0.7f, 1f);
+            // Golge elipsi dokunun alt yarisinda: +0.20 cocuk = ayak cizgisi (Oyun ile ayni).
+            golgeGo.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+            golgeGo.transform.localScale = new Vector3(0.95f, 0.6f, 1f);
             var gsr = golgeGo.AddComponent<SpriteRenderer>();
             gsr.sprite = Karo64.Al(Sayfa64.Ek, Karo64.Golge);
             gsr.sortingOrder = 1;
@@ -172,7 +270,7 @@ namespace Amorland.EditorAraclari
             gorselGo.transform.SetParent(kok.transform, false);
             gorselGo.transform.localPosition = new Vector3(0f, 0.5f, 0f);
             var sr = gorselGo.AddComponent<SpriteRenderer>();
-            sr.sprite = Karo64.Al(Sayfa64.Ek, kadin ? Karo64.KoyluKadin : Karo64.KoyluErkek);
+            sr.sprite = sprite;
             sr.sortingOrder = 2;
         }
 

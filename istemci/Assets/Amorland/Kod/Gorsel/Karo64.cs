@@ -284,6 +284,17 @@ namespace Amorland.Gorsel
         public const int Filiz = 88;
         public const int SuruluIslak = 89;
 
+        /// <summary>
+        /// Oyuncu koyluleri (satir 8-9): 4 cift rengi x (erkek|kadin) x 3 kare.
+        /// Kiyafet rengi SPRITE'IN ICINDE — SpriteRenderer tint'i yuzu de boyadigi
+        /// icin kaldirildi; renk secimi tulumu/elbiseyi, sapka bandini ve fiyongu boyar.
+        /// Kare: 0 durus, 1-2 yuruyus adimlari (flipX ile tam dongu).
+        /// </summary>
+        public const int OyuncuTaban = 96;
+
+        public static int Oyuncu(bool kadin, int renk, int kare) =>
+            OyuncuTaban + Mathf.Clamp(renk, 0, 3) * 6 + (kadin ? 3 : 0) + Mathf.Clamp(kare, 0, 2);
+
         // ------------------------------------------------------------ yukleme
 
         private static readonly string[] Yollar = { "harita2d64/rpgbase", "harita2d64/ek64" };
