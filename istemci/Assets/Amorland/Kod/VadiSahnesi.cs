@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Amorland.Arayuz;
@@ -49,6 +50,12 @@ namespace Amorland
         private const float TrenHizi = 5f;
         private const float TrenY = 36.5f;
 
+        // Kelebekler: cicekli cayirlarda gezinen minik canlilik.
+        private readonly List<Transform> _kelebekler = new List<Transform>();
+        private readonly List<Vector2> _kelebekYuva = new List<Vector2>();
+        private Sprite _kanatAcik, _kanatKapali;
+        private float _kanatZamani;
+
         private void Start() => Kur();
 
         /// <summary>
@@ -71,6 +78,37 @@ namespace Amorland
             EtiketleriKur();
             ArayuzuKur();
             TrenKur();
+            KelebekleriKur();
+        }
+
+        /// <summary>
+        /// Dort kelebek, cicekli cayir noktalarina yuvalanir; Lissajous egrisiyle
+        /// yuva cevresinde suzulur, kanatlar iki karelik cirpma ile animasyonlanir.
+        /// </summary>
+        private void KelebekleriKur()
+        {
+            _kanatAcik = Karo64.Al(Sayfa64.Ek, Karo64.KelebekAcik);
+            _kanatKapali = Karo64.Al(Sayfa64.Ek, Karo64.KelebekKapali);
+
+            Vector2[] yuvalar =
+            {
+                new Vector2(250f, 195f), new Vector2(215f, 118f),
+                new Vector2(430f, 152f), new Vector2(298f, 104f),
+            };
+            var kok = new GameObject("Kelebekler");
+            kok.transform.SetParent(transform, false);
+            foreach (var yuva in yuvalar)
+            {
+                var go = new GameObject("Kelebek");
+                go.transform.SetParent(kok.transform, false);
+                go.transform.position = new Vector3(yuva.x, yuva.y, 0f);
+                go.transform.localScale = Vector3.one * 0.8f;
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = _kanatAcik;
+                sr.sortingOrder = 4;
+                _kelebekler.Add(go.transform);
+                _kelebekYuva.Add(yuva);
+            }
         }
 
         /// <summary>
@@ -84,6 +122,7 @@ namespace Amorland
             _tren = kok.transform;
 
             int[] parcalar = { Karo64.Lokomotif, Karo64.Vagon, Karo64.Vagon };
+            Sprite golge = Karo64.Al(Sayfa64.Ek, Karo64.Golge);
             for (int i = 0; i < parcalar.Length; i++)
             {
                 var go = new GameObject(i == 0 ? "Lokomotif" : "Vagon" + i);
@@ -94,7 +133,27 @@ namespace Amorland
                 sr.sprite = Karo64.Al(Sayfa64.Ek, parcalar[i]);
                 // Zemin katmani 0, dekor 1 — tren nesnelerle ayni duzlemde (2).
                 sr.sortingOrder = 2;
+
+                var g = new GameObject("Golge");
+                g.transform.SetParent(go.transform, false);
+                g.transform.localPosition = new Vector3(0f, -0.12f, 0f);
+                var gsr = g.AddComponent<SpriteRenderer>();
+                gsr.sprite = golge;
+                gsr.sortingOrder = 1;
             }
+            // Bacadan duman: lokomotifin ustunde iki puf, geride kalir.
+            var d1 = new GameObject("Duman1");
+            d1.transform.SetParent(kok.transform, false);
+            d1.transform.localPosition = new Vector3(-0.35f, 0.85f, 0f);
+            d1.AddComponent<SpriteRenderer>().sprite = Karo64.Al(Sayfa64.Ek, Karo64.DumanKucuk);
+            d1.GetComponent<SpriteRenderer>().sortingOrder = 3;
+            var d2 = new GameObject("Duman2");
+            d2.transform.SetParent(kok.transform, false);
+            d2.transform.localPosition = new Vector3(-1.1f, 1.35f, 0f);
+            var d2sr = d2.AddComponent<SpriteRenderer>();
+            d2sr.sprite = Karo64.Al(Sayfa64.Ek, Karo64.Duman);
+            d2sr.color = new Color(1f, 1f, 1f, 0.7f);
+            d2sr.sortingOrder = 3;
             // Gar yakininda baslar; bassiz kare de treni peronda gosterir.
             _tren.position = new Vector3(352f, TrenY, 0f);
         }
@@ -293,6 +352,7 @@ namespace Amorland
         private void Update()
         {
             TrenGuncelle();
+            KelebekGuncelle();
             DokunmaIsle();
 
             if (_bolgeYazisi == null || _kamera == null) return;
@@ -318,6 +378,26 @@ namespace Amorland
             // Hattan cikinca bati ucundan tekrar girer (vagon payi 12 karo).
             if (k.x > VadiHaritasi.En + 12f) k.x = -12f;
             _tren.position = k;
+        }
+
+        private void KelebekGuncelle()
+        {
+            if (_kelebekler.Count == 0) return;
+            _kanatZamani += Time.deltaTime;
+            bool acik = Mathf.FloorToInt(_kanatZamani / 0.16f) % 2 == 0;
+            float t = Time.time;
+            for (int i = 0; i < _kelebekler.Count; i++)
+            {
+                Transform tr = _kelebekler[i];
+                Vector2 yuva = _kelebekYuva[i];
+                float f = 0.55f + i * 0.13f;
+                // Lissajous: yuva cevresinde 8 cizerek suzulme.
+                tr.position = new Vector3(
+                    yuva.x + Mathf.Sin(t * f) * 3.2f,
+                    yuva.y + Mathf.Sin(t * f * 1.7f + i) * 2.1f, 0f);
+                var sr = tr.GetComponent<SpriteRenderer>();
+                sr.sprite = acik ? _kanatAcik : _kanatKapali;
+            }
         }
 
         /// <summary>

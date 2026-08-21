@@ -52,9 +52,12 @@ namespace Amorland.Gorsel
         /// <summary>Duz toprak cesitleri (yol/avlu ici).</summary>
         public static readonly int[] Toprak = { 8, 9, 28, 29 };
 
-        /// <summary>Duz su cesitleri (golun ortasi).</summary>
-        public static readonly int[] Su = { 13, 14, 33 };
-        public const int SuAdacik = 34;
+        /// <summary>
+        /// Duz su. ⚠ 13/14/33 KULLANILMIYOR: iclerindeki turuncu benekler genis su
+        /// yuzeyinde gurultu gibi okundu (inceleme bulgusu). Duz 31 + dekor katmaninda
+        /// seyrek Dalga + derin bolgede DerinSu.
+        /// </summary>
+        public static readonly int[] Su = { 31 };
 
         /// <summary>
         /// Toprak 3x3 blogu: toprak adasi, kenarlarinda CIM zemin gomulu.
@@ -139,6 +142,10 @@ namespace Amorland.Gorsel
         public static readonly Duvar DuvarMavi = new Duvar
         { UstSol = 73, UstOrta = 74, UstSag = 75, AltSol = 109, AltOrta = 110, AltSag = 112, Kemer = 113 };
 
+        // ⚠ KAHVE CATI KULLANILMIYOR: iki ayri denemede (ahir, market bati evi)
+        // kahve kiremit toprak avluyla ton tona kayboldu ve bina "catisiz" gorundu.
+        // Yapi zeminleri hep toprak/kaldirim oldugu icin kahve catinin okundugu yer
+        // kalmadi; hepsi arduvaz. Tanim ileride cim-komsulu yapi olursa diye duruyor.
         // ⚠ Iki olcumden ders: (a) govde TEK karodan (145/154) doser — kivrimli
         // paneller (140/142) kenarda dikey dikis uretti; (b) etek 164/165/166 —
         // 162'yi etek sagi sanmistim, 3x buyutmede ucgen ALINLIK yarisi cikti ve
@@ -187,6 +194,48 @@ namespace Amorland.Gorsel
         /// <summary>Yandan bakisli lokomotif ve yuk vagonu — hatta gezen tren.</summary>
         public const int Lokomotif = 9;
         public const int Vagon = 10;
+
+        // -------------------------------------------------- ince detay (Ek, satir 3-4)
+
+        /// <summary>
+        /// Cayir golgelendirme karolari: rpg-base ciminin merkezi koyulastirilmis
+        /// halleri. Kenar halkasi orijinal cimle AYNI — dikissiz birlesir.
+        /// </summary>
+        public const int CimGolgeHafif = 36;
+        public const int CimGolgeKoyu = 37;
+        /// <summary>Cicek obekleri: beyaz papatya, sari, pembe.</summary>
+        public static readonly int[] Cicekler = { 38, 39, 40 };
+        public const int Saz = 41;
+        public const int Nilufer = 42;
+        public const int Cakiltasi = 43;
+        /// <summary>Yumusak elips golge — agac/hayvan/esya altina, Dekor katmanina.</summary>
+        public const int Golge = 44;
+        public const int Kuyu = 45;
+        public const int Fener = 46;
+        public const int Baca = 47;
+        public const int Duman = 48;
+        public const int DumanKucuk = 49;
+        public const int Sandal = 50;
+        public const int CicekTarhi = 51;
+        public const int TasYigini = 52;
+        public const int Cevher = 53;
+        public const int KelebekAcik = 54;
+        public const int KelebekKapali = 55;
+        /// <summary>Sacak golgesi: kaide pedinin ustune binen solan serit.</summary>
+        public const int GolgeSerit = 56;
+        public const int DevrikKutuk = 57;
+        /// <summary>Tenteli pazar tezgahi.</summary>
+        public const int Tezgah = 58;
+        public const int AsiliTabela = 59;
+        public const int Kumes = 60;
+        public const int Yalak = 61;
+        public const int MadenVagonu = 62;
+        /// <summary>Acik su dalga vurgusu (dekor).</summary>
+        public const int Dalga = 63;
+        /// <summary>Derin su: duz su karosunun tamami koyu.</summary>
+        public const int DerinSu = 64;
+        /// <summary>Orman tabani: cimin tamami koyu — genis alanda dikissiz.</summary>
+        public const int OrmanTabani = 65;
 
         // ------------------------------------------------------------ yukleme
 

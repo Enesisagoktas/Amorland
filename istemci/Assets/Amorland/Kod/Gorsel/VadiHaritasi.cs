@@ -51,6 +51,7 @@ namespace Amorland.Gorsel
 
         private bool[,] _su;        // gol + nehirler
         private bool[,] _suYakin;   // suyun 1 karo genislemis hali
+        private bool[,] _suDerin;   // kiyidan 2+ karo uzak su — koyu ton
         private bool[,] _toprak;    // yol + avlu + tarla tabani (toprak blok autotile)
         private bool[,] _kaldirim;  // arnavut kaldirimi (meydan, peron)
         private bool[,] _surulu;    // saban izli tarla parseli
@@ -67,6 +68,7 @@ namespace Amorland.Gorsel
             _r = new System.Random(Tohum);
             _su = new bool[En, Boy];
             _suYakin = new bool[En, Boy];
+            _suDerin = new bool[En, Boy];
             _toprak = new bool[En, Boy];
             _kaldirim = new bool[En, Boy];
             _surulu = new bool[En, Boy];
@@ -96,6 +98,8 @@ namespace Amorland.Gorsel
             Iskele();
 
             Serpistir();
+            SuDetayi();
+            Balast();
 
             _zemin.RefreshAllTiles();
             _dekor.RefreshAllTiles();
@@ -137,7 +141,9 @@ namespace Amorland.Gorsel
             Bolgeler.Add(new Bolge { Ad = "tarla",  Baslik = "Tarla",       Seviye = 1, Alan = new RectInt(170, 66, 122, 58) });
             Bolgeler.Add(new Bolge { Ad = "depo",   Baslik = "Depo",        Seviye = 2, Alan = new RectInt(310, 146, 78, 50) });
             Bolgeler.Add(new Bolge { Ad = "market", Baslik = "Market",      Seviye = 6, Alan = new RectInt(392, 96, 106, 74) });
-            Bolgeler.Add(new Bolge { Ad = "tren",   Baslik = "Tren Gari",   Seviye = 5, Alan = new RectInt(322, 14, 88, 46) });
+            // ⚠ Gar dikdortgeni guneye 4 karo genis: kadraj bolge merkezine bakar ve
+            // ilk halinde gar binasi kadrajin ustunde kaliyordu (inceleme bulgusu).
+            Bolgeler.Add(new Bolge { Ad = "tren",   Baslik = "Tren Gari",   Seviye = 5, Alan = new RectInt(322, 18, 88, 44) });
         }
 
         // ------------------------------------------------------------------ arazi
@@ -198,6 +204,11 @@ namespace Amorland.Gorsel
             // Dogu-bati ana yolu.
             Kol(new Vector2(4f, 128f), kavsak);
             Kol(kavsak, new Vector2(508f, 132f));
+
+            // Orman yolunun ucunu meyve bahcesinin guney kapisina bagla — cikmaz yol
+            // ve haritadan kopuk bahce tek hamlede cozulur (inceleme bulgusu).
+            Kol(new Vector2(150f, 200f), new Vector2(228f, 226f));
+            Serit(_toprak, new[] { new Vector2(228f, 226f), new Vector2(228f, 233f) }, 2.0f, 0f);
         }
 
         private void TrenHatti()
@@ -210,6 +221,19 @@ namespace Amorland.Gorsel
                     if (y >= 35 && y <= 37) _toprak[x, y] = true;
                     if (y == 36) _ray[x, y] = true;
                 }
+            }
+        }
+
+        /// <summary>Ray yataginin iki yanina seyrek balast cakili — hattin zemini
+        /// baglanir (inceleme bulgusu: ray toprakta yuzuyordu).</summary>
+        private void Balast()
+        {
+            for (int x = 0; x < En; x += 1)
+            {
+                if (_r.Next(100) < 40 && Icerde(x, 35) && _toprak[x, 35] && !_kalas[x, 35])
+                    Dekor(x, 35, Ek(Karo64.Cakiltasi));
+                if (_r.Next(100) < 40 && Icerde(x, 37) && _toprak[x, 37] && !_kalas[x, 37])
+                    Dekor(x, 37, Ek(Karo64.Cakiltasi));
             }
         }
 
@@ -317,6 +341,25 @@ namespace Amorland.Gorsel
                     if (kalasKomsu) ek.Add(new Vector2Int(x, y));
                 }
             foreach (var pkt in ek) { _kalas[pkt.x, pkt.y] = true; _toprak[pkt.x, pkt.y] = false; }
+
+            // Derin su: 5x5 komsulugun tamami su olan hucreler. Iki tonlu su golun
+            // ortasina derinlik hissi verir (inceleme bulgusu: tek duz camgobegi).
+            for (int x = 0; x < En; x++)
+            {
+                for (int y = 0; y < Boy; y++)
+                {
+                    if (!_su[x, y]) continue;
+                    bool derin = true;
+                    for (int dx = -2; dx <= 2 && derin; dx++)
+                        for (int dy = -2; dy <= 2 && derin; dy++)
+                        {
+                            int nx = x + dx, ny = y + dy;
+                            if (nx < 0 || ny < 0 || nx >= En || ny >= Boy) continue;
+                            if (!_su[nx, ny]) derin = false;
+                        }
+                    _suDerin[x, y] = derin;
+                }
+            }
         }
 
         private void Kol(Vector2 a, Vector2 b)
@@ -379,7 +422,8 @@ namespace Amorland.Gorsel
                                              Ayni(_su, x - 1, y), Ayni(_su, x + 1, y));
                         if (i == Karo64.SuBlok[1, 1])
                         {
-                            i = _r.Next(100) < 4 ? Karo64.SuAdacik : Karo64.Sec(Karo64.Su, _r);
+                            if (_suDerin[x, y]) { Koy(_zemin, x, y, Ek(Karo64.DerinSu)); continue; }
+                            i = Karo64.Sec(Karo64.Su, _r);
                         }
                         Koy(_zemin, x, y, Rpg(i));
                         continue;
@@ -410,12 +454,31 @@ namespace Amorland.Gorsel
                         continue;
                     }
 
-                    // Cim: cayirlik bolgelerde tutamli/detayli, duzluklerde sade.
+                    // Cim: iki ayri gurultu katmani.
+                    // ⚠ Golgelendirme (36/37) buyuk olcekli gurultuyle gelir — cayira
+                    // derinlik veren sey bu. Karolarin kenar halkasi orijinal cimle
+                    // ayni oldugu icin leke sinirlari dikissiz.
+                    float golgelik = Gurultu(x, y, 27, 7);
                     float cayir = Gurultu(x, y, 19, 1);
-                    int c;
-                    if (cayir > 0.62f && _r.Next(100) < 30) c = Karo64.Sec(Karo64.CimDetay, _r);
-                    else c = Karo64.Sec(Karo64.Cim, _r);
-                    Koy(_zemin, x, y, Rpg(c));
+                    if (golgelik < 0.34f)
+                    {
+                        // ⚠ Leke ICI duz koyu (65), leke KENARI merkez-koyu gecis
+                        // karosu (36). Merkez-koyu karo genis bitisik alanda dama
+                        // deseni uretiyor (derin su dersi); kenarindaki halkasi
+                        // orijinal cim oldugu icin gecisi o tasir.
+                        bool kenar = Gurultu(x, y + 1, 27, 7) >= 0.34f
+                                     || Gurultu(x, y - 1, 27, 7) >= 0.34f
+                                     || Gurultu(x - 1, y, 27, 7) >= 0.34f
+                                     || Gurultu(x + 1, y, 27, 7) >= 0.34f;
+                        Koy(_zemin, x, y, Ek(kenar ? Karo64.CimGolgeHafif : Karo64.OrmanTabani));
+                    }
+                    else
+                    {
+                        int c = (cayir > 0.62f && _r.Next(100) < 30)
+                                ? Karo64.Sec(Karo64.CimDetay, _r)
+                                : Karo64.Sec(Karo64.Cim, _r);
+                        Koy(_zemin, x, y, Rpg(c));
+                    }
                 }
             }
         }
@@ -452,16 +515,22 @@ namespace Amorland.Gorsel
                     float kenar = Mathf.Min(Mathf.Min(x - a.xMin, a.xMax - 1 - x),
                                             Mathf.Min(y - a.yMin, a.yMax - 1 - y));
                     float sikilik = Gurultu(x, y, 15, 5);
-                    float sans = Mathf.Lerp(6f, 64f, Mathf.Clamp01(kenar / 10f))
+                    // Orman tabani: sik bolgelerde zemin koyu cim — kanopi golgesi hissi.
+                    // ⚠ DUZ varyant (65): merkez-koyu karo yogun tekrarda dama deseni
+                    // veriyor (derin su dersiyle ayni).
+                    if (sikilik > 0.52f && !_toprak[x, y])
+                        Koy(_zemin, x, y, Ek(Karo64.OrmanTabani));
+                    float sans = Mathf.Lerp(8f, 74f, Mathf.Clamp01(kenar / 10f))
                                  * Mathf.Clamp01(sikilik * 1.6f);
                     if (_r.Next(100) >= sans) continue;
 
                     int t = _r.Next(100);
-                    if (t < 46) Nesne(x, y, Rpg(Karo64.KavakYesil));
-                    else if (t < 72) Nesne(x, y, Rpg(Karo64.KavakCam));
-                    else if (t < 82) Nesne(x, y, Rpg(Karo64.TopYesil));
-                    else if (t < 92) Dekor(x, y, Rpg(Karo64.Sec(Karo64.CaliBuyuk, _r)));
-                    else Dekor(x, y, Rpg(Karo64.Sec(Karo64.Fidan, _r)));
+                    if (t < 46) GolgeliNesne(x, y, Rpg(Karo64.KavakYesil));
+                    else if (t < 72) GolgeliNesne(x, y, Rpg(Karo64.KavakCam));
+                    else if (t < 82) GolgeliNesne(x, y, Rpg(Karo64.TopYesil));
+                    else if (t < 90) Dekor(x, y, Rpg(Karo64.Sec(Karo64.CaliBuyuk, _r)));
+                    else if (t < 96) Dekor(x, y, Rpg(Karo64.Sec(Karo64.Fidan, _r)));
+                    else Dekor(x, y, Ek(Karo64.DevrikKutuk));
                 }
             }
             Nesne(a.xMin + a.width / 2, a.yMin - 2, Ek(Karo64.YonTabelasi));
@@ -475,6 +544,12 @@ namespace Amorland.Gorsel
             // Ocak binasi kadraj merkezinin hemen ustunde: gri tas, kemerli agiz.
             EvInsa(mx - 3, my + 2, 6, 2, Karo64.DuvarGri, Karo64.CatiArduvaz, kemer: true);
 
+            // Agizdan cikan kisa ray + uzerinde maden vagonu — mekanin kimligi
+            // (inceleme bulgusu: 'burasi neden maden, okunmuyor').
+            for (int ry = my - 3; ry <= my + 1; ry++)
+                if (Icerde(mx, ry)) Koy(_zemin, mx, ry, Ek(Karo64.RayDikey));
+            GolgeliNesne(mx, my - 1, Ek(Karo64.MadenVagonu));
+
             // Bina onunde islik: kasa/varil kumeleri + merdiven + isci.
             Nesne(mx - 6, my - 1, Rpg(Karo64.KasaBuyuk));
             Nesne(mx - 5, my - 3, Rpg(Karo64.GriVaril));
@@ -482,7 +557,6 @@ namespace Amorland.Gorsel
             Nesne(mx + 4, my - 1, Rpg(Karo64.KasaBuyuk));
             Nesne(mx + 5, my - 3, Rpg(Karo64.KasaKucuk));
             Nesne(mx + 6, my - 1, Rpg(Karo64.GriVaril));
-            Nesne(mx - 7, my + 3, Rpg(Karo64.Merdiven));
             Nesne(mx + 1, my - 4, Ek(Karo64.KoyluErkek));
             Nesne(mx - 1, my - 6, Rpg(Karo64.Sec(Karo64.Comlek, _r)));
 
@@ -491,10 +565,13 @@ namespace Amorland.Gorsel
             {
                 for (int y = a.yMin; y < a.yMax; y++)
                 {
-                    if (!Musait(x, y) || _r.Next(1000) >= 20) continue;
+                    if (!Musait(x, y) || _r.Next(1000) >= 26) continue;
                     int t = _r.Next(100);
-                    if (t < 45) Dekor(x, y, Rpg(Karo64.Sec(Karo64.CaliKucuk, _r)));
-                    else if (t < 70) Nesne(x, y, Rpg(Karo64.GriVaril));
+                    if (t < 26) Dekor(x, y, Rpg(Karo64.Sec(Karo64.CaliKucuk, _r)));
+                    else if (t < 44) GolgeliNesne(x, y, Ek(Karo64.TasYigini));
+                    else if (t < 56) GolgeliNesne(x, y, Ek(Karo64.Cevher));
+                    else if (t < 74) Dekor(x, y, Ek(Karo64.Cakiltasi));
+                    else if (t < 88) Nesne(x, y, Rpg(Karo64.GriVaril));
                     else Dekor(x, y, Rpg(Karo64.Sec(Karo64.Comlek, _r)));
                 }
             }
@@ -511,27 +588,34 @@ namespace Amorland.Gorsel
             // ahirin catisi yerli yerindeydi ama toprakla ton tona oldugu icin "cati
             // yok" gorunuyordu. Toprak zeminli bolgelerde cati hep ARDUVAZ; kahve
             // cati yalniz cim/kaldirim komsulu yerlerde (market) kullanilir.
-            EvInsa(mx - 8, my + 1, 6, 2, Karo64.DuvarKrem, Karo64.CatiArduvaz);
+            EvInsa(mx - 8, my + 1, 6, 2, Karo64.DuvarKrem, Karo64.CatiArduvaz, duman: true);
             EvInsa(mx + 1, my, 4, 1, Karo64.DuvarGri, Karo64.CatiArduvaz, kemer: true);
 
             // Ev onunde yasam: cift, saman, varil, comlek.
-            Nesne(mx - 6, my - 2, Ek(Karo64.KoyluErkek));
-            Nesne(mx - 4, my - 2, Ek(Karo64.KoyluKadin));
-            Nesne(mx + 6, my - 2, Rpg(Karo64.SamanYigin));
+            GolgeliNesne(mx - 6, my - 2, Ek(Karo64.KoyluErkek));
+            GolgeliNesne(mx - 4, my - 2, Ek(Karo64.KoyluKadin));
+            GolgeliNesne(mx + 6, my - 2, Rpg(Karo64.SamanYigin));
             Nesne(mx + 7, my, Rpg(Karo64.Sec(Karo64.Varil, _r)));
             Nesne(mx - 9, my - 1, Rpg(Karo64.Sec(Karo64.Comlek, _r)));
 
             // Citli otlak: avlunun guneyi, hayvanlar icinde.
             var otlak = new RectInt(mx - 12, my - 12, 24, 9);
             CitCevir(otlak);
-            Nesne(mx - 9, my - 6, Ek(Karo64.Inek));
-            Nesne(mx - 5, my - 8, Ek(Karo64.Inek));
-            Nesne(mx - 1, my - 6, Ek(Karo64.Koyun));
-            Nesne(mx + 3, my - 9, Ek(Karo64.Koyun));
-            Nesne(mx + 6, my - 6, Ek(Karo64.Koyun));
-            Nesne(mx + 8, my - 8, Ek(Karo64.Tavuk));
-            Nesne(mx + 9, my - 6, Ek(Karo64.Tavuk));
-            Nesne(mx - 3, my - 10, Ek(Karo64.Tavuk));
+            GolgeliNesne(mx - 9, my - 6, Ek(Karo64.Inek));
+            GolgeliNesne(mx - 5, my - 8, Ek(Karo64.Inek));
+            GolgeliNesne(mx - 1, my - 6, Ek(Karo64.Koyun));
+            GolgeliNesne(mx + 3, my - 9, Ek(Karo64.Koyun));
+            GolgeliNesne(mx + 6, my - 6, Ek(Karo64.Koyun));
+            GolgeliNesne(mx + 8, my - 8, Ek(Karo64.Tavuk));
+            GolgeliNesne(mx + 9, my - 6, Ek(Karo64.Tavuk));
+            GolgeliNesne(mx - 3, my - 10, Ek(Karo64.Tavuk));
+
+            // Bakim izleri: kumes, su yalagi, saman — hayvanlar sahipsiz durmasin
+            // (inceleme bulgusu: 'kimse onlara bakmiyor hissi').
+            GolgeliNesne(mx + 10, my - 10, Ek(Karo64.Kumes));
+            GolgeliNesne(mx - 7, my - 5, Ek(Karo64.Yalak));
+            GolgeliNesne(mx - 11, my - 9, Rpg(Karo64.SamanYigin));
+            GolgeliNesne(mx + 1, my - 8, Rpg(Karo64.SamanYigin));
         }
 
         private void Tarlalar()
@@ -594,13 +678,15 @@ namespace Amorland.Gorsel
             int mx = a.xMin + a.width / 2;
 
             // Gar binasi peronun hemen kuzeyinde, vitrinli tas cephe.
-            EvInsa(mx - 3, 46, 6, 1, Karo64.DuvarGri, Karo64.CatiArduvaz, vitrin: true);
+            EvInsa(mx - 3, 46, 6, 1, Karo64.DuvarGri, Karo64.CatiArduvaz, vitrin: true, duman: true);
 
             // Peronda bekleyen yuk ve yolcular.
             for (int i = 0; i < 5; i++)
                 Nesne(mx + 5 + i * 2, 41 + (i % 2), Rpg(Karo64.KasaBuyuk));
-            Nesne(mx - 6, 42, Ek(Karo64.KoyluKadin));
-            Nesne(mx - 9, 41, Ek(Karo64.KoyluErkek));
+            GolgeliNesne(mx - 6, 42, Ek(Karo64.KoyluKadin));
+            GolgeliNesne(mx - 9, 41, Ek(Karo64.KoyluErkek));
+            Nesne(mx - 16, 41, Ek(Karo64.Fener));
+            Nesne(mx + 20, 41, Ek(Karo64.Fener));
             Nesne(mx - 12, 42, Rpg(Karo64.SamanYigin));
             Nesne(mx - 14, 41, Rpg(Karo64.Sec(Karo64.Varil, _r)));
             Nesne(mx, a.yMax + 2, Ek(Karo64.YonTabelasi));
@@ -612,31 +698,46 @@ namespace Amorland.Gorsel
             int mx = a.xMin + a.width / 2, my = a.yMin + a.height / 2;
 
             // Meydanin cevresi dukkan: kuzeyde iki vitrinli, dogu-batida birer ev.
-            EvInsa(mx - 9, my + 6, 4, 1, Karo64.DuvarKrem, Karo64.CatiKahve, vitrin: true);
+            EvInsa(mx - 9, my + 6, 4, 1, Karo64.DuvarKrem, Karo64.CatiArduvaz, vitrin: true, duman: true);
             EvInsa(mx - 2, my + 6, 3, 2, Karo64.DuvarGri, Karo64.CatiArduvaz);
-            EvInsa(mx + 3, my + 6, 4, 1, Karo64.DuvarMavi, Karo64.CatiKahve, vitrin: true);
-            EvInsa(mx - 14, my - 2, 4, 2, Karo64.DuvarGri, Karo64.CatiKahve);
+            EvInsa(mx + 3, my + 6, 4, 1, Karo64.DuvarMavi, Karo64.CatiArduvaz, vitrin: true, duman: true);
+            EvInsa(mx - 14, my - 2, 4, 2, Karo64.DuvarGri, Karo64.CatiArduvaz);
             EvInsa(mx + 10, my - 2, 4, 2, Karo64.DuvarKrem, Karo64.CatiArduvaz);
 
-            // Meydanda tezgahlar: kasa + comlek + saman, aralarinda koyluler.
-            for (int i = 0; i < 4; i++)
+            // Pazar: tenteli tezgahlar onde, mal yiginlari arkalarinda kumeli.
+            for (int sira = 0; sira < 2; sira++)
             {
-                int x = mx - 7 + i * 4, y = my + 1;
-                Nesne(x, y, Rpg(Karo64.KasaBuyuk));
-                Nesne(x + 1, y, Rpg(Karo64.Sec(Karo64.Comlek, _r)));
-                if (i % 2 == 0) Nesne(x, y - 1, Rpg(Karo64.SamanYigin));
+                for (int i = 0; i < 4; i++)
+                {
+                    int x = mx - 7 + i * 4 + (sira % 2) * 2, y = my + 1 - sira * 4;
+                    if (!Icerde(x, y)) continue;
+                    GolgeliNesne(x, y, Ek(Karo64.Tezgah));
+                    if (i % 2 == sira % 2)
+                        Nesne(x + 1, y - 1, Rpg(Karo64.Sec(Karo64.Comlek, _r)));
+                    else if (_r.Next(2) == 0)
+                        Nesne(x - 1, y - 1, Rpg(Karo64.KasaKucuk));
+                }
             }
-            for (int i = 0; i < 3; i++)
-            {
-                int x = mx - 5 + i * 4, y = my - 3;
-                Nesne(x, y, Rpg(Karo64.Sec(Karo64.Varil, _r)));
-                Nesne(x + 1, y, Rpg(Karo64.KasaKucuk));
-            }
-            Nesne(mx - 2, my - 1, Ek(Karo64.KoyluKadin));
-            Nesne(mx + 4, my + 2, Ek(Karo64.KoyluErkek));
-            Nesne(mx - 8, my - 4, Ek(Karo64.KoyluKadin));
-            Nesne(mx + 8, my - 5, Ek(Karo64.KoyluErkek));
+            Nesne(mx - 10, my - 3, Rpg(Karo64.Sec(Karo64.Varil, _r)));
+            Nesne(mx + 10, my - 4, Rpg(Karo64.Sec(Karo64.Varil, _r)));
+            GolgeliNesne(mx - 2, my - 1, Ek(Karo64.KoyluKadin));
+            GolgeliNesne(mx + 4, my + 2, Ek(Karo64.KoyluErkek));
+            GolgeliNesne(mx - 8, my - 4, Ek(Karo64.KoyluKadin));
+            GolgeliNesne(mx + 8, my - 5, Ek(Karo64.KoyluErkek));
             Nesne(mx, a.yMin - 2, Ek(Karo64.YonTabelasi));
+
+            // Meydanin kalbi: kuyu. Koseler fenerli, girisler cicek tarhli.
+            GolgeliNesne(mx, my - 1, Ek(Karo64.Kuyu));
+            Nesne(mx - 8, my + 3, Ek(Karo64.Fener));
+            Nesne(mx + 8, my + 3, Ek(Karo64.Fener));
+            Nesne(mx - 8, my - 6, Ek(Karo64.Fener));
+            Nesne(mx + 8, my - 6, Ek(Karo64.Fener));
+            Nesne(mx - 5, my + 4, Ek(Karo64.CicekTarhi));
+            Nesne(mx + 5, my + 4, Ek(Karo64.CicekTarhi));
+            // ⚠ Yan tarhlar (mx±12) dogu/bati evlerinin CATISINA denk geliyordu —
+            // ayni katmana SetTile kiremidi silip altindan cim gosterdi. Kuyu yanina.
+            Nesne(mx - 3, my - 1, Ek(Karo64.CicekTarhi));
+            Nesne(mx + 3, my - 1, Ek(Karo64.CicekTarhi));
         }
 
         /// <summary>Meyve bahcesi: golun batisinda, cit icinde duzenli top agac siralari.</summary>
@@ -650,7 +751,7 @@ namespace Amorland.Gorsel
                 {
                     if (!Musait(x, y)) continue;
                     int t = (x / 4 + y / 4) % 3;
-                    Nesne(x, y, Rpg(t == 0 ? Karo64.TopYesil : (t == 1 ? Karo64.TopCam : Karo64.TopYesilInce)));
+                    GolgeliNesne(x, y, Rpg(t == 0 ? Karo64.TopYesil : (t == 1 ? Karo64.TopCam : Karo64.TopYesilInce)));
                 }
             }
         }
@@ -672,6 +773,11 @@ namespace Amorland.Gorsel
             }
             Nesne(x0, y + 1, Rpg(Karo64.Sec(Karo64.Varil, _r)));
             Nesne(x0 + 1, y + 7, Rpg(Karo64.KasaKucuk));
+            // Iskeleye bagli sandal — suyun ustunde, Dekor katmaninda.
+            if (Icerde(x0 + 3, y + 6) && _su[x0 + 3, y + 6])
+                Dekor(x0 + 3, y + 6, Ek(Karo64.Sandal));
+            if (Icerde(x0 - 2, y + 4) && _su[x0 - 2, y + 4])
+                Dekor(x0 - 2, y + 4, Ek(Karo64.Sandal));
         }
 
         // ------------------------------------------------------------------ yapi
@@ -686,8 +792,14 @@ namespace Amorland.Gorsel
         /// </summary>
         private void EvInsa(int x0, int y0, int genislik, int catiKat,
                             Karo64.Duvar duvar, Karo64.Cati cati,
-                            bool kemer = false, bool vitrin = false)
+                            bool kemer = false, bool vitrin = false, bool duman = false)
         {
+            // Sacak golgesi: kaide pedinin ustune binen solan serit — bina zemine
+            // oturur (inceleme bulgusu: binalar 'yapistirilmis kagit' gibiydi).
+            for (int x = 0; x < genislik; x++)
+                if (Icerde(x0 + x, y0 - 1))
+                    Koy(_dekor, x0 + x, y0 - 1, Ek(Karo64.GolgeSerit));
+
             // Taban pedi: kapi onune ve binanin yanlarina bir sira kaldirim.
             // Bina ciplak topraga oturunca zeminle kaynasip "yapistirilmis" duruyor;
             // krem ped hem kontur veriyor hem girisi isaretliyor.
@@ -712,6 +824,8 @@ namespace Amorland.Gorsel
                 bool krem = duvar.AltOrta == Karo64.DuvarKrem.AltOrta;
                 Koy(_nesneUst, orta, y0, Rpg(krem ? Karo64.DukkanCamKrem : Karo64.DukkanCamGri));
                 if (genislik >= 3) Koy(_nesneUst, orta - 1, y0, Rpg(Karo64.KapiBuyukKahve));
+                // Dukkan tabelasi sacaktan sarkar.
+                if (Icerde(orta, y0 + 1)) Koy(_nesneUst, orta, y0 + 1, Ek(Karo64.AsiliTabela));
             }
             else
             {
@@ -730,6 +844,13 @@ namespace Amorland.Gorsel
                     NesneKoy(x0 + x, y0 + 2 + k, Rpg(m));
                 }
             }
+
+            // Baca: en ust kiremit sirasinin solunda. Duman istenirse bir ust hucrede
+            // (orasi catinin ustu — arkadaki cimin uzerine puf).
+            int bacaX = x0 + 1, bacaY = y0 + 1 + catiKat;
+            Koy(_nesneUst, bacaX, bacaY, Ek(Karo64.Baca));
+            if (duman && Icerde(bacaX, bacaY + 1))
+                Koy(_nesneUst, bacaX, bacaY + 1, Ek(Karo64.DumanKucuk));
         }
 
         /// <summary>Cit: dikdortgenin cevresi, guney ortasinda kapi boslugu.</summary>
@@ -791,10 +912,10 @@ namespace Amorland.Gorsel
                     if (bitki > 0.66f)
                     {
                         if (t < 200)
-                            Nesne(x, y, Rpg(sonbahar ? Karo64.KavakTuruncu
+                            GolgeliNesne(x, y, Rpg(sonbahar ? Karo64.KavakTuruncu
                                            : (t % 2 == 0 ? Karo64.KavakYesil : Karo64.KavakCam)));
                         else if (t < 280)
-                            Nesne(x, y, Rpg(sonbahar ? Karo64.TopTuruncu : Karo64.TopYesil));
+                            GolgeliNesne(x, y, Rpg(sonbahar ? Karo64.TopTuruncu : Karo64.TopYesil));
                         else if (t < 340) Dekor(x, y, Rpg(Karo64.Sec(Karo64.CaliBuyuk, _r)));
                     }
                     else if (bitki > 0.48f)
@@ -802,12 +923,44 @@ namespace Amorland.Gorsel
                         if (t < 60) Dekor(x, y, Rpg(Karo64.Sec(Karo64.CaliKucuk, _r)));
                         else if (t < 84) Dekor(x, y, Rpg(Karo64.Sec(Karo64.Fidan, _r)));
                         else if (t < 96)
-                            Nesne(x, y, Rpg(sonbahar ? Karo64.TopTuruncuInce : Karo64.TopYesilInce));
+                            GolgeliNesne(x, y, Rpg(sonbahar ? Karo64.TopTuruncuInce : Karo64.TopYesilInce));
                     }
                     else if (t < 12)
                     {
                         Dekor(x, y, Rpg(Karo64.Sec(Karo64.CaliKucuk, _r)));
                     }
+                    else if (t < 30 && Gurultu(x, y, 27, 7) > 0.6f)
+                    {
+                        // Cicekler acik cayirin AYDINLIK lekelerinde toplanir.
+                        Dekor(x, y, Ek(Karo64.Sec(Karo64.Cicekler, _r)));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Su detaylari: kiyi sazlari + acik suda niluferler.
+        /// Serpistir'den AYRI: kiyi hucresi tanimi su komsuluguna bakar.
+        /// </summary>
+        private void SuDetayi()
+        {
+            for (int x = 0; x < En; x++)
+            {
+                for (int y = 0; y < Boy; y++)
+                {
+                    if (_su[x, y])
+                    {
+                        // Nilufer: yalnizca acik suda (dort komsusu da su) ve golde.
+                        bool acikSu = Ayni(_su, x, y + 1) && Ayni(_su, x, y - 1)
+                                      && Ayni(_su, x - 1, y) && Ayni(_su, x + 1, y);
+                        if (acikSu && y > 200 && _r.Next(1000) < 14)
+                            Dekor(x, y, Ek(Karo64.Nilufer));
+                        else if (acikSu && _r.Next(1000) < 30)
+                            Dekor(x, y, Ek(Karo64.Dalga));
+                        continue;
+                    }
+                    if (!_suYakin[x, y] || !Musait(x, y) || BolgedeMi(x, y)) continue;
+                    if (_r.Next(100) < 34) Dekor(x, y, Ek(Karo64.Saz));
                 }
             }
         }
@@ -881,6 +1034,24 @@ namespace Amorland.Gorsel
             _dolu[x, y] = true;
         }
 
+        /// <summary>
+        /// Ayakta duran nesne (agac, hayvan, koylu, varil): altina yumusak golge.
+        ///
+        /// ⚠ Golgesiz hali "kagittan cikartma" gibi duruyordu — nesneler zeminde
+        /// degil zeminin USTUNDE yuzuyordu. Golge Dekor katmanina gider; ayni
+        /// hucrede cit/ekin varsa golge atlanir (ustune binmesin).
+        /// </summary>
+        private void GolgeliNesne(int x, int y, Karo64Kimlik k)
+        {
+            if (!Icerde(x, y)) return;
+            // Konuma bagli deterministik varyant: govde ve golge birlikte kayar.
+            int varyant = ((x * 73856093) ^ (y * 19349663)) & 3;
+            if (_dekor.GetTile(new Vector3Int(x, y, 0)) == null)
+                Koy(_dekor, x, y, Ek(Karo64.Golge), varyant);
+            Koy(_nesne, x, y, k, varyant);
+            _dolu[x, y] = true;
+        }
+
         /// <summary>Nesne katmanina koyar ve hucreyi kapatir (ev parcalari).</summary>
         private void NesneKoy(int x, int y, Karo64Kimlik k)
         {
@@ -891,14 +1062,33 @@ namespace Amorland.Gorsel
 
         private static void Koy(Tilemap tm, int x, int y, Karo64Kimlik karo)
         {
-            Tile t = Onbellek(karo);
+            Koy(tm, x, y, karo, 0);
+        }
+
+        /// <summary>
+        /// varyant 1-3: karoyu hucre icinde bir tutam kaydirir (Tile.transform).
+        /// Agaclar hucre merkezine kilitlenince orman ekili misir tarlasi gibi
+        /// izgara hissi veriyordu; kucuk kaydirma dogal dagilim yaniltmasi yaratir.
+        /// Golge ve govde AYNI varyantla cagrilir ki birlikte kaysinlar.
+        /// </summary>
+        private static void Koy(Tilemap tm, int x, int y, Karo64Kimlik karo, int varyant)
+        {
+            Tile t = Onbellek(karo, varyant);
             if (t != null) tm.SetTile(new Vector3Int(x, y, 0), t);
         }
 
-        /// <summary>Tile onbellegi: ayni karo tek ScriptableObject.</summary>
-        private static Tile Onbellek(Karo64Kimlik karo)
+        private static readonly Vector3[] _varyantKaydirma =
         {
-            long anahtar = (long)karo.Sayfa * 100000 + karo.Indeks;
+            Vector3.zero,
+            new Vector3(-0.16f, 0.05f, 0f),
+            new Vector3(0.14f, -0.04f, 0f),
+            new Vector3(0.05f, 0.12f, 0f),
+        };
+
+        /// <summary>Tile onbellegi: ayni karo+varyant tek ScriptableObject.</summary>
+        private static Tile Onbellek(Karo64Kimlik karo, int varyant)
+        {
+            long anahtar = ((long)karo.Sayfa * 100000 + karo.Indeks) * 8 + varyant;
             if (_onbellek.TryGetValue(anahtar, out Tile t) && t != null) return t;
 
             Sprite s = Karo64.Al(karo);
@@ -907,7 +1097,9 @@ namespace Amorland.Gorsel
             t = ScriptableObject.CreateInstance<Tile>();
             t.sprite = s;
             t.colliderType = Tile.ColliderType.None;
-            t.name = s.name;
+            t.name = s.name + "_v" + varyant;
+            if (varyant > 0)
+                t.transform = Matrix4x4.Translate(_varyantKaydirma[varyant]);
             _onbellek[anahtar] = t;
             return t;
         }
