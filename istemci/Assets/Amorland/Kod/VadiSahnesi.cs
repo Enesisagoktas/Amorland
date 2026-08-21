@@ -72,7 +72,8 @@ namespace Amorland
         ///   y_merkez= y_ray + (60-32)/64  = 36.78   (pivot sprite ortasi)
         /// 36.5 (karo ortasi) kullanilinca tekerler rayin ALTINDA yuzuyordu.
         /// </summary>
-        private const float TrenY = 36.78f;
+        // 36.78 + 0.07: 1.15 olcek teker altini (0.44 * 0.15) asagi tasidi.
+        private const float TrenY = 36.85f;
 
         // Kelebekler: cicekli cayirlarda gezinen minik canlilik.
         private readonly List<Transform> _kelebekler = new List<Transform>();
@@ -371,6 +372,9 @@ namespace Amorland
             var kok = new GameObject("Tren");
             kok.transform.SetParent(transform, false);
             _tren = kok.transform;
+            // ⚠ 1.15 olcek: lokomotif koyluden kisa kaliyordu (denetim) — cift,
+            // binecegi trenden uzun olamaz. Teker temasi TrenY'de telafi edildi.
+            _tren.localScale = new Vector3(1.15f, 1.15f, 1f);
 
             int[] parcalar = { Karo64.Lokomotif, Karo64.Vagon, Karo64.VagonKasa };
             Sprite golge = Karo64.Al(Sayfa64.Ek, Karo64.Golge);

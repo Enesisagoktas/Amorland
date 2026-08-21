@@ -122,6 +122,11 @@ namespace Amorland.Gorsel
             _dekor.RefreshAllTiles();
             _nesne.RefreshAllTiles();
             _nesneUst.RefreshAllTiles();
+            // ⚠ NesneTepe listeye SONRADAN eklendi ve refresh'i unutulmustu:
+            // bassiz renderda chunk mesh'lerinin yarisi guncellenmeden ciziliyor,
+            // uzun agac tepelerinin ~%51'i gorunmuyordu (denetim bulgusu; veri
+            // tamdi, KesikAgacDokumu 5435/5435). Katman ekleyen REFRESH de ekler.
+            _nesneTepe.RefreshAllTiles();
         }
 
         private void KatmanlariKur()
@@ -602,11 +607,14 @@ namespace Amorland.Gorsel
                     if (_r.Next(100) >= sans) continue;
 
                     int t = _r.Next(100);
-                    if (t < 28) UzunAgac(x, y, 0);
-                    else if (t < 46) GolgeliNesne(x, y, Ek(Karo64.KavakKoyu));
-                    else if (t < 62) UzunAgac(x, y, 1);
-                    else if (t < 72) GolgeliNesne(x, y, Rpg(Karo64.KavakCam));
-                    else if (t < 82) GolgeliNesne(x, y, Ek(Karo64.TopKoyu));
+                    // Siluet cesitliligi: ucgen %72'ydi, yuvarlak %10 (denetim) —
+                    // top agaclarin payi artti, ince top ormana girdi.
+                    if (t < 26) UzunAgac(x, y, 0);
+                    else if (t < 40) GolgeliNesne(x, y, Ek(Karo64.KavakKoyu));
+                    else if (t < 54) UzunAgac(x, y, 1);
+                    else if (t < 62) GolgeliNesne(x, y, Rpg(Karo64.KavakCam));
+                    else if (t < 76) GolgeliNesne(x, y, Ek(Karo64.TopKoyu));
+                    else if (t < 84) GolgeliNesne(x, y, Ek(Karo64.TopInceKoyu));
                     else if (t < 90) Dekor(x, y, BuyukCali());
                     else if (t < 96) Dekor(x, y, Rpg(Karo64.Sec(Karo64.Fidan, _r)));
                     else Dekor(x, y, Ek(Karo64.DevrikKutuk));
@@ -635,7 +643,12 @@ namespace Amorland.Gorsel
             // (inceleme bulgusu: 'burasi neden maden, okunmuyor').
             for (int ry = my - 3; ry <= my + 1; ry++)
                 if (Icerde(mx, ry)) Koy(_zemin, mx, ry, Ek(Karo64.RayDikey));
-            GolgeliNesne(mx, my - 1, Ek(Karo64.MadenVagonu));
+            // Vagon RAYDA ORTALI durmali: GolgeliNesne'nin konum jitteri onu
+            // ray ekseninden 5 px kaydiriyordu (denetim) — varyantsiz yerlesir.
+            if (_dekor.GetTile(new Vector3Int(mx, my - 1, 0)) == null)
+                Koy(_dekor, mx, my - 1, Ek(Karo64.Golge));
+            Koy(_nesne, mx, my - 1, Ek(Karo64.MadenVagonu));
+            _dolu[mx, my - 1] = true;
 
             // Bina onunde islik: kasa/varil kumeleri + merdiven + isci.
             GolgeliNesne(mx - 6, my - 1, Rpg(Karo64.KasaBuyuk));
@@ -769,6 +782,14 @@ namespace Amorland.Gorsel
 
             // Gar binasi peronun hemen kuzeyinde, vitrinli tas cephe.
             EvInsa(mx - 3, 46, 6, 1, Karo64.DuvarGri, Karo64.CatiArduvaz, vitrin: true, duman: true);
+
+            // Peron dekoru: ~20 karoluk platform 6 sandikla bombostu (denetim).
+            for (int pi = 0; pi < 3; pi++)
+            {
+                if (Icerde(mx - 8 + pi * 3, 42))
+                    GolgeliNesne(mx - 8 + pi * 3, 42, Ek(Karo64.SandikKontrast));
+            }
+            if (Icerde(mx + 8, 42)) GolgeliNesne(mx + 8, 42, Ek(Karo64.Fener));
 
             // Peronda bekleyen yuk ve yolcular.
             for (int i = 0; i < 5; i++)
@@ -928,7 +949,9 @@ namespace Amorland.Gorsel
                 Koy(_nesneUst, orta, y0, Ek(Karo64.Vitrin));
                 if (genislik >= 3) Koy(_nesneUst, orta - 1, y0, Rpg(Karo64.KapiBuyukKahve));
                 // Dukkan tabelasi sacaktan sarkar.
-                if (Icerde(orta, y0 + 1)) Koy(_nesneUst, orta, y0 + 1, Ek(Karo64.AsiliTabela));
+                // Tabela cizimi karonun USTUNDEN sarkar (denetim); hucre bir ust
+                // satira cikti ki pano cephe hizasina, askilar sacaga otursun.
+                if (Icerde(orta, y0 + 2)) Koy(_nesneUst, orta, y0 + 2, Ek(Karo64.AsiliTabela));
             }
             else if (kemer)
             {
@@ -1009,10 +1032,16 @@ namespace Amorland.Gorsel
                         // Korkuluk NESNE katmaninda (kalas artik Dekor'u kaplıyor;
                         // ayrica Y-sort sayesinde karakter korkulugun online/arkasina
                         // dogru gecer). Yatay kenara cit, dikey kenara dikey cit karosu.
-                        bool kuzey = y + 1 < Boy && !_kalas[x, y + 1] && _su[x, y + 1];
-                        bool guney = y - 1 >= 0 && !_kalas[x, y - 1] && _su[x, y - 1];
-                        bool bati = x > 0 && !_kalas[x - 1, y] && _su[x - 1, y];
-                        bool dogu = x + 1 < En && !_kalas[x + 1, y] && _su[x + 1, y];
+                        // suYakin da sayilir: kiyi ucundaki kalas hucreleri
+                        // korkuluksuz kaliyordu, kopru 'yarim' okunuyordu (denetim).
+                        bool kuzey = y + 1 < Boy && !_kalas[x, y + 1]
+                                     && (_su[x, y + 1] || _suYakin[x, y + 1]);
+                        bool guney = y - 1 >= 0 && !_kalas[x, y - 1]
+                                     && (_su[x, y - 1] || _suYakin[x, y - 1]);
+                        bool bati = x > 0 && !_kalas[x - 1, y]
+                                    && (_su[x - 1, y] || _suYakin[x - 1, y]);
+                        bool dogu = x + 1 < En && !_kalas[x + 1, y]
+                                    && (_su[x + 1, y] || _suYakin[x + 1, y]);
                         if (kuzey || guney) Koy(_nesne, x, y, Rpg(Karo64.Sec(Karo64.CitOrta, _r)));
                         else if (bati || dogu) Koy(_nesne, x, y, Ek(Karo64.CitDikeyKaro));
                         continue;
@@ -1283,6 +1312,9 @@ namespace Amorland.Gorsel
         private void UzunAgac(int x, int y, int tur)
         {
             if (!Icerde(x, y) || !Icerde(x, y + 1)) return;
+            // Kanopi hucresi onceden doluysa (mantar, kutuk...) agac dikilmez:
+            // kanopi dekoru gomup 'bosa yerlesim' uretiyordu (denetim).
+            if (_dolu[x, y + 1]) return;
             int alt = tur == 0 ? Karo64.UzunKavakAlt : (tur == 1 ? Karo64.UzunCamAlt : Karo64.UzunTuruncuAlt);
             int ust = alt + 1;
             // ⚠ Uzun agacta varyant kaydirma YOK: alt/ust iki ayri karo — kaydirma
