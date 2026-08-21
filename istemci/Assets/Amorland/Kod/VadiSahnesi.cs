@@ -121,7 +121,7 @@ namespace Amorland
             kok.transform.SetParent(transform, false);
             _tren = kok.transform;
 
-            int[] parcalar = { Karo64.Lokomotif, Karo64.Vagon, Karo64.Vagon };
+            int[] parcalar = { Karo64.Lokomotif, Karo64.Vagon, Karo64.VagonKasa };
             Sprite golge = Karo64.Al(Sayfa64.Ek, Karo64.Golge);
             for (int i = 0; i < parcalar.Length; i++)
             {
@@ -144,12 +144,12 @@ namespace Amorland
             // Bacadan duman: lokomotifin ustunde iki puf, geride kalir.
             var d1 = new GameObject("Duman1");
             d1.transform.SetParent(kok.transform, false);
-            d1.transform.localPosition = new Vector3(-0.35f, 0.85f, 0f);
+            d1.transform.localPosition = new Vector3(0.34f, 0.9f, 0f);
             d1.AddComponent<SpriteRenderer>().sprite = Karo64.Al(Sayfa64.Ek, Karo64.DumanKucuk);
             d1.GetComponent<SpriteRenderer>().sortingOrder = 3;
             var d2 = new GameObject("Duman2");
             d2.transform.SetParent(kok.transform, false);
-            d2.transform.localPosition = new Vector3(-1.1f, 1.35f, 0f);
+            d2.transform.localPosition = new Vector3(-0.35f, 1.4f, 0f);
             var d2sr = d2.AddComponent<SpriteRenderer>();
             d2sr.sprite = Karo64.Al(Sayfa64.Ek, Karo64.Duman);
             d2sr.color = new Color(1f, 1f, 1f, 0.7f);

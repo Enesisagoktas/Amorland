@@ -193,7 +193,10 @@ namespace Amorland.Gorsel
         public const int CitDirek = 8;
         /// <summary>Yandan bakisli lokomotif ve yuk vagonu — hatta gezen tren.</summary>
         public const int Lokomotif = 9;
+        /// <summary>Saman yuklu vagon.</summary>
         public const int Vagon = 10;
+        /// <summary>Sandik yuklu vagon — trene cesitlilik.</summary>
+        public const int VagonKasa = 11;
 
         // -------------------------------------------------- ince detay (Ek, satir 3-4)
 

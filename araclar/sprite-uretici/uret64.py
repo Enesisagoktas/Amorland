@@ -395,61 +395,115 @@ class Cizer:
         d.rounded_rectangle([x + 27, y + 14, x + 37, y + 30], 4, fill=ton(ahsap, 1.12) + (255,))
 
     def lokomotif(self, i):
-        """Oyuncak lokomotif — DOGUYA (saga) gider, onu de sagda.
+        """Klasik sevimli buharli lokomotif — DOGUYA (saga) gider.
 
-        ⚠ Ilk surumde baca ve tampon soldaydi: tren haritada saga akarken
-        lokomotif geriye bakiyordu. Simdi kabin arkada (solda), burun sagda.
-        Kirmizi serit + iri gobekli tekerler oyuncak sicakligi verir.
+        ⚠ Onceki iki deneme de dagildi: baca kazanin ortasinda mantar gibi
+        duruyordu, on izgara govdeden kopuktu, sasi yoktu. Bu surum arketipe
+        sadik: arkada sacakli kabin, kirmizi kazan + pirinc bantlar, onde koyu
+        duman haznesi ve ustunde huni baca, altta sasi cubugu, baglanti kollu
+        tekerler, one entegre izgara.
         """
         x, y = self.kanvas(i)
         d = ImageDraw.Draw(self.im)
-        govde = ton(self.TAS, 0.55)
-        acik = ton(self.TAS, 0.78)
-        kirmizi = (214, 70, 56)
-        # kabin (arkada, solda)
-        d.rounded_rectangle([x + 4, y + 12, x + 24, y + 48], 5, fill=govde + (255,))
-        d.rounded_rectangle([x + 4, y + 12, x + 24, y + 20], 5, fill=acik + (255,))
-        d.rounded_rectangle([x + 8, y + 18, x + 20, y + 30], 3, fill=(150, 200, 214, 255))
-        d.rounded_rectangle([x + 9, y + 19, x + 19, y + 23], 3, fill=(196, 230, 240, 255))
-        # kazan: yuvarlak burunlu
-        d.rounded_rectangle([x + 20, y + 26, x + 52, y + 48], 8, fill=govde + (255,))
-        d.rounded_rectangle([x + 20, y + 26, x + 52, y + 33], 8, fill=acik + (255,))
-        d.ellipse([x + 46, y + 26, x + 60, y + 48], fill=govde + (255,))
-        d.ellipse([x + 49, y + 29, x + 57, y + 37], fill=acik + (255,))
-        # kirmizi serit + on lamba
-        d.rectangle([x + 20, y + 42, x + 56, y + 46], fill=kirmizi + (255,))
-        d.ellipse([x + 54, y + 33, x + 60, y + 40], fill=(246, 220, 130, 255))
-        # baca (onde) — hafif genis agizli
-        d.rounded_rectangle([x + 36, y + 12, x + 44, y + 30], 3, fill=govde + (255,))
-        d.rounded_rectangle([x + 33, y + 8, x + 47, y + 16], 4, fill=kirmizi + (255,))
-        # on tampon (sagda)
-        d.polygon([(x + 58, y + 58), (x + 62, y + 58), (x + 62, y + 44), (x + 52, y + 52)],
-                  fill=ton(self.AHSAP, 0.8) + (255,))
-        # iri gobekli tekerler
-        for cx, rr in ((14, 8), (32, 8), (48, 7)):
-            d.ellipse([x + cx - rr, y + 58 - rr * 2, x + cx + rr, y + 58],
-                      fill=(52, 44, 46, 255))
-            d.ellipse([x + cx - 3, y + 55 - rr, x + cx + 3, y + 61 - rr],
-                      fill=kirmizi + (255,))
-    def vagon(self, i):
-        """Yuk vagonu: yuvarlak koseli ahsap kasa + saman tepesi + gobekli teker."""
+        kirmizi = (204, 70, 58)
+        kkoyu = ton(kirmizi, 0.76)
+        komur = (56, 48, 50)
+        kacik = (96, 88, 92)
+        pirinc = (228, 190, 96)
+        cam = (168, 214, 226)
+
+        # kabin (arkada): kirmizi govde + sacakli koyu cati
+        d.rounded_rectangle([x + 4, y + 16, x + 24, y + 50], 4, fill=kirmizi + (255,))
+        d.rectangle([x + 4, y + 34, x + 24, y + 50], fill=kkoyu + (255,))
+        d.rounded_rectangle([x + 1, y + 11, x + 27, y + 18], 3, fill=komur + (255,))
+        # pencere
+        d.rounded_rectangle([x + 8, y + 21, x + 20, y + 33], 3, fill=komur + (255,))
+        d.rounded_rectangle([x + 10, y + 23, x + 18, y + 31], 2, fill=cam + (255,))
+        d.rectangle([x + 10, y + 23, x + 18, y + 26], fill=ton(cam, 1.15) + (255,))
+
+        # kazan: kirmizi silindir + ust isilti + pirinc bantlar
+        d.rounded_rectangle([x + 22, y + 28, x + 52, y + 50], 6, fill=kirmizi + (255,))
+        d.rounded_rectangle([x + 22, y + 28, x + 52, y + 36], 6, fill=ton(kirmizi, 1.14) + (255,))
+        d.rectangle([x + 30, y + 28, x + 33, y + 50], fill=pirinc + (255,))
+        d.rectangle([x + 42, y + 28, x + 45, y + 50], fill=pirinc + (255,))
+        # buhar kubbesi
+        d.pieslice([x + 33, y + 20, x + 43, y + 32], 180, 360, fill=kkoyu + (255,))
+        d.pieslice([x + 35, y + 22, x + 41, y + 30], 180, 360, fill=kirmizi + (255,))
+
+        # duman haznesi (onde, koyu) + on kapak + lamba
+        d.rounded_rectangle([x + 48, y + 26, x + 62, y + 50], 6, fill=komur + (255,))
+        d.rounded_rectangle([x + 48, y + 26, x + 62, y + 33], 6, fill=kacik + (255,))
+        d.ellipse([x + 57, y + 34, x + 63, y + 42], fill=kacik + (255,))
+        d.ellipse([x + 59, y + 36, x + 61, y + 40], fill=pirinc + (255,))
+
+        # huni baca: haznenin ustunde, govdeli + genis agiz
+        d.rectangle([x + 51, y + 14, x + 57, y + 28], fill=komur + (255,))
+        d.polygon([(x + 48, y + 8), (x + 60, y + 8), (x + 58, y + 16), (x + 50, y + 16)],
+                  fill=komur + (255,))
+        d.rectangle([x + 49, y + 8, x + 59, y + 11], fill=kacik + (255,))
+
+        # sasi + one entegre izgara (suvari)
+        d.rounded_rectangle([x + 2, y + 48, x + 60, y + 54], 3, fill=komur + (255,))
+        d.polygon([(x + 56, y + 48), (x + 63, y + 60), (x + 52, y + 54)],
+                  fill=pirinc + (255,))
+        d.polygon([(x + 56, y + 48), (x + 60, y + 55), (x + 54, y + 52)],
+                  fill=ton(pirinc, 0.8) + (255,))
+
+        # tekerler: iki buyuk + bir kucuk, pirinc gobek + baglanti kolu
+        for cx, rr in ((14, 9), (34, 9), (51, 6)):
+            d.ellipse([x + cx - rr, y + 60 - rr * 2, x + cx + rr, y + 60],
+                      fill=komur + (255,))
+            d.ellipse([x + cx - rr + 3, y + 60 - rr * 2 + 3, x + cx + rr - 3, y + 60 - 3],
+                      fill=kacik + (255,))
+            d.ellipse([x + cx - 2, y + 60 - rr - 2, x + cx + 2, y + 60 - rr + 2],
+                      fill=pirinc + (255,))
+        d.line([x + 14, y + 51, x + 51, y + 54], fill=pirinc + (255,), width=3)
+    def vagon(self, i, yuk="saman"):
+        """Yuk vagonu: cerceveli ahsap kasa + sasi + pirinc gobekli tekerler.
+
+        ⚠ Onceki surumde citalar kasanin ustunden tasip mazgal gibi gorunuyordu
+        ve tekerler bosluga asiliydi. Citalar artik cercevenin ICINDE, altta
+        sasi cubugu var. yuk="saman" pofuduk tepe, "kasa" sandik yigini koyar.
+        """
         x, y = self.kanvas(i)
         d = ImageDraw.Draw(self.im)
         ahsap = ton(self.AHSAP, 0.9)
-        saman = (232, 198, 110)
-        # saman yuku (kasanin ustunden tasan yumusak tepe)
-        d.ellipse([x + 12, y + 14, x + 34, y + 32], fill=saman + (255,))
-        d.ellipse([x + 26, y + 12, x + 50, y + 30], fill=ton(saman, 1.08) + (255,))
-        # kasa
-        d.rounded_rectangle([x + 6, y + 24, x + 58, y + 48], 6, fill=ton(ahsap, 0.78) + (255,))
+        cerceve = ton(self.AHSAP, 0.66)
+        komur = (56, 48, 50)
+        pirinc = (228, 190, 96)
+
+        # yuk (kasanin arkasindan yukselir)
+        if yuk == "saman":
+            saman = (232, 198, 110)
+            d.ellipse([x + 8, y + 12, x + 40, y + 34], fill=saman + (255,))
+            d.ellipse([x + 26, y + 10, x + 56, y + 32], fill=ton(saman, 1.08) + (255,))
+            d.ellipse([x + 14, y + 14, x + 30, y + 24], fill=ton(saman, 1.16) + (255,))
+            for sx, sy in ((10, 14), (48, 12), (30, 8)):
+                d.line([x + sx, y + sy, x + sx + 5, y + sy - 4],
+                       fill=ton(saman, 0.8) + (255,), width=2)
+        else:
+            for kx, ky, w in ((10, 14, 20), (32, 16, 18)):
+                d.rounded_rectangle([x + kx, y + ky, x + kx + w, y + ky + 16], 3,
+                                    fill=ahsap + (255,))
+                d.rounded_rectangle([x + kx + 2, y + ky + 2, x + kx + w - 2, y + ky + 7], 2,
+                                    fill=ton(ahsap, 1.15) + (255,))
+                d.rectangle([x + kx, y + ky + 7, x + kx + w, y + ky + 9],
+                            fill=cerceve + (255,))
+
+        # kasa: koyu cerceve + ICERIDE dikey citalar
+        d.rounded_rectangle([x + 4, y + 26, x + 60, y + 50], 5, fill=cerceve + (255,))
         for k in range(4):
-            d.rounded_rectangle([x + 10 + k * 13, y + 27, x + 19 + k * 13, y + 45], 3,
+            d.rounded_rectangle([x + 9 + k * 13, y + 30, x + 18 + k * 13, y + 46], 2,
                                 fill=ahsap + (255,))
-        d.rectangle([x + 6, y + 24, x + 58, y + 28], fill=ton(ahsap, 1.12) + (255,))
-        # gobekli tekerler
+            d.rectangle([x + 9 + k * 13, y + 30, x + 18 + k * 13, y + 34],
+                        fill=ton(ahsap, 1.12) + (255,))
+
+        # sasi + tekerler
+        d.rounded_rectangle([x + 6, y + 48, x + 58, y + 54], 3, fill=komur + (255,))
         for cx in (18, 46):
-            d.ellipse([x + cx - 7, y + 44, x + cx + 7, y + 58], fill=(52, 44, 46, 255))
-            d.ellipse([x + cx - 3, y + 48, x + cx + 3, y + 54], fill=(214, 70, 56, 255))
+            d.ellipse([x + cx - 8, y + 44, x + cx + 8, y + 60], fill=komur + (255,))
+            d.ellipse([x + cx - 5, y + 47, x + cx + 5, y + 57], fill=(96, 88, 92, 255))
+            d.ellipse([x + cx - 2, y + 50, x + cx + 2, y + 54], fill=pirinc + (255,))
     def yapistir(self, i, katman):
         """Ayri katmanda cizilen (blur'lu) sprite'i karoya oturtur."""
         x, y = self.kanvas(i)
@@ -874,7 +928,8 @@ def main():
     c.isaret(7)
     c.direk(8)
     c.lokomotif(9)
-    c.vagon(10)
+    c.vagon(10, yuk="saman")
+    c.vagon(11, yuk="kasa")
     # Satir 3: ince detay — zemin ve dogal dekor
     c.cim_koyu(36, 0.055)
     c.cim_koyu(37, 0.10)
