@@ -180,12 +180,17 @@ namespace Amorland.Ogretici
                 Bitir();
                 return;
             }
-            if (_adimlar[_adim].Kosul(_durum))
+            // WHILE, IF degil: tam senkron birden cok adimin kosulunu ayni anda
+            // getirebilir (isaretler kalicidir). Tek tek ilerleseydi ogretici
+            // coktan yapilmis islerde takili gorunurdu (oyuncu bulgusu).
+            bool ilerledi = false;
+            while (_adim < _adimlar.Count && _adimlar[_adim].Kosul(_durum))
             {
                 _adim++;
-                if (_adim >= _adimlar.Count) Bitir();
-                else AdimGoster();
+                ilerledi = true;
             }
+            if (_adim >= _adimlar.Count) Bitir();
+            else if (ilerledi) AdimGoster();
         }
 
         private void AdimGoster()

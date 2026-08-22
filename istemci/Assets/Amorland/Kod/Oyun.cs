@@ -755,6 +755,17 @@ namespace Amorland
 
         private void BolgeyeGit(string bolgeId)
         {
+            // Kilitli bolgeye niyet de isinlanma da yok: sunucu zaten reddederdi
+            // ama oyuncu once TASINIP sonra red gorurdu — kapi burada.
+            int acilis = _denge.BolgeAcilisSeviyesi(bolgeId);
+            int seviyem = _durum.Ben != null ? _durum.Ben.Seviye : 1;
+            if (acilis > seviyem)
+            {
+                _bildirimler.Goster(
+                    _denge.BolgeAdi(bolgeId) + " Sv " + acilis + "'te açılır.", uyari: true);
+                return;
+            }
+
             _aktifBolge = bolgeId;
             Gonder("bolgeye_gir", NiyetHedef.Bolgeye(bolgeId));
 
@@ -765,6 +776,16 @@ namespace Amorland
         private IEnumerator BolgeGecisi(string bolgeId)
         {
             _yukleme.Goster(_denge.BolgeAdi(bolgeId) + " yükleniyor...");
+
+            // Isinlanma (oyuncu istegi): kararma perdesi arkasinda karakter
+            // bolgenin kapisina tasinir, kamera suzulmeden oturur. Panel acmak
+            // yetmiyordu — "depoya git" fiziksel bir yolculuk gibi hissetmeliydi.
+            Vector2? nokta = _vadi.BolgeIsinlanmaNoktasi(bolgeId);
+            if (nokta.HasValue)
+            {
+                _karakter.Isinla(nokta.Value);
+                _kameraYoneticisi.AnindaOrtala();
+            }
             yield return new WaitForSecondsRealtime(0.6f);
             _yukleme.Gizle();
 

@@ -154,7 +154,9 @@ public class IlerlemeServisi {
     var ik = denge.ilerlemeDosyasi().xpKaynaklari().ilkKezAnlari();
     if (!ik.anlar().contains(an)) return 0;
     if (!dunya.isaretKoy(vadi.id(), oyuncuId, "ilk:" + an, saat.simdi())) return 0;
-    yazici.isaret("ilk:" + an);
+    // Isaret her yolda AYNI bicimde gider: tam senkron da delta da
+    // "oyuncuId|isaret" tasir. Ciplak isaret istemcide hic eslesmiyordu.
+    yazici.isaret(oyuncuId + "|ilk:" + an);
     yazici.olay(Olay.ilkKez(an));
     return ik.xp();
   }
@@ -166,7 +168,7 @@ public class IlerlemeServisi {
    */
   public int bolgeyeIlkGiris(Vadi vadi, UUID oyuncuId, String bolgeId, DegisimYazici yazici) {
     if (!dunya.isaretKoy(vadi.id(), oyuncuId, "bolge:" + bolgeId, saat.simdi())) return 0;
-    yazici.isaret("bolge:" + bolgeId);
+    yazici.isaret(oyuncuId + "|bolge:" + bolgeId);
     yazici.olay(Olay.bolgeAcildi(bolgeId));
     int xp = denge.bolgeIlkAcmaXp(bolgeId);
     // Bolge acilisi bir defter sayfasini tetikleyebilir.
@@ -189,7 +191,7 @@ public class IlerlemeServisi {
     int toplam = 0;
     for (int no : sayfalar) {
       if (dunya.isaretKoy(vadi.id(), oyuncuId, "defter:" + no, saat.simdi())) {
-        yazici.isaret("defter:" + no);
+        yazici.isaret(oyuncuId + "|defter:" + no);
         yazici.olay(Olay.defterSayfasi(no));
         toplam += defter.sayfaXp();
       }
@@ -201,7 +203,7 @@ public class IlerlemeServisi {
   public int craftXp(Vadi vadi, UUID oyuncuId, String tarifId, DegisimYazici yazici) {
     var cx = denge.uretimDosyasi().craftTarifleri().craftXp();
     boolean ilk = dunya.isaretKoy(vadi.id(), oyuncuId, "craft:" + tarifId, saat.simdi());
-    if (ilk) yazici.isaret("craft:" + tarifId);
+    if (ilk) yazici.isaret(oyuncuId + "|craft:" + tarifId);
     return ilk ? cx.ilkKez() : cx.tekrar();
   }
 }

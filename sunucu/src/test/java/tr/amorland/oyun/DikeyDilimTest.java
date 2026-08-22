@@ -231,6 +231,24 @@ class DikeyDilimTest extends TestTemeli {
   }
 
   @Test
+  @DisplayName("Ilk depoya bosaltma isareti 'oyuncuId|ilk:...' bicimiyle DELTADA gider")
+  void isaretFormati() {
+    // Oyuncu bulgusu: delta ciplak isaret tasiyordu, istemci yalnizca
+    // "oyuncuId|isaret" bicimini aradigi icin ogreticinin depo adimi hic
+    // dusmuyordu. Tam senkron ve delta artik AYNI bicimi tasimali.
+    UUID o = oyuncuKur("cihaz-1", "Ada");
+    Vadi vadi = vadiServisi.kur(o);
+    seviyeAyarla(o, vadi, 2);
+    dunya.envanterDegistir(vadi.id(), o, "bugday", 3);
+
+    Degisim d = niyet(o, vadi.id(), "depoya_bosalt", null, null);
+
+    assertTrue(
+        d.isaretler().contains(o + "|ilk:ilk_depoya_bosaltma"),
+        "Delta isaretleri oyuncu onekiyle gitmeli; gelenler: " + d.isaretler());
+  }
+
+  @Test
   @DisplayName("Depo dolunca hasat engellenir, urun karoda BEKLER (yok edilmez)")
   void depoDoluHasatiEngeller() {
     UUID o = oyuncuKur("cihaz-1", "Ada");

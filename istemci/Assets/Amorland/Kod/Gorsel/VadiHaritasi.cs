@@ -1272,6 +1272,41 @@ namespace Amorland.Gorsel
         }
 
         /// <summary>Karakter bu hucrede yuruyebilir mi.</summary>
+        /// <summary>
+        /// Bolgeye isinlanma noktasi, DUNYA koordinatinda (oyuncu istegi:
+        /// haritadan bolge secilince karakter ORAYA TASINIR, yalnizca panel
+        /// acilmaz). Bolge alaninin alt-orta bandindan yukari taranan ilk
+        /// GECILEBILIR karo secilir — kapi onu / meydan gibi dogal bir nokta.
+        /// </summary>
+        public Vector2? BolgeIsinlanmaNoktasi(string bolgeId)
+        {
+            // Oyun bolge kimligi "gar", haritadaki tanim "tren" adini tasir.
+            string ad = bolgeId == "gar" ? "tren" : bolgeId;
+            foreach (var b in Bolgeler)
+            {
+                if (b.Ad != ad) continue;
+                int cx = b.Alan.xMin + b.Alan.width / 2;
+                int cy = b.Alan.yMin + b.Alan.height / 2;
+                // Dikeyde MERKEZDEN disa taranir: alt kenardan baslamak karakteri
+                // bolgenin guney ucuna, binadan uzaga birakiyordu (goruntuyle
+                // dogrulandi). Merkez civari meydan/kapi onu demektir.
+                for (int t = 0; t < b.Alan.height; t++)
+                {
+                    int y = t % 2 == 0 ? cy + t / 2 : cy - (t / 2 + 1);
+                    if (y < b.Alan.yMin || y > b.Alan.yMax) continue;
+                    for (int s = 0; s <= b.Alan.width / 2; s++)
+                    {
+                        if (Gecilebilir(cx + s, y))
+                            return new Vector2(cx + s - OyunCapaX, y - OyunCapaY);
+                        if (s > 0 && Gecilebilir(cx - s, y))
+                            return new Vector2(cx - s - OyunCapaX, y - OyunCapaY);
+                    }
+                }
+                return new Vector2(b.Alan.center.x - OyunCapaX, b.Alan.center.y - OyunCapaY);
+            }
+            return null;
+        }
+
         public bool Gecilebilir(int x, int y)
         {
             if (!Icerde(x, y)) return false;

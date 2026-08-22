@@ -69,6 +69,13 @@ namespace Amorland.Oynanis
             SonrakiAdim();
         }
 
+        /// <summary>Karakteri hedefe ANINDA tasir (bolge gecisi). Yuruyus kesilir.</summary>
+        public void Isinla(Vector2 dunya)
+        {
+            Dur();
+            transform.position = new Vector3(dunya.x, dunya.y, transform.position.z);
+        }
+
         public void Dur()
         {
             _yol.Clear();

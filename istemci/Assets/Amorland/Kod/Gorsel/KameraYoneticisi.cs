@@ -54,6 +54,14 @@ namespace Amorland.Gorsel
 
         public bool UzakMi => _uzakMi;
 
+        /// <summary>Isinlanma sonrasi kamera SUZULMEZ, hedefe aninda oturur.</summary>
+        public void AnindaOrtala()
+        {
+            if (Hedef == null) return;
+            _merkez = new Vector2(Hedef.position.x, Hedef.position.y);
+            Yerlestir(anlik: true);
+        }
+
         private void LateUpdate()
         {
             if (_kamera == null || Hedef == null) return;
