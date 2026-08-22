@@ -23,7 +23,7 @@ namespace Amorland.Oynanis
     /// </summary>
     public class EtkilesimYoneticisi : MonoBehaviour
     {
-        public enum Eylem { Yok, Ek, Sula, Hasat, Topla, KovaDoldur }
+        public enum Eylem { Yok, Ek, Sula, Hasat, Topla, KovaDoldur, Kes }
 
         private DunyaDurumu _durum;
         private DengeVerisi _denge;
@@ -243,6 +243,7 @@ namespace Amorland.Oynanis
                 case Eylem.Sula: return _denge.SulamaSn;
                 case Eylem.Hasat: return _denge.HasatSn;
                 case Eylem.Topla: return _denge.ToplamaSn;
+                case Eylem.Kes: return _denge.VurusSn;
                 case Eylem.KovaDoldur: return _denge.KovaDoldurmaSn;
                 default: return 0f;
             }
@@ -278,6 +279,13 @@ namespace Amorland.Oynanis
             {
                 if (d.X != hedef.x || d.Y != hedef.y) continue;
                 if (d.Sinif != "yabani") continue;
+                if ("agac".Equals(d.Sinif))
+                {
+                    // Devrik agac buyuyene kadar hedef degildir.
+                    return d.KirildiAt == null || d.Hazir(_durum.SunucuZamani)
+                        ? Eylem.Kes
+                        : Eylem.Yok;
+                }
                 return d.Hazir(_durum.SunucuZamani) ? Eylem.Topla : Eylem.Yok;
             }
 
@@ -342,6 +350,22 @@ namespace Amorland.Oynanis
                     if (!kuyruktaMi) Haptik.Haptik.Calistir(Haptik.Haptik.Desen.CokHafif);
                     _efekt.UrunZiplamasi(hedef, Karo64.Al(Sayfa64.Ek, Karo64.DevrikKutuk));
                     _efekt.UcanYazi(hedef, ToplamaYazisi(dugum.Tur), Palet.UiAltin);
+                    _karakter.EylemHopu();
+                    break;
+
+                case Eylem.Kes:
+                    var agacDugum = DugumBul(hedef);
+                    if (agacDugum == null) return;
+                    niyet = Niyet.Olustur("kes", NiyetHedef.Dugum(agacDugum.Bolge, agacDugum.X, agacDugum.Y));
+                    _ses.Cal(SesEtiketi.Toplama, kuyruktaMi);
+                    if (!kuyruktaMi) Haptik.Haptik.Calistir(Haptik.Haptik.Desen.CokHafif);
+                    // Son vurusta odul ucar (iyimser tahmin: saglik istemcide);
+                    // ara vuruslar sessiz gecmez — kalan vurus sayisi ucar.
+                    if (agacDugum.Saglik <= 1)
+                        _efekt.UcanYazi(hedef, "+Odun", Palet.UiAltin);
+                    else
+                        _efekt.UcanYazi(hedef, "Tok! " + (agacDugum.Saglik - 1) + " vurus kaldı",
+                            Palet.KapsulCerceve);
                     _karakter.EylemHopu();
                     break;
 

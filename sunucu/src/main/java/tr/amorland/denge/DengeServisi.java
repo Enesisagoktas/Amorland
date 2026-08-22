@@ -388,6 +388,14 @@ public class DengeServisi {
 
   public String esyaAdi(String esyaId) { return esyaAdlari.getOrDefault(esyaId, esyaId); }
 
+  public java.util.Optional<DengeModelleri.Agac> agac(String id) {
+    for (var a : uretimDosyasi().agaclar()) {
+      if (a.id().equals(id)) return java.util.Optional.of(a);
+    }
+    return java.util.Optional.empty();
+  }
+
+
   // ------------------------------------------------------------------ turetilmis hesaplar
 
   /** Sv n -> n+1 icin gereken XP. Ust seviyede 0 doner. */

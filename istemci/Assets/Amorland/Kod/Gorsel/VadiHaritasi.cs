@@ -601,6 +601,9 @@ namespace Amorland.Gorsel
                         Koy(_zemin, x, y, Ek(sinir ? Karo64.CimGolgeHafif : Karo64.OrmanTabani));
                     }
                     if (!Musait(x, y)) continue;
+                    // Orman kesim acikligi dekorsuz kalir: cali/fidan/mantar da
+                    // dahil — oynanabilir agaclarin sahnesi net okunmali.
+                    if (KesimSahasi.Contains(new Vector2Int(x, y))) continue;
                     float sans = Mathf.Lerp(8f, 74f, Mathf.Clamp01(kenar / 10f))
                                  * Mathf.Clamp01(sikilik * 1.6f);
                     if (_r.Next(100) >= sans) continue;
@@ -1370,9 +1373,19 @@ namespace Amorland.Gorsel
         /// 2 karo boyunda agac: golge + govde (Nesne, Y-sortlu, ENGEL) + kanopi
         /// (NesneTepe, hep onde). tur: 0 koyu kavak, 1 cam, 2 turuncu.
         /// </summary>
+        /// <summary>
+        /// Orman kesim acikligi (HARITA koordinati): sunucu "agac" dugumlerini
+        /// buraya eker (turetilmis.json ormanKesimSahasi ile AYNI dikdortgen —
+        /// dunya (-62,96) 24x12). Dekor agac/cali burada dikilmez; oynanabilir
+        /// agaclar TarlaGorunumu'nun tek parca GO'lariyla cizilir.
+        /// </summary>
+        public static readonly RectInt KesimSahasi = new RectInt(
+            OyunCapaX - 62, OyunCapaY + 96, 25, 13);
+
         private void UzunAgac(int x, int y, int tur)
         {
             if (!Icerde(x, y) || !Icerde(x, y + 1)) return;
+            if (KesimSahasi.Contains(new Vector2Int(x, y))) return;
             // Kanopi hucresi onceden doluysa (mantar, kutuk...) agac dikilmez.
             if (_dolu[x, y + 1]) return;
             Sprite sprite = Karo64.UzunAgacSprite(tur);
@@ -1397,6 +1410,7 @@ namespace Amorland.Gorsel
         private void GolgeliNesne(int x, int y, Karo64Kimlik k)
         {
             if (!Icerde(x, y)) return;
+            if (KesimSahasi.Contains(new Vector2Int(x, y))) return;
             // Konuma bagli deterministik varyant: govde ve golge birlikte kayar.
             int varyant = ((x * 73856093) ^ (y * 19349663)) & 3;
             if (_dekor.GetTile(new Vector3Int(x, y, 0)) == null)

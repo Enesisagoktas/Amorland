@@ -111,6 +111,7 @@ public class OyunServisi {
           case "sula" -> sula(vadi, oyuncu, niyet, simdi, yazici);
           case "hasat" -> hasat(vadi, oyuncu, niyet, simdi, yazici);
           case "topla" -> topla(vadi, oyuncu, niyet, simdi, yazici);
+          case "kes" -> kes(vadi, oyuncu, niyet, simdi, yazici);
           case "kova_doldur" -> kovaDoldur(vadi, oyuncu, yazici);
           case "depoya_koy" -> depoyaKoy(vadi, oyuncu, niyet, yazici);
           case "depodan_al" -> depodanAl(vadi, oyuncu, niyet, yazici);
@@ -463,6 +464,109 @@ public class OyunServisi {
     }
 
     return kaynak.xp();
+  }
+
+  // ================================================================== orman (B.14 agac kesme)
+
+  /**
+   * Agac kesme: cok vurusludur — her "kes" niyeti 1 vurus dusurur ve baltayi
+   * 1 yipratir; son vurusta getiri cantaya, XP yazilir, agac devrilir ve
+   * buyumeSn sonra okuma aninda yeniden buyur (cron yok). Kutuk kalmaz
+   * (uretim.json kutukKalir=false).
+   */
+  private int kes(Vadi vadi, Oyuncu oyuncu, Niyet n, Instant simdi, DegisimYazici y) {
+    var satir =
+        dunya
+            .dugumKilitli(vadi.id(), n.bolge(), n.x(), n.y())
+            .orElseThrow(() -> new OyunHatasi(RedKodu.GECERSIZ_HEDEF, "Burada agac yok."));
+    if (!"agac".equals(satir.sinif())) {
+      throw new OyunHatasi(RedKodu.GECERSIZ_HEDEF, "Bu kesilmez.");
+    }
+    var agac =
+        denge
+            .agac(satir.tur())
+            .orElseThrow(() -> new OyunHatasi(RedKodu.GECERSIZ_HEDEF, "Bilinmeyen agac."));
+    if (oyuncu.seviye() < agac.acilisSeviye()) {
+      throw new OyunHatasi(
+          RedKodu.SEVIYE_YETERSIZ, agac.ad() + " Sv " + agac.acilisSeviye() + "'te kesilir.");
+    }
+
+    // Devrilmis agac yeniden buyuyor mu? (okuma aninda, kural 2)
+    int saglik = satir.saglik();
+    if (satir.kirildiAt() != null) {
+      Instant hazir = satir.kirildiAt().plusSeconds(agac.buyumeSn());
+      if (simdi.isBefore(hazir)) {
+        long saat = Math.max(1, Duration.between(simdi, hazir).toHours());
+        throw new OyunHatasi(
+            RedKodu.DUGUM_TUKENDI, agac.ad() + " yeniden buyuyor — ~" + saat + " sa kaldi.");
+      }
+      saglik = agac.vurus(); // buyudu: tam saglikla yeni cevrim
+    }
+
+    baltaIleVur(vadi, oyuncu, y);
+
+    saglik -= 1;
+    if (saglik > 0) {
+      dunya.dugumYaz(
+          vadi.id(), satir.bolge(), satir.x(), satir.y(), saglik, agac.vurus(), null,
+          satir.katkiJson());
+      dunya
+          .dugumKilitli(vadi.id(), satir.bolge(), satir.x(), satir.y())
+          .ifPresent(s -> y.dugum(okuyucu.dugumeCevir(s)));
+      return 0;
+    }
+
+    // Son vurus: agac devrilir.
+    for (var g : agac.getiri()) {
+      cantayaEkle(vadi, oyuncu, g.id(), g.adet(), y);
+    }
+    dunya.dugumYaz(
+        vadi.id(), satir.bolge(), satir.x(), satir.y(), 0, agac.vurus(), simdi, satir.katkiJson());
+    dunya
+        .dugumKilitli(vadi.id(), satir.bolge(), satir.x(), satir.y())
+        .ifPresent(s -> y.dugum(okuyucu.dugumeCevir(s)));
+
+    // Hedef zinciri kalici izi (XP'siz — kalici-durum ilkesi).
+    if (dunya.isaretKoy(vadi.id(), oyuncu.id(), "ilk:ilk_agac_kesimi", simdi)) {
+      y.isaret(oyuncu.id() + "|ilk:ilk_agac_kesimi");
+    }
+
+    Integer xp = denge.ilerlemeDosyasi().xpKaynaklari().agacKesme().get(agac.id());
+    return xp != null ? xp : agac.xp();
+  }
+
+  /**
+   * En iyi baltayla 1 vurus: dayaniklilik 1 duser; %20 esiginin ALTINA ilk
+   * dususte uyari, 0'da kirilma olayi (B.14 — sessizce kirilan alet ofke
+   * uretir). Balta yoksa ALET_YOK: tas balta Sv1 tezgahta, kilitlenme yok.
+   */
+  private void baltaIleVur(Vadi vadi, Oyuncu oyuncu, DegisimYazici y) {
+    DunyaDeposu.AletSatiri balta = null;
+    Alet baltaTanim = null;
+    for (var a : dunya.aletler(vadi.id(), oyuncu.id())) {
+      if (a.dayaniklilik() <= 0) continue;
+      var tanim = denge.alet(a.aletId()).orElse(null);
+      if (tanim == null || !"balta".equals(tanim.tur())) continue;
+      if (baltaTanim == null || tanim.kademe() > baltaTanim.kademe()) {
+        balta = a;
+        baltaTanim = tanim;
+      }
+    }
+    if (balta == null) {
+      throw new OyunHatasi(RedKodu.ALET_YOK, "Balta gerek — tezgahta tas balta yap (Sv 1).");
+    }
+
+    int maks = baltaTanim.dayaniklilik();
+    int yeni = balta.dayaniklilik() - 1;
+    dunya.aletYaz(vadi.id(), oyuncu.id(), balta.aletId(), yeni);
+    y.alet(new DunyaModeli.Alet(oyuncu.id(), balta.aletId(), yeni, maks));
+
+    double esik = denge.uretimDosyasi().aletKurallari().dayaniklilikUyariEsigi();
+    if (yeni <= 0) {
+      y.olay(DunyaModeli.Olay.aletKirildi(balta.aletId()));
+    } else if (yeni <= maks * esik && balta.dayaniklilik() > maks * esik) {
+      y.olay(DunyaModeli.Olay.aletUyarisi(balta.aletId()));
+    }
   }
 
   // ================================================================== kuyu ve kova

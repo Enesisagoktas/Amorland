@@ -308,6 +308,12 @@ namespace Amorland.Ogretici
                 Kosul = d => d.IsaretVar("bolge:market"),
                 Serbest = true
             });
+            _adimlar.Add(new Adim
+            {
+                Metin = "Sv 7'de ORMAN açılır: kesim sahasında baltanla bir ÇAM devir.",
+                Kosul = d => d.IsaretVar("ilk:ilk_agac_kesimi"),
+                Serbest = true
+            });
         }
 
         private void Update()

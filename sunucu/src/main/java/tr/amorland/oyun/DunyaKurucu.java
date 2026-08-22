@@ -102,7 +102,31 @@ public class DunyaKurucu {
    * ulasamiyordu; istemcideki ogretici de kovasiz hesapta kuyu adiminda
    * kilitleniyordu (oyuncu bulgusu). Gecmis hesaplar girista iyilestirilir.
    */
+  /**
+   * Orman kesim sahasini kurar (idempotent: dugumOlustur ON CONFLICT).
+   * Agaclar "agac" sinifiyla ekilir; saglik = vurus sayisi (B.14). Mevcut
+   * vadiler de ilk BAGLAN'da kavusur — orman bos bir bolge olmaktan cikar.
+   */
+  public void ormaniKur(UUID vadiId) {
+    var saha = denge.turetilmisDosyasi().ormanKesimSahasi();
+    if (saha == null) return;
+    int sutun = Math.max(1, saha.en() / 4);
+    int i = 0;
+    for (var giris : saha.agaclar().entrySet()) {
+      var agac =
+          denge
+              .agac(giris.getKey())
+              .orElseThrow(() -> new IllegalStateException("Bilinmeyen agac: " + giris.getKey()));
+      for (int n = 0; n < giris.getValue(); n++, i++) {
+        int x = saha.x0() + (i % sutun) * 4;
+        int y = saha.y0() + (i / sutun) * 4;
+        dunya.dugumOlustur(vadiId, "orman", x, y, agac.id(), "agac", agac.vurus());
+      }
+    }
+  }
+
   public void baslangicSetiniTamamla(UUID vadiId, UUID oyuncuId) {
+    ormaniKur(vadiId);
     var eldekiler = new java.util.HashSet<String>();
     for (var a : dunya.aletler(vadiId, oyuncuId)) eldekiler.add(a.aletId());
     for (String aletId : denge.turetilmisDosyasi().baslangicDurumu().aletler()) {

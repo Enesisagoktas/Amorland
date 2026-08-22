@@ -67,6 +67,8 @@ namespace Amorland.EditorAraclari
             // Cit kose kaniti: tarla bolgesinin guneybati kosesi (oyuncu bulgusu
             // "citlerin kosesi kose seklinde baglanmamis" dogrulamasi).
             Kare(cikti, "05-cit-kose.png", durum, denge, new Vector3(-42f, -20f, 0f), 5f);
+            // Orman kesim sahasi: dekordan arinmis aciklik + oynanabilir agaclar.
+            Kare(cikti, "07-orman-kesim.png", durum, denge, new Vector3(-52f, 101f, 0f), 9f);
 
             Debug.Log("[Amorland] " + _uretilen + " dunya karesi uretildi, " + _hatalar.Count
                       + " hata. Klasor: " + cikti);
@@ -123,6 +125,13 @@ namespace Amorland.EditorAraclari
                 tarlaGo.transform.position = new Vector3(-0.5f, -0.5f, 0f);
                 var tarla = tarlaGo.AddComponent<TarlaGorunumu>();
                 tarla.Kur(durum, denge);
+
+                int kesAgac = 0;
+                foreach (var t in tarlaGo.GetComponentsInChildren<Transform>())
+                {
+                    if (t.name.StartsWith("KesAgac_")) kesAgac++;
+                }
+                Debug.Log("[Amorland] " + dosya + " KesAgac sayisi: " + kesAgac);
 
                 KarakterKur(cop, kadin: false, renk: 0, kare: 0, new Vector3(1f, -2f, 0f));
                 // Partner temsili: kendi rengi (gokyuzu), durus karesinde —
@@ -340,6 +349,23 @@ namespace Amorland.EditorAraclari
                     HasatSayaci = 0
                 };
                 durum.Karolar[k.Anahtar] = k;
+            }
+
+            // Orman kesim sahasi agaclari (sunucu yerlesiminin aynasi:
+            // turetilmis.json ormanKesimSahasi x0=-62 y0=96, 4 karo ara).
+            for (int i = 0; i < 10; i++)
+            {
+                var a = new Amorland.Ag.Dugum
+                {
+                    Bolge = "orman",
+                    X = -62 + (i % 6) * 4,
+                    Y = 96 + (i / 6) * 4,
+                    Tur = "cam",
+                    Sinif = "agac",
+                    Saglik = 3,
+                    MaksSaglik = 3
+                };
+                durum.Dugumler[a.Anahtar] = a;
             }
 
             // Benim parsel: filiz (kuru) / filiz (yeni islak) / genc / olgun.

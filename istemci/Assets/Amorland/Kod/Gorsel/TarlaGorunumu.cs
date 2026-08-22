@@ -125,9 +125,15 @@ namespace Amorland.Gorsel
             _zemin.SetColor(hucre, Color.white);
         }
 
+        /// <summary>Sunucu agac dugumlerinin tek parca govdeleri (Y-sortlu).</summary>
+        private readonly List<GameObject> _agacGolar = new List<GameObject>();
+
         public void Tazele()
         {
             if (_durum == null || _bitki == null) return;
+
+            foreach (var go in _agacGolar) Destroy(go);
+            _agacGolar.Clear();
 
             _isaret.ClearAllTiles();
             _bitki.ClearAllTiles();
@@ -220,8 +226,40 @@ namespace Amorland.Gorsel
             _bitki.SetTile(h, K(Sayfa64.Ek, indeks));
         }
 
+        /// <summary>agaclar64 tur indeksi: cam=1, digerleri kavak govdesiyle.</summary>
+        private static int AgacGorseli(string tur)
+        {
+            switch (tur)
+            {
+                case "cam": return 1;
+                case "mese": return 0;
+                case "ceviz": return 2;
+                default: return 0;
+            }
+        }
+
         private void DugumCiz(Dugum dugum)
         {
+            // Oynanabilir AGAC: tilemap degil tek parca govde (kullanici kurali:
+            // uzun agaclar GameObject + Y-sort). Devrilmisse cizilmez — kutuk
+            // kalmaz (B.12), buyuyunce parilti saati geri getirir.
+            if ("agac".Equals(dugum.Sinif))
+            {
+                if (dugum.KirildiAt != null && !dugum.Hazir(_durum.SunucuZamani)) return;
+                var sprite = Karo64.UzunAgacSprite(AgacGorseli(dugum.Tur));
+                if (sprite == null) return;
+                var go = new GameObject("KesAgac_" + dugum.Anahtar);
+                go.transform.SetParent(transform, false);
+                // VadiHaritasi.UzunAgac ile ayni ayak yerlesimi (kok -0.5 ofsetli).
+                go.transform.localPosition = new Vector3(dugum.X + 0.5f, dugum.Y + 0.26f, 0f);
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = sprite;
+                sr.sortingOrder = 2;
+                sr.spriteSortPoint = SpriteSortPoint.Pivot;
+                _agacGolar.Add(go);
+                return;
+            }
+
             // Toplanan yabani kaynak YERDEN KALKAR (oyuncu bulgusu: "topladigim
             // urunler neden silinmiyor") — govdesi ekranda kalinca toplandigi
             // okunmuyordu. Yenilenme aninda parilti saati (SonrakiPariltiAni)

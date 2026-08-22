@@ -452,6 +452,56 @@ class DikeyDilimTest extends TestTemeli {
     dunya.kovaYaz(vadi.id(), oyuncuId, 6);
   }
 
+  // ================================================================== orman (B.14)
+
+  @Test
+  @DisplayName("Agac kesme: baltasiz red, cok vurus, yipranma, devrilme, yeniden buyume")
+  void agacKesme() {
+    UUID o = oyuncuKur("cihaz-1", "Ada");
+    Vadi vadi = vadiServisi.kur(o);
+    kurucu.ormaniKur(vadi.id());
+    oyuncular.seviyeVeXpYaz(o, 7, 0);
+
+    var cam =
+        dunya.dugumler(vadi.id()).stream()
+            .filter(d -> "agac".equals(d.sinif()) && "cam".equals(d.tur()))
+            .findFirst()
+            .orElseThrow();
+    var hedef = new Niyet.Hedef(cam.bolge(), cam.x(), cam.y(), null);
+
+    OyunHatasi baltasiz =
+        assertThrows(OyunHatasi.class, () -> niyet(o, vadi.id(), "kes", hedef, null));
+    assertEquals(RedKodu.ALET_YOK, baltasiz.kod(), "Baltasiz kesim reddedilir (B.14)");
+
+    dunya.aletYaz(vadi.id(), o, "tas_balta", 40);
+
+    niyet(o, vadi.id(), "kes", hedef, null);
+    niyet(o, vadi.id(), "kes", hedef, null);
+    assertEquals(0, dunya.envanterAdet(vadi.id(), o, "odun"), "Devrilmeden getiri yok");
+
+    Degisim son = niyet(o, vadi.id(), "kes", hedef, null); // cam: 3 vurus
+
+    assertEquals(4, dunya.envanterAdet(vadi.id(), o, "odun"), "Cam 4 odun verir (D)");
+    int dayaniklilik =
+        dunya.aletler(vadi.id(), o).stream()
+            .filter(a -> "tas_balta".equals(a.aletId()))
+            .findFirst()
+            .orElseThrow()
+            .dayaniklilik();
+    assertEquals(37, dayaniklilik, "3 vurus baltayi 3 yipratir");
+    assertTrue(
+        son.isaretler().contains(o + "|ilk:ilk_agac_kesimi"),
+        "Ilk kesim kalici iz birakir (hedef zinciri)");
+
+    OyunHatasi buyuyor =
+        assertThrows(OyunHatasi.class, () -> niyet(o, vadi.id(), "kes", hedef, null));
+    assertEquals(RedKodu.DUGUM_TUKENDI, buyuyor.kod(), "Devrik agac hemen kesilmez");
+
+    sahteSaat().ileriSar(Duration.ofSeconds(28801)); // cam buyumeSn
+    assertDoesNotThrow(
+        () -> niyet(o, vadi.id(), "kes", hedef, null), "Buyuyen agac yeniden kesilir");
+  }
+
   // ================================================================== tren + market (B.15)
 
   @Autowired TrenServisi tren;

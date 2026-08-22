@@ -471,5 +471,11 @@ public final class DengeModelleri {
       Esyalar esyalar,
       DepoSiralama depoSiralama,
       Sulama sulama,
-      DepoKisitiKurali depoKisitiKurali) {}
+      DepoKisitiKurali depoKisitiKurali,
+      OrmanKesimSahasi ormanKesimSahasi) {}
+
+  /** Orman kesim acikligi: agac dugumlerinin deterministik yerlesimi. */
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public record OrmanKesimSahasi(
+      int x0, int y0, int en, int boy, Map<String, Integer> agaclar) {}
 }

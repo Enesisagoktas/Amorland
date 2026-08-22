@@ -247,6 +247,15 @@
   "doldurmaSn": 1.0,
   "sahneIcinde": true
  },
+ "ormanKesimSahasi": {
+  "$kaynak": "B.4 orman bolgesi + B.14 agac kesme (uretim.json agaclar)",
+  "$turetim": "Orman icinde dekordan arindirilmis kesim acikligi. Istemci acikligi bos birakir (VadiHaritasi), sunucu agac dugumlerini deterministik izgaraya eker. Koordinatlar SUNUCU uzayinda; agaclar 4 karo arayla dizilir ki aralarinda yurunebilsin.",
+  "x0": -62,
+  "y0": 96,
+  "en": 24,
+  "boy": 12,
+  "agaclar": { "cam": 10, "mese": 4 }
+ },
  "yabaniKaynakYerlesimi": {
   "$kaynak": "B.18 2:20 — 'Tarla kenarindaki 3 yabani kaynak parlar'",
   "tarla_kenari": {
