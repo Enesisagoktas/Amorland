@@ -143,14 +143,25 @@ namespace Amorland.Ogretici
                 // ⚠ Kovasiz hesap (eski kayit) bu adimda KILITLENIYORDU ve akis
                 // "sirasiz" gorunuyordu (oyuncu bulgusu) — kovasizsa adim atlanir;
                 // sunucu iyilestirmesi zaten girista kova verir.
-                Kosul = d => d.Ben != null && (d.Ben.KovaKapasite <= 0
-                             || d.Ben.KovaKalan >= d.Ben.KovaKapasite),
+                // Kova durumu KALICI degil: sonradan bosalan kova, yeniden
+                // giriste bu adimi yanlis yere geri getiriyordu. Hasat izi varsa
+                // kuyu dersi coktan alinmistir (ayni sinif hata: dal adimi).
+                Kosul = d => d.IsaretVar("ilk:ilk_hasat")
+                             || (d.Ben != null && (d.Ben.KovaKapasite <= 0
+                                 || d.Ben.KovaKalan >= d.Ben.KovaKapasite)),
                 Hedef = new Vector2(TarlaGorunumu.KuyuKonumu.x, TarlaGorunumu.KuyuKonumu.y)
             });
             _adimlar.Add(new Adim
             {
                 Metin = "Parlayan dallara dokun — odun topla, çantana girer.",
-                Kosul = d => d.EnvanterAdet("odun") > 0,
+                // ⚠ Kosul KALICI olmali: envantere bakmak, odun depoya/craft'a
+                // gidince adimi yeniden aciyordu ve dallar tukenmisken oyuncu
+                // "odun topla" karsisinda kilitleniyordu (oyuncu bulgusu).
+                // Isaret sunucudan gelir; eski kayitlar icin canta/depo kaniti da
+                // kabul edilir (isaret gecmise donuk yazilamaz).
+                Kosul = d => d.IsaretVar("ilk:ilk_toplama")
+                             || d.EnvanterAdet("odun") > 0
+                             || d.Depo.ContainsKey("odun"),
                 Hedef = new Vector2(-2f, 1f)
             });
             _adimlar.Add(new Adim

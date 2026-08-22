@@ -427,7 +427,9 @@ public class OyunServisi {
     if (satir.kirildiAt() != null) {
       Instant hazir = satir.kirildiAt().plusSeconds(kaynak.yenilenmeSn());
       if (simdi.isBefore(hazir)) {
-        throw new OyunHatasi(RedKodu.DUGUM_TUKENDI, "Bu kaynak henuz yenilenmedi.");
+        long dk = Math.max(1, Duration.between(simdi, hazir).toMinutes());
+        throw new OyunHatasi(
+            RedKodu.DUGUM_TUKENDI, "Bu kaynak henuz yenilenmedi — " + dk + " dk kaldi.");
       }
     }
 
@@ -445,6 +447,16 @@ public class OyunServisi {
     dunya
         .dugumKilitli(vadi.id(), satir.bolge(), satir.x(), satir.y())
         .ifPresent(s -> y.dugum(okuyucu.dugumeCevir(s)));
+
+    // Ogretici KALICI iz ister: "ilk toplama" ani XP'SIZ isaretlenir. B.16'nin
+    // 6 ilk-kez odulu sabittir ve bu an listede yoktur — XP eklemek 765
+    // toplamini bozardi; isaret ise yalnizca "bu is bir kez yapildi" kaydidir.
+    // (Envantere bakan ogretici, odun depoya/craft'a gidince yeniden "topla"
+    // diyordu ve dallar tukenmisken kilitleniyordu — oyuncu bulgusu.)
+    if (dunya.isaretKoy(vadi.id(), oyuncu.id(), "ilk:ilk_toplama", simdi)) {
+      y.isaret(oyuncu.id() + "|ilk:ilk_toplama");
+      y.olay(DunyaModeli.Olay.ilkKez("ilk_toplama"));
+    }
 
     return kaynak.xp();
   }

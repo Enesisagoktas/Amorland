@@ -144,6 +144,11 @@ class DikeyDilimTest extends TestTemeli {
       tur++;
     }
     assertTrue(odun >= 8, "Dal toplayarak 8 odun toplanabilmeli, toplanan: " + odun);
+    // Ogretici izi KALICI: ilk toplama isareti yazilmis olmali (XP'siz —
+    // B.16'nin 6 ilk-kez odulu sabit kalir, bu yalnizca "yapildi" kaydidir).
+    assertTrue(
+        dunya.isaretler(vadi.id(), o).contains("ilk:ilk_toplama"),
+        "Ilk toplama isareti kalici yazilmali (ogretici kilitlenmesi)");
 
     Degisim craft =
         niyet(o, vadi.id(), "craft", null, new Niyet.Ek(null, null, null, "ahsap_kova"));

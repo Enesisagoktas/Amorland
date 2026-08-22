@@ -137,6 +137,49 @@ namespace Amorland.Gorsel
             foreach (var karo in _durum.BenimKarolarim) KaroCiz(karo, 0);
             foreach (var karo in _durum.PartnerKarolari) KaroCiz(karo, PartnerKaydirma);
             foreach (var dugum in _durum.Dugumler.Values) DugumCiz(dugum);
+
+            _sonrakiPariltiAni = SonrakiPariltiAni();
+        }
+
+        // ------------------------------------------------------------------ parilti saati
+
+        private System.DateTime? _sonrakiPariltiAni;
+
+        /// <summary>
+        /// Olgunlasma ve dugum yenilenmesi SUNUCUDAN MESAJ GETIRMEZ (cron yok,
+        /// mimari kural 2): sunucu her seyi okuma aninda hesaplar, istemciye
+        /// "hazir oldu" dive bir paket gelmez. Parilti bu yuzden YEREL sunucu
+        /// saatiyle yakilir — yoksa toplanan dal 30 dk sonra yenilendigi halde
+        /// sonuk kalir ve oyuncu "ortalikta odun yok" sanir (oyuncu bulgusu).
+        /// Ayni kok olgunlasan urunun piriltisini de soyuk birakiyordu.
+        /// </summary>
+        private System.DateTime? SonrakiPariltiAni()
+        {
+            System.DateTime? enYakin = null;
+            var simdi = _durum.SunucuZamani;
+
+            foreach (var d in _durum.Dugumler.Values)
+            {
+                if (d.HazirOlacakAt == null || d.HazirOlacakAt.Value <= simdi) continue;
+                if (enYakin == null || d.HazirOlacakAt.Value < enYakin.Value)
+                    enYakin = d.HazirOlacakAt.Value;
+            }
+            foreach (var k in _durum.Karolar.Values)
+            {
+                if (k.Bos || k.SulandiAt == null || Olgun(k)) continue;
+                var an = simdi.AddSeconds(KalanSn(k));
+                if (enYakin == null || an < enYakin.Value) enYakin = an;
+            }
+            return enYakin;
+        }
+
+        private void Update()
+        {
+            if (_sonrakiPariltiAni == null || _durum == null) return;
+            if (_durum.SunucuZamani < _sonrakiPariltiAni.Value) return;
+            // Tazele hem piriltiyi yakar hem bir SONRAKI ani yeniden hesaplar;
+            // bekleyen kalmayinca sayac kendiliginden durur.
+            Tazele();
         }
 
         /// <summary>
