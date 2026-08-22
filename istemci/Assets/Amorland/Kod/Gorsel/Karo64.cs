@@ -46,7 +46,10 @@ namespace Amorland.Gorsel
         // ------------------------------------------------------------ arazi (RpgBase)
 
         /// <summary>Duz cim cesitleri. Cogunluk sade (43), tutamli olanlar serpilir.</summary>
-        public static readonly int[] Cim = { 43, 43, 43, 3, 23, 44 };
+        // ⚠ 3 ve 23 havuzdan CIKTI: rpg-base'de bu karolarin kahve yapraklari
+        // karo SINIRINA dayali cizilmis — rastgele serpistirmede komsuda devami
+        // olmayinca kenarda kesik yarim-yaprak lekeleri kaliyordu (gorsel denetim).
+        public static readonly int[] Cim = { 43, 43, 43, 44 };
         public static readonly int[] CimDetay = { 4, 24 };
 
         /// <summary>Duz toprak cesitleri (yol/avlu ici).</summary>

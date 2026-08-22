@@ -935,6 +935,14 @@ class Cizer:
         for ax in (14, 30, 46):
             d.arc([4, 78, 60, 114], 30 + ax * 2, 46 + ax * 2, fill=ton(tas, 0.66) + (255,), width=2)
 
+        # kuyu ici karanligi: catinin altindaki bosluk SAYDAM birakilinca
+        # arkadaki karakter direklerin arasindan gorunuyor ve "kuyunun icinde
+        # yuz var" gibi okunuyordu (gorsel denetim). Koyu panel + iki kiris.
+        d.rectangle([12, 40, 52, 92], fill=(56, 46, 42, 255))
+        d.rectangle([12, 40, 52, 52], fill=(44, 36, 33, 255))
+        d.rectangle([12, 62, 52, 65], fill=(48, 39, 36, 255))
+        d.rectangle([12, 78, 52, 81], fill=(48, 39, 36, 255))
+
         # direkler
         d.rectangle([8, 34, 15, 100], fill=direk + (255,), outline=ton(direk, 0.6) + (255,))
         d.rectangle([49, 34, 56, 100], fill=direk + (255,), outline=ton(direk, 0.6) + (255,))
