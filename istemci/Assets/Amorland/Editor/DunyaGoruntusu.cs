@@ -69,6 +69,15 @@ namespace Amorland.EditorAraclari
             Kare(cikti, "05-cit-kose.png", durum, denge, new Vector3(-42f, -20f, 0f), 5f);
             // Orman kesim sahasi: dekordan arinmis aciklik + oynanabilir agaclar.
             Kare(cikti, "07-orman-kesim.png", durum, denge, new Vector3(-52f, 101f, 0f), 9f);
+            // Bolge denetim kareleri (oyuncu talebi: "haritanin diger yerlerini
+            // elden gecir") — her bolge kendi kadrajinda taranir.
+            Kare(cikti, "08-maden.png", durum, denge, new Vector3(-131f, -16f, 0f), 14f);
+            Kare(cikti, "09-ev.png", durum, denge, new Vector3(15f, 85f, 0f), 10f);
+            Kare(cikti, "10-depo.png", durum, denge, new Vector3(135f, 83f, 0f), 12f);
+            Kare(cikti, "11-market.png", durum, denge, new Vector3(231f, 45f, 0f), 14f);
+            Kare(cikti, "12-gar.png", durum, denge, new Vector3(152f, -48f, 0f), 12f);
+            Kare(cikti, "13-gol.png", durum, denge, new Vector3(108f, 152f, 0f), 18f);
+            Kare(cikti, "14-vadi-tam.png", durum, denge, new Vector3(42f, 72f, 0f), 162f);
 
             Debug.Log("[Amorland] " + _uretilen + " dunya karesi uretildi, " + _hatalar.Count
                       + " hata. Klasor: " + cikti);

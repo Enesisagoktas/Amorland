@@ -956,7 +956,12 @@ namespace Amorland.Gorsel
                 // Dukkan tabelasi sacaktan sarkar.
                 // Tabela cizimi karonun USTUNDEN sarkar (denetim); hucre bir ust
                 // satira cikti ki pano cephe hizasina, askilar sacaga otursun.
-                if (Icerde(orta, y0 + 2)) Koy(_nesneUst, orta, y0 + 2, Ek(Karo64.AsiliTabela));
+                // Pano sprite'i hucrenin USTUNDEN sarkar: cati hizasindaki her
+                // yerlesim panoyu kiremite bindiriyordu (gorsel denetim, iki
+                // deneme). Dogru yer CEPHE katinin yan hucresi — vitrin ortada,
+                // kapi solda, pano sagda: dukkan cephesi tam okunur.
+                if (genislik >= 3 && Icerde(orta + 1, y0))
+                    Koy(_nesneUst, orta + 1, y0, Ek(Karo64.AsiliTabela));
             }
             else if (kemer)
             {
@@ -1041,9 +1046,13 @@ namespace Amorland.Gorsel
             }
         }
 
-        /// <summary>Cit konabilir mi: dekoru ezer, su ve dolu (bina/nesne) hucreye konmaz.</summary>
+        /// <summary>
+        /// Cit konabilir mi: dekoru VE serbest nesneleri (yalak, saman — yalniz
+        /// _dolu) ezer; su ile bina/agac govdesi (_engel) korunur. Eski !_dolu
+        /// sarti avlu citinde nesne hizasinda DELIK acyordu (gorsel denetim).
+        /// </summary>
         private bool CitOlur(int x, int y) =>
-            Icerde(x, y) && !_su[x, y] && !_dolu[x, y] && !_engel[x, y];
+            Icerde(x, y) && !_su[x, y] && !_engel[x, y];
 
         // ------------------------------------------------------------------ serpme
 

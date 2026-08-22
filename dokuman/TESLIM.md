@@ -83,7 +83,7 @@ oturum uzunluğunu tren değil, bölge içerikleri taşıyacak.
 | `carpanKus` (küslükte tren çarpanı) UYGULANMADI | B.8 kırmızı çizgi: "küslüğün ekonomik etkisi olamaz" — spec kendi içinde çelişiyor, güvenli taraf seçildi |
 | Not tahtası şu an YAYIN | çevrimdışı partner notu kaçırır; kalıcı tahta sunucuda ayrı iş |
 | Tren tohum satışı, fiyat mini grafiği | Perde 1 için şart değil |
-| Görsel cila kalanları (çim→orman geçiş karoları, çit köşesi, bölge imzaları) | oynanışı etkilemiyor |
+| Göl sığ/derin geçişi köşeli; ağaç kümesi gölge yamaları yer yer sahipsiz | ikisi de autotile/yerleşim işi — ayrı tur; oynanışı etkilemiyor |
 
 ---
 
