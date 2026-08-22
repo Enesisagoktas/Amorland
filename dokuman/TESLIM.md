@@ -59,6 +59,23 @@ protokol uyumu, ekonomi/denge) tarandı; her bulgu 2 karşıt hakemle doğruland
 Düzeltilmeyen 2 bulgu bilinçli: mini fiyat grafiği yokluğu (ertelendi) ve
 not tahtası kalıcılığı (aşağıda).
 
+### Oyuncu bulguları turu (22.08 gündüz)
+
+| Bulgu | Düzeltme |
+|---|---|
+| Öğretici depo adımı ilerlemiyordu | İşaret formatı tekilleşti (delta da `oyuncuId\|işaret`); öğretici zincirleme ilerler |
+| "Depoya git" ışınlamıyordu | Bölge geçişi karakteri bölge kapısına taşır, kamera anında oturur |
+| "Odun topla" kilitlenmesi | Koşullar KALICI izlere bağlandı; parıltılar yerel sunucu saatiyle yanar; toplanan kaynak yerden kalkar |
+| Öğretici pasifti | ZORUNLU yönlendirme: adım dışı dokunuş kilitli, karakter hedefe kendisi yürür, depo adımı taşır |
+| **"2 dakikalık gameplay"** | **Hedef zinciri**: öğretici sonrası 5 yol gösterici görev (taş kazma → balta → Sv5 → tren teslimi → market), kilitsiz, kalıcı izlere bağlı |
+
+**İçerik ömrü — dürüst tablo.** Perde 1 iskeleti (Sv 1-5: tarla/depo/craft/tren/market)
+tamam; "2 dk" hissinin üç kaynağından ikisi kapandı (hedefsizlik, görsel geri
+bildirim). Üçüncüsü içerik derinliği: orman (Sv 7 ağaç kesme), maden (Sv 9),
+kümes/değirmen üretim zincirleri henüz İNŞA EDİLMEDİ — Hafta 2-3 sırasının
+kendisi. Tren kasıtlı olarak 6 saatte bir gelir (B.15 mobil oturum ritmi);
+oturum uzunluğunu tren değil, bölge içerikleri taşıyacak.
+
 ### Bilinçli sınırlar / ertelenenler
 
 | Karar | Sebep |

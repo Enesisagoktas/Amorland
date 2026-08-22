@@ -222,6 +222,13 @@ namespace Amorland.Gorsel
 
         private void DugumCiz(Dugum dugum)
         {
+            // Toplanan yabani kaynak YERDEN KALKAR (oyuncu bulgusu: "topladigim
+            // urunler neden silinmiyor") — govdesi ekranda kalinca toplandigi
+            // okunmuyordu. Yenilenme aninda parilti saati (SonrakiPariltiAni)
+            // Tazele'yi cagirir ve govde geri gelir. Cevher gibi elle
+            // toplanmayan siniflar yerinde durur.
+            if ("yabani".Equals(dugum.Sinif) && !dugum.Hazir(_durum.SunucuZamani)) return;
+
             string tur = dugum.Tur ?? "";
             int indeks;
             if (tur.Contains("dal") || tur.Contains("odun") || tur.Contains("kutuk"))

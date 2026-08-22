@@ -492,6 +492,9 @@ class DikeyDilimTest extends TestTemeli {
             new Niyet.Ek(null, null, null, null, sefer));
 
     assertEquals(siparis.altinOdul(), dunya.altin(vadi.id(), o), "Odul tek seferde tam yatar");
+    assertTrue(
+        d.isaretler().contains(o + "|ilk:ilk_tren_teslimi"),
+        "Ilk tren teslimi kalici iz birakmali (hedef zinciri)");
     assertEquals(0, dunya.envanterAdet(vadi.id(), o, siparis.urunId()), "Kismi yatirma yok, tam teslim");
     assertTrue(d.olaylar().stream().anyMatch(x -> "tren_siparis_karsilandi".equals(x.tip())));
 

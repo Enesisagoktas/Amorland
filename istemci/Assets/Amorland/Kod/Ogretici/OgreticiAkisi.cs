@@ -30,7 +30,9 @@ namespace Amorland.Ogretici
         private Text _yazi;
         private int _adim = -1;
 
-        private const string TamamlandiAnahtari = "amorland.ogretici.bitti";
+        // Surumlu anahtar: hedef zinciri eklenince eski "bitti" bayragi
+        // gecersizdir — isaret tabanli kosullar dogru adima kendiliginden oturur.
+        private const string TamamlandiAnahtari = "amorland.ogretici.bitti.v2";
 
         /// <summary>
         /// Ipucu seridinin olculeri. Genislik 760'tan 620'ye indi: 760 px'lik serit
@@ -269,6 +271,42 @@ namespace Amorland.Ogretici
                 Metin = "Bu vadide hiçbir iş tek başına görülmez. Sv 3'te eşin için sol üst kapsüle dokun.",
                 Kosul = d => d.Ben != null && d.Ben.Seviye >= 3,
                 Serbest = true   // ogretici gorevleri bitti: dunya artik oyuncunun
+            });
+
+            // ---- HEDEF ZINCIRI (oyuncu bulgusu: "2 dakikalik gameplay") ----
+            // Ogretici bitince oyuncuya kimse "simdi ne yap" demiyordu; Sv2-6
+            // arasi bos hissediliyordu. Zincir spec'in kendi ilerlemesini takip
+            // eder: craft -> Sv5 tren -> teslimat -> market. Hepsi SERBEST —
+            // kilit yok, yalniz yol gosterir; kosullar KALICI izlere bagli.
+            _adimlar.Add(new Adim
+            {
+                Metin = "Tarla kenarından taş topla, evdeki tezgahta TAŞ KAZMA yap.",
+                Kosul = d => d.IsaretVar("craft:tas_kazma"),
+                Serbest = true
+            });
+            _adimlar.Add(new Adim
+            {
+                Metin = "Bir de TAŞ BALTA yap — orman Sv 7'de seni bekliyor.",
+                Kosul = d => d.IsaretVar("craft:tas_balta"),
+                Serbest = true
+            });
+            _adimlar.Add(new Adim
+            {
+                Metin = "Ek, sula, biç — Sv 5'te TREN GARI açılır ve para oyuna girer.",
+                Kosul = d => d.Ben != null && d.Ben.Seviye >= 5,
+                Serbest = true
+            });
+            _adimlar.Add(new Adim
+            {
+                Metin = "Haritadan GAR'a git — trene bir sipariş teslim et, ilk altınını kazan.",
+                Kosul = d => d.IsaretVar("ilk:ilk_tren_teslimi"),
+                Serbest = true
+            });
+            _adimlar.Add(new Adim
+            {
+                Metin = "Sv 6'da MARKET açılır: fazla ürünü sat, yeni tohumlar al.",
+                Kosul = d => d.IsaretVar("bolge:market"),
+                Serbest = true
             });
         }
 

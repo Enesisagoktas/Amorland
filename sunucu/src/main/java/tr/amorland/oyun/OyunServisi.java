@@ -189,6 +189,10 @@ public class OyunServisi {
     envanterYaz(vadi, oyuncu.id(), siparis.urunId(), -siparis.miktar(), y);
     dunya.altinDegistir(vadi.id(), oyuncu.id(), siparis.altinOdul());
     y.olay(DunyaModeli.Olay.trenSiparisi(oyuncu.id(), kart));
+    // Hedef zinciri KALICI iz ister (XP'siz — B.16 tek seferlikleri sabit).
+    if (dunya.isaretKoy(vadi.id(), oyuncu.id(), "ilk:ilk_tren_teslimi", simdi)) {
+      y.isaret(oyuncu.id() + "|ilk:ilk_tren_teslimi");
+    }
 
     int xp = siparis.xp();
     xp += ilerleme.defterTetikle(vadi, oyuncu.id(), "bolge_acildi:gar", y);
