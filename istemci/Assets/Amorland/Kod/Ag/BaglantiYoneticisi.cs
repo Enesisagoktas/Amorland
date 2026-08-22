@@ -217,9 +217,13 @@ namespace Amorland.Ag
 
                 case Protokol.TipRed:
                     _bekleyenOnaylar.Remove(mesaj.ClientActionId);
-                    _durum.RediIsle(mesaj.ClientActionId, mesaj.Kod, mesaj.Mesaj);
+                    // Tek bildirim kanali: Red olayi (Oyun'daki abone toast basar).
+                    // Buradan ikinci bir Bildirim atmak AYNI reddi ust uste iki
+                    // seritle gosteriyordu; kuyruk bosaltilirken ikisi de susar,
+                    // ozet mekanizmasi konusur.
+                    _durum.RediIsle(
+                        mesaj.ClientActionId, mesaj.Kod, mesaj.Mesaj, sessiz: _kuyrukBosaltiliyor);
                     if (_kuyrukBosaltiliyor) _kuyrukRedSayisi++;
-                    else Bildirim?.Invoke(mesaj.Mesaj);
                     break;
 
                 case Protokol.TipHata:

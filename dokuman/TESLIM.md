@@ -1,3 +1,75 @@
+# Teslim raporu
+
+## 0. Gece turu (22.08) — para oyuna girdi, iletişim spec kalıbına oturdu
+
+Hafta 2'nin ilk kalemi ("Perde 1'i tamamla: tren garı + manifesto + dinamik
+fiyat") ve B.9 iletişim kalıpları bu turda bitti. Her faz ayrı commit; hepsi
+ölçülerek ilerledi (A.6).
+
+### Ne eklendi
+
+| Alan | Durum |
+|---|---|
+| **Tren (B.15)** — deterministik sefer/fiyat/kart, sunucu | ✅ sefer no epoch'tan, fiyat 50-sefer ileri sarmalı ortalamaya dönen yürüyüş, 3 kart hash'ten. DB'ye YALNIZ karşılama yazılır (kural 3) |
+| İlk-ulaşan-kazanır (C.5) | ✅ birincil anahtar (vadi, sefer, kart) — yarış kodu yok, veritabanı zorlar |
+| Manifesto 3/3 bonusu | ✅ İKİ imzaya da yazılır; `manifesto_tamam` olayı iki tarafta kutlanır |
+| `tren_karsila` / `sat` / `satin_al` niyetleri + Sv5 para kapısı | ✅ kısmi yatırma yok; market sabit %55; açılmamış ürünün tohumu satılmaz |
+| **Tren panosu ekranı** | ✅ GET /tren'den okur, fiyat HESAPLAMAZ (kural 7); karşılanan kart altın çerçeve + kim karşıladığı yazılı; geri sayım yerel, sefer bitince tek yenileme |
+| **Market ekranı** | ✅ bilerek sıkıcı — "fiyatlar sabittir, iyi para trende" ekranda yazılı |
+| **Not tahtası (B.9, 12 şablon)** | ✅ şablon+nesne kimliği gider, metin iki uçta aynı tablodan çözülür; {nesne}/{bölge} iki dokunuşla |
+| **İfade tekerleği (B.9, 8 ifade)** | ✅ "ifade:" önekiyle sohbet kanalından; balon konuşanın başının üstünde, bölge dışındaysa bildirime düşer |
+| Seviye atlayınca açılan ürünün tohumu (4 adet) | ✅ "açılış kutlaması boş vaatti" boşluğu kapandı — duman testi Sv2'de turp tohumunu sunucu onaylı doğruluyor |
+| Depodan miktarlı alma ("1 Al" / "Hepsi") | ✅ tek dokunuş çantayı kilitlemiyor |
+
+### Doğrulama (bu tur)
+
+| Ne | Sonuç |
+|---|---|
+| Sunucu testleri | **58/58** (2 yeni: tren karşılama + market) |
+| Protokol — canlı sunucu | **35/35** (3 yeni tren denetimi; bayat "kova boş" varsayımı düzeltildi) |
+| Bütünlük — statik | **16/16** |
+| Unity C# derlemesi (gerçek DLL, iki girdi kolu) | **0 hata** |
+| **Duman testi — 16 adım** | **GEÇTİ**: seçim tıklaması → ek/sula/topla/kuyu/hasat → **Sv2 + turp tohumu ödülü** → depo boşaltma, hepsi sunucu onaylı |
+
+Duman testinin uzatılmış ilk koşusu gerçek bir hata yakaladı: sohbet olay
+bağlamaları `_sohbet` kurulmadan önce yapılıyordu — null referans dünya
+kurulumunu sessizce koparıyordu. Test olmasa sabah oyun açılmazdı.
+
+### Gece denetimi: 32 ajanlı, 4 mercekli tur — 14 bulgu, 12'si düzeltildi
+
+Yeni kodun tamamı 4 bağımsız mercekle (sunucu-B.15, istemci null/yaşam döngüsü,
+protokol uyumu, ekonomi/denge) tarandı; her bulgu 2 karşıt hakemle doğrulandı.
+14/14 gerçek çıktı. Düzeltilenler:
+
+| Bulgu | Düzeltme |
+|---|---|
+| **[kritik]** Tren niyeti sefer taşımıyordu — tam sınırda kalkan tren, oyuncunun HİÇ GÖRMEDİĞİ yeni kartla eşleşiyordu | Niyet artık panodaki seferi taşır; uyuşmazlık AÇIK reddedilir ("Tren kalktı — pano yenilendi") |
+| **[kritik]** Fiyat/kart hash'i `vadi.tohum` kullanmıyordu — tüm vadiler aynı fiyat eğrisini görüyordu, gelecek fiyatlar hesaplanabilirdi (C.11 ihlali) | Tüm tren hash'lerine vadi tohumu girdi oldu |
+| **[kritik]** Davetle katılımda dünya sıfırlanmıyordu — WS ESKİ vadiye bağlı kalıyor, tüm eylemler solo vadiye işleniyordu | Katılımda soket kapatılır, durum sıfırlanır, yeni vadiye bağlanılır |
+| %70 kontenjan yalnız partnersiz vadiye iniyordu; 7 gündür terk edilmiş oyuncu çift kontenjanla yalnızdı (B.7) | Koşul `tekImzaModu`'na bağlandı |
+| Tohum penceresi (B.11) hiç denetlenmiyordu — safran tohumu 7/24 sınırsızdı, +%56 fiyat primi anlamsızlaşıyordu | Deterministik pencere: gün 3 dilime bölünür, pencere başlangıcı vadi tohumundan türetilir; test açık+kapalı anı tarayarak doğrular |
+| İdempotency denetimi vadi kilidinden ÖNCEYDİ — aynı `client_action_id` yarışta iki kez uygulanabilirdi (çifte satış) | Kilit ALTINDA ikinci bakış eklendi |
+| Her RED iki ayrı bildirim üretiyordu; kuyruk özeti deliniyordu | Tek kanal (Red olayı); kuyruk boşaltırken susturulur |
+| `tren_siparis_karsilandi` faili taşımıyordu — partnerin teslimatı "sen teslim ettin" diye kutlanıyordu | Olay karşılayanı taşır; partner adıyla kutlanır (B.1) |
+| Bağlantı yokken not tahtası sahte "asıldı" onayı veriyordu | WS kapalıyken açık uyarı, gönderim yok |
+| Haritadan gar'a gelişte pano sessizce açılmıyordu (senkron yarışı) | Pano senkronu bekler (8 sn'ye kadar), sonra açılır |
+| Uçuştaki GET yanıtı kapatılmış tren panelini zorla geri açıyordu | Yenileme tazelemeleri paneli açmaz, yalnız bölgeye giriş açar |
+| Market her Değişim'de listeyi anında yıkıp kuruyordu (parmak altındaki buton yok oluyordu) | Kirli bayrağı — tazeleme bir sonraki kareye ertelenir |
+
+Düzeltilmeyen 2 bulgu bilinçli: mini fiyat grafiği yokluğu (ertelendi) ve
+not tahtası kalıcılığı (aşağıda).
+
+### Bilinçli sınırlar / ertelenenler
+
+| Karar | Sebep |
+|---|---|
+| `carpanKus` (küslükte tren çarpanı) UYGULANMADI | B.8 kırmızı çizgi: "küslüğün ekonomik etkisi olamaz" — spec kendi içinde çelişiyor, güvenli taraf seçildi |
+| Not tahtası şu an YAYIN | çevrimdışı partner notu kaçırır; kalıcı tahta sunucuda ayrı iş |
+| Tren tohum satışı, fiyat mini grafiği | Perde 1 için şart değil |
+| Görsel cila kalanları (çim→orman geçiş karoları, çit köşesi, bölge imzaları) | oynanışı etkilemiyor |
+
+---
+
 # Hafta 1 teslim raporu
 
 **Hedef (A.4 #1):** Ev + Tarla, tek ürün, ek/sula/biç, iki oyuncu bağlı, durum kalıcı,

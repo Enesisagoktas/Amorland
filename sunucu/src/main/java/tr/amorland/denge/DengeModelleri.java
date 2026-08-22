@@ -24,6 +24,10 @@ public final class DengeModelleri {
   @JsonIgnoreProperties(ignoreUnknown = true)
   public record AcilisTohumOdulu(int adet) {}
 
+  /** B.11 tohum penceresi: pencereli tohumlar gunde N kez, S sn satilir. */
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public record TohumPenceresiKurali(int gunlukPencereSayisi, long pencereSuresiSn) {}
+
   public record Acilis(String tip, int seviye) {
     public boolean seviyeOduluMu() {
       return "seviye_odulu".equals(tip);
@@ -113,6 +117,7 @@ public final class DengeModelleri {
       TrenFiyat trenFiyat,
       Manifesto manifesto,
       AcilisTohumOdulu acilisTohumOdulu,
+      TohumPenceresiKurali tohumPenceresiKurali,
       BaslangicUrunKurali baslangicUrunKurali) {}
 
   // ---------------------------------------------------------------- uretim.json

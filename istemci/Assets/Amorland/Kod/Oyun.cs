@@ -112,6 +112,7 @@ namespace Amorland
             KonumYayinla();
             JoystickGuncelle();
             _tren?.SureTazele();
+            _market?.Guncelle();
         }
 
         private void OnDestroy() => _baglanti?.Durdur();
@@ -528,8 +529,13 @@ namespace Amorland
             _ayarlar = new AyarlarEkrani(_ustKanvas.transform, _ses);
 
             _tren = new TrenEkrani(_ustKanvas.transform, _durum, _denge);
-            _tren.Karsila += kart => Gonder("tren_karsila", NiyetHedef.Dugum("gar", kart, 0));
-            _tren.Yenile += TrenTazele;
+            // Niyet PANODAKI sefere baglanir: tren tam sinirda kalkarsa sunucu
+            // bayat panoyu ACIKCA reddeder, oyuncu gormedigini onaylamaz.
+            _tren.Karsila += kart => Gonder(
+                "tren_karsila",
+                NiyetHedef.Dugum("gar", kart, 0),
+                new NiyetEk { Sefer = _tren.AcikSefer });
+            _tren.Yenile += () => TrenTazele(ac: false);
             _market = new MarketEkrani(_ustKanvas.transform, _durum, _denge);
             _market.SatIstegi += (esya, adet) =>
                 Gonder("sat", null, new NiyetEk { EsyaId = esya, Adet = adet });
@@ -539,6 +545,12 @@ namespace Amorland
             _notTahtasi = new NotTahtasiEkrani(_ustKanvas.transform, _durum, _denge);
             _notTahtasi.Gonder += (sablon, nesne) =>
             {
+                // WS kapaliyken "asildi" demek yalan olurdu: not yayin, kuyruga girmez.
+                if (_baglanti == null || !_baglanti.Bagli)
+                {
+                    _bildirimler.Goster("Bağlantı yok — not asılamadı.", uyari: true);
+                    return;
+                }
                 _baglanti.NotTahtasi(sablon, nesne);
                 // Kendi notumun da onayini gorurum: "asildi mi?" belirsiz kalmaz.
                 _bildirimler.Goster("Tahtaya asıldı: " + NotTahtasiEkrani.Metin(sablon, NesneAdi(nesne)));
@@ -548,6 +560,11 @@ namespace Amorland
             _sohbet.NotTahtasi += () => _notTahtasi.Ac();
             _sohbet.Ifade += ifadeId =>
             {
+                if (_baglanti == null || !_baglanti.Bagli)
+                {
+                    _bildirimler.Goster("Bağlantı yok — ifade gönderilemedi.", uyari: true);
+                    return;
+                }
                 _baglanti.SohbetGonder("ifade:" + ifadeId);
                 // Kendi balonum aninda ucar (iyimser istemci); partnerinki
                 // SohbetMesaji uzerinden gelir.
@@ -625,7 +642,12 @@ namespace Amorland
             {
                 if (sonuc.Basarili)
                 {
-                    _bildirimler.Goster("Vadiye katıldın.");
+                    _bildirimler.Goster("Vadiye katıldın! Ortak vadi yükleniyor...");
+                    // Eski soket ESKI vadiye kayitli (sunucu uyeligi BAGLAN aninda
+                    // sabitler): kapatilmadan yeni vadiye gecilmez. Durum da
+                    // sifirlanir ki eski revizyon yeni vadiye delta tabani olmasin.
+                    _baglanti.Durdur();
+                    _durum.Sifirla();
                     _baglanti.Baslat(_rest.ErisimJetonu);
                 }
                 else _davet.HataGoster(sonuc.HataMesaji ?? "Katılamadı.");
@@ -672,15 +694,33 @@ namespace Amorland
         /// Tren panosunu sunucudan ceker (mimari kural 7: istemci fiyat HESAPLAMAZ,
         /// yalnizca gosterir). Basarisizlik sessiz kalmaz.
         /// </summary>
-        private void TrenTazele()
+        private void TrenTazele(bool ac = true)
         {
             string vadiId = _durum.Vadi != null ? _durum.Vadi.Id : null;
             if (vadiId == null) return;
             _rest.TrenDurumu(vadiId, s =>
             {
-                if (s.Basarili) _tren.Goster(s.Veri);
+                if (s.Basarili) _tren.Goster(s.Veri, ac);
                 else _bildirimler.Goster("Tren panosu alınamadı: " + s.HataMesaji, uyari: true);
             });
+        }
+
+        /// <summary>
+        /// Vadi haritasindan dogrudan gar'a gelindiginde ilk senkron henuz
+        /// gelmemis olabilir — pano SESSIZCE acilmamak yerine senkronu bekler.
+        /// </summary>
+        private IEnumerator GarPanosunuAc()
+        {
+            for (int i = 0; i < 16 && _durum.Vadi == null; i++)
+            {
+                yield return new WaitForSecondsRealtime(0.5f);
+            }
+            if (_durum.Vadi == null)
+            {
+                _bildirimler.Goster("Tren panosu için bağlantı bekleniyor...", uyari: true);
+                yield break;
+            }
+            TrenTazele(ac: true);
         }
 
         /// <summary>Not tahtasi nesnesi esya DA bolge DE olabilir — adi dogru sozlukten cozulur.</summary>
@@ -739,7 +779,7 @@ namespace Amorland
                     _ses.OrtamBaslat(SesEtiketi.OrtamEv);
                     break;
                 case "gar":
-                    TrenTazele();
+                    StartCoroutine(GarPanosunuAc());
                     _ses.OrtamBaslat(SesEtiketi.OrtamTarla);
                     break;
                 case "market":
@@ -820,10 +860,22 @@ namespace Amorland
                     break;
 
                 case "tren_siparis_karsilandi":
-                    _bildirimler.Goster("Sipariş teslim edildi — tren düdüğü senin için çaldı!");
+                    // B.1: "hicbir is tek basina gorulmez" — partnerin teslimati da
+                    // KENDI adiyla kutlanir, "sen teslim ettin" yalani soylenmez.
+                    bool benimTeslimatim = olay.Deger == null || olay.Deger == _durum.BenimId;
+                    if (benimTeslimatim)
+                    {
+                        _bildirimler.Goster("Sipariş teslim edildi — tren düdüğü senin için çaldı!");
+                        Haptik.Haptik.Calistir(Haptik.Haptik.Desen.UcluYukselen);
+                    }
+                    else
+                    {
+                        string teslimEden =
+                            _durum.Oyuncular.TryGetValue(olay.Deger, out var te) ? te.Ad : "Eşin";
+                        _bildirimler.Goster(teslimEden + " bir siparişi teslim etti — manifesto ilerliyor!");
+                    }
                     _ses.Cal(SesEtiketi.UiOnay);
-                    Haptik.Haptik.Calistir(Haptik.Haptik.Desen.UcluYukselen);
-                    if (_tren.Acik) TrenTazele();
+                    if (_tren.Acik) TrenTazele(ac: false);
                     break;
 
                 case "manifesto_tamam":

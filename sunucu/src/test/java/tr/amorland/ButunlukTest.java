@@ -72,8 +72,10 @@ class ButunlukTest extends TestTemeli {
 
     Set<String> ekAlanlar = new HashSet<>();
     for (var alan : Niyet.Ek.class.getRecordComponents()) ekAlanlar.add(alan.getName());
+    // "sefer" bir miktar DEGIL, teklifin kimligidir: istemci hangi panoya
+    // bastigini soyler, sunucu uyusmazsa reddeder. Fiyat/xp/sure hala yasak.
     assertEquals(
-        Set.of("urunId", "esyaId", "adet", "tarifId"), ekAlanlar,
+        Set.of("urunId", "esyaId", "adet", "tarifId", "sefer"), ekAlanlar,
         "Ek'te fiyat/xp/sure alani olmamali (C.11: istemciden hicbir miktar kabul edilmez)");
   }
 

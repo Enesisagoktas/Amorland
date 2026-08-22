@@ -450,7 +450,23 @@ class DikeyDilimTest extends TestTemeli {
     var siparis = tren.siparisler(vadi, vadi.dunyaSeviyesi(), sefer).get(0);
     dunya.envanterDegistir(vadi.id(), o, siparis.urunId(), siparis.miktar());
 
-    Degisim d = niyet(o, vadi.id(), "tren_karsila", new Niyet.Hedef("gar", 0, 0, null), null);
+    // Bayat pano reddi: istemci sefer N-1'in kartina basmisken tren kalkmissa
+    // sunucu N'in kartini SESSIZCE esleyemez — oyuncu gormedigini onaylayamaz.
+    OyunHatasi bayat =
+        assertThrows(
+            OyunHatasi.class,
+            () ->
+                niyet(
+                    o, vadi.id(), "tren_karsila",
+                    new Niyet.Hedef("gar", 0, 0, null),
+                    new Niyet.Ek(null, null, null, null, sefer - 1)));
+    assertEquals(RedKodu.GECERSIZ_HEDEF, bayat.kod(), "Sefer uyusmazligi acik red");
+
+    Degisim d =
+        niyet(
+            o, vadi.id(), "tren_karsila",
+            new Niyet.Hedef("gar", 0, 0, null),
+            new Niyet.Ek(null, null, null, null, sefer));
 
     assertEquals(siparis.altinOdul(), dunya.altin(vadi.id(), o), "Odul tek seferde tam yatar");
     assertEquals(0, dunya.envanterAdet(vadi.id(), o, siparis.urunId()), "Kismi yatirma yok, tam teslim");
@@ -498,5 +514,41 @@ class DikeyDilimTest extends TestTemeli {
             OyunHatasi.class,
             () -> niyet(o, vadi.id(), "satin_al", null, new Niyet.Ek(null, "domates_tohum", 1, null)));
     assertEquals(RedKodu.SEVIYE_YETERSIZ, kapali.kod(), "Acilmamis urunun tohumu satilmaz");
+  }
+
+  @Test
+  @DisplayName("Tohum penceresi (B.11): safran tohumu yalnizca acik pencerede satilir")
+  void tohumPenceresi() {
+    UUID o = oyuncuKur("cihaz-1", "Ada");
+    Vadi vadi = vadiServisi.kur(o);
+    oyuncular.seviyeVeXpYaz(o, 19, 0);
+    dunya.altinDegistir(vadi.id(), o, 1_000_000);
+    var safran = denge.urun("safran").orElseThrow();
+    assertTrue(safran.tohumPenceresi(), "safran pencereli olmali (denge)");
+
+    // Pencere deterministik: 15 dk adimlarla 24 saat taranir, iki durum da bulunur.
+    java.time.Instant acikAn = null;
+    java.time.Instant kapaliAn = null;
+    for (int i = 0; i < 96 && (acikAn == null || kapaliAn == null); i++) {
+      java.time.Instant aday = BASLANGIC.plusSeconds(i * 900L);
+      if (oyun.tohumPenceresiAcikMi(vadi, safran, aday)) {
+        if (acikAn == null) acikAn = aday;
+      } else if (kapaliAn == null) {
+        kapaliAn = aday;
+      }
+    }
+    assertNotNull(acikAn, "24 saatte en az bir acik pencere olmali (gunde 3 x 2 saat)");
+    assertNotNull(kapaliAn, "pencereler gunun tamamini kaplamamali");
+
+    sahteSaat().ayarla(kapaliAn);
+    OyunHatasi kapali =
+        assertThrows(
+            OyunHatasi.class,
+            () -> niyet(o, vadi.id(), "satin_al", null, new Niyet.Ek(null, "safran_tohum", 1, null)));
+    assertEquals(RedKodu.ESYA_YOK, kapali.kod(), "Pencere disinda tezgahta yok");
+
+    sahteSaat().ayarla(acikAn);
+    niyet(o, vadi.id(), "satin_al", null, new Niyet.Ek(null, "safran_tohum", 1, null));
+    assertEquals(1, dunya.envanterAdet(vadi.id(), o, "safran_tohum"), "Pencerede satis calisir");
   }
 }

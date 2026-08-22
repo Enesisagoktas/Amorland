@@ -60,6 +60,9 @@ namespace Amorland.Ag
         [JsonProperty("esyaId")] public string EsyaId;
         [JsonProperty("adet")] public int? Adet;
         [JsonProperty("tarifId")] public string TarifId;
+
+        /// <summary>Tren niyetleri panodaki sefere baglanir — bayat pano sunucuda reddedilir.</summary>
+        [JsonProperty("sefer")] public long? Sefer;
     }
 
     /// <summary>

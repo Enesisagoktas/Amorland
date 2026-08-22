@@ -47,7 +47,9 @@ namespace Amorland.Arayuz
             _denge = denge;
             _panel = new Panel(kanvas, "MarketEkrani", "Market", null, PanelGenislik, PanelYukseklik);
             Kur();
-            _durum.DurumDegisti += _ => { if (_panel.Acik) Tazele(); };
+            // Degisim ANINDA tam yeniden kurulum, parmagin altindaki butonu yok
+            // ediyordu (tiklama yutulur). Kirli bayragi bir sonraki kareye erteler.
+            _durum.DurumDegisti += _ => { if (_panel.Acik) _kirli = true; };
         }
 
         private void Kur()
@@ -85,6 +87,16 @@ namespace Amorland.Arayuz
         }
 
         public bool Acik => _panel.Acik;
+
+        private bool _kirli;
+
+        /// <summary>Her kare cagrilir (Oyun.Update): ertelenen tazeleme burada islenir.</summary>
+        public void Guncelle()
+        {
+            if (!_panel.Acik || !_kirli) return;
+            _kirli = false;
+            Tazele();
+        }
 
         public void Ac()
         {

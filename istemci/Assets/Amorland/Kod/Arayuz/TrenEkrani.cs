@@ -95,13 +95,21 @@ namespace Amorland.Arayuz
 
         public bool Acik => _panel.Acik;
 
-        /// <summary>Sunucudan gelen panoyu acar/tazeler. Sayac bu andan itibaren yerel akar.</summary>
-        public void Goster(TrenCevabi cevap)
+        /// <summary>Ekranin gordugu sefer — niyetler buna baglanir (bayat pano reddi).</summary>
+        public long? AcikSefer => _cevap != null ? _cevap.SeferNo : (long?)null;
+
+        /// <summary>
+        /// Sunucudan gelen panoyu isler. <paramref name="ac"/> yalniz bolgeye
+        /// giriste true'dur: olay/yenileme tazelemeleri KAPATILMIS paneli zorla
+        /// geri acmaz (ucustaki GET yaniti oyuncunun kapatma kararini ezmesin).
+        /// </summary>
+        public void Goster(TrenCevabi cevap, bool ac = true)
         {
             _cevap = cevap;
             _cevapAni = Time.realtimeSinceStartupAsDouble;
             _yenilemeIstendi = false;
-            _panel.Ac();
+            if (ac) _panel.Ac();
+            if (!_panel.Acik) return;
             Ciz();
             SureTazele();
         }

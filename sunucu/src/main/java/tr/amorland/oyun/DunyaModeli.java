@@ -128,8 +128,9 @@ public final class DunyaModeli {
       return new Olay("depo_doldu", null, null);
     }
 
-    public static Olay trenSiparisi(int kart) {
-      return new Olay("tren_siparis_karsilandi", null, kart);
+    /** deger = karsilayan oyuncu (B.1: partner de KIMIN teslim ettigini gormeli). */
+    public static Olay trenSiparisi(UUID karsilayan, int kart) {
+      return new Olay("tren_siparis_karsilandi", karsilayan.toString(), kart);
     }
 
     public static Olay manifestoTamam() {

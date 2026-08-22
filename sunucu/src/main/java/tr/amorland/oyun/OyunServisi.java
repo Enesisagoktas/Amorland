@@ -92,6 +92,12 @@ public class OyunServisi {
         vadiler
             .bulKilitli(vadiId)
             .orElseThrow(() -> new OyunHatasi(RedKodu.BILINMEYEN, "Vadi yok."));
+    // Kilit ALTINDA ikinci bakis (mimari kural 4): ayni client_action_id ile
+    // yarisan iki istekte ikincisi ilkinin commit'inden sonra kilidi alir ve
+    // sonucu burada gorur — kilitsiz ilk bakis yalniz hizli yoldur, guvence bu.
+    onceki = revizyon.oncekiSonuc(niyet.clientActionId());
+    if (onceki.isPresent()) return onceki.get();
+
     if (!vadi.uyeMi(oyuncuId)) {
       throw new OyunHatasi(RedKodu.UYE_DEGIL, "Bu vadinin uyesi degilsin.");
     }
@@ -154,6 +160,14 @@ public class OyunServisi {
   private int trenKarsila(Vadi vadi, Oyuncu oyuncu, Niyet n, Instant simdi, DegisimYazici y) {
     paraKapisi(oyuncu);
     long sefer = tren.seferNo(simdi);
+    // Niyet PANODAKI sefere baglidir: istemci sefer N'in kartini gorup basmisken
+    // sunucu N+1'i hesaplarsa oyuncu hic gormedigi bir takasi onaylamis olurdu.
+    // Sefer uyusmazligi sessiz kabul degil ACIK reddir.
+    Long panoSeferi = n.ek() == null ? null : n.ek().sefer();
+    if (panoSeferi != null && panoSeferi != sefer) {
+      throw new OyunHatasi(
+          RedKodu.GECERSIZ_HEDEF, "Tren kalkti — pano yenilendi, yeni seferi kontrol et.");
+    }
     var siparisler = tren.siparisler(vadi, vadi.dunyaSeviyesi(), sefer);
     int kart = n.hedef() == null || n.hedef().x() == null ? -1 : n.hedef().x();
     if (kart < 0 || kart >= siparisler.size()) {
@@ -174,7 +188,7 @@ public class OyunServisi {
 
     envanterYaz(vadi, oyuncu.id(), siparis.urunId(), -siparis.miktar(), y);
     dunya.altinDegistir(vadi.id(), oyuncu.id(), siparis.altinOdul());
-    y.olay(DunyaModeli.Olay.trenSiparisi(kart));
+    y.olay(DunyaModeli.Olay.trenSiparisi(oyuncu.id(), kart));
 
     int xp = siparis.xp();
     xp += ilerleme.defterTetikle(vadi, oyuncu.id(), "bolge_acildi:gar", y);
@@ -233,6 +247,11 @@ public class OyunServisi {
           RedKodu.SEVIYE_YETERSIZ,
           denge.esyaAdi(urunId) + " Sv " + urun.acilis().seviye() + "'te acilir.");
     }
+    if (Boolean.TRUE.equals(urun.tohumPenceresi()) && !tohumPenceresiAcikMi(vadi, urun, saat.simdi())) {
+      throw new OyunHatasi(
+          RedKodu.ESYA_YOK,
+          denge.esyaAdi(urunId) + " tohumu su an tezgahta degil — gunun pencerelerinden birini bekle.");
+    }
     long fiyat = (long) urun.tohumFiyat() * adet;
     long bakiye = dunya.altin(vadi.id(), oyuncu.id());
     if (bakiye < fiyat) {
@@ -242,6 +261,26 @@ public class OyunServisi {
     cantayaEkle(vadi, oyuncu, esyaId, adet, y);
     dunya.altinDegistir(vadi.id(), oyuncu.id(), -fiyat);
     return 0;
+  }
+
+  /**
+   * Tohum penceresi (B.11): pencereli urunlerin tohumu gunde N kez, S saniyelik
+   * DETERMINISTIK pencerelerde satilir — safranin fiyat primi bu arz kisitindan
+   * gelir. Gun esit dilimlere bolunur; her dilimde pencerenin baslangici
+   * vadi.tohum'dan turetilir (C tablosu: tohum "fiyat ve PENCERE uretiminin
+   * girdisi"). Cron yok: okuma aninda hesaplanir (mimari kural 2).
+   */
+  public boolean tohumPenceresiAcikMi(Vadi vadi, Urun urun, Instant simdi) {
+    var kural = denge.urunlerDosyasi().tohumPenceresiKurali();
+    long gunSn = 86400L;
+    long dilimSn = gunSn / kural.gunlukPencereSayisi();
+    long gun = simdi.getEpochSecond() / gunSn;
+    long gunIci = simdi.getEpochSecond() % gunSn;
+    int dilim = (int) (gunIci / dilimSn);
+    double kayma =
+        Deterministik.hash01(vadi.tohum(), "tohumPencere", urun.id(), gun, dilim);
+    long baslangic = dilim * dilimSn + (long) (kayma * (dilimSn - kural.pencereSuresiSn()));
+    return gunIci >= baslangic && gunIci < baslangic + kural.pencereSuresiSn();
   }
 
   // ================================================================== tarla

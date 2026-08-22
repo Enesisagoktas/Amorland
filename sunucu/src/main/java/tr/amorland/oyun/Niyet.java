@@ -24,7 +24,13 @@ public record Niyet(
    * Eyleme ozgu ek bilgi. Buradaki {@code adet} bile <b>talep</b>tir, sonuc degil:
    * sunucu kapasiteye ve stoka gore kirpar.
    */
-  public record Ek(String urunId, String esyaId, Integer adet, String tarifId) {}
+  public record Ek(String urunId, String esyaId, Integer adet, String tarifId, Long sefer) {
+
+    /** Sefersiz kisa bicim — tren disindaki niyetler sefer tasimaz. */
+    public Ek(String urunId, String esyaId, Integer adet, String tarifId) {
+      this(urunId, esyaId, adet, tarifId, null);
+    }
+  }
 
   public String bolge() {
     return hedef == null ? null : hedef.bolge();

@@ -59,12 +59,12 @@ public class TrenServisi {
    * Urunun bu seferki fiyat carpani. Son {@code ileriSarmaPenceresi} seferden
    * ileri sarilarak hesaplanir — durumsuz, her cagiran ayni sonucu bulur.
    */
-  public double fiyatCarpani(String urunId, long sefer) {
+  public double fiyatCarpani(long tohum, String urunId, long sefer) {
     var tf = denge.urunlerDosyasi().trenFiyat();
     long baslangic = Math.max(0, sefer - tf.ileriSarmaPenceresi());
     double p = tf.baslangic();
     for (long n = baslangic + 1; n <= sefer; n++) {
-      double gurultu = (Deterministik.hash01("trenFiyat", urunId, n) - 0.5) * tf.gurultuGenligi();
+      double gurultu = (Deterministik.hash01(tohum, "trenFiyat", urunId, n) - 0.5) * tf.gurultuGenligi();
       p = p + (1.0 - p) * tf.ortalamayaDonusKatsayisi() + gurultu;
       p = Math.max(tf.bandMin(), Math.min(tf.bandMax(), p));
     }
@@ -86,16 +86,24 @@ public class TrenServisi {
 
     var sonuc = new ArrayList<Siparis>(m.siparisKartiSayisi());
     for (int kart = 0; kart < m.siparisKartiSayisi(); kart++) {
-      Urun urun = havuz.get((int) (Deterministik.hash01("trenUrun", sefer, kart) * havuz.size()));
-      int miktar = 4 + (int) (Deterministik.hash01("trenAdet", urun.id(), sefer, kart) * 9);
-      if (!vadi.ciftMi()) {
+      // vadi.tohum HER hash'in girdisi (B.15 formulu, C.11): tohum olmadan
+      // fiyat serisi evrensel olur ve gelecegi herkes hesaplayabilirdi.
+      long tohum = vadi.tohum();
+      Urun urun =
+          havuz.get((int) (Deterministik.hash01(tohum, "trenUrun", sefer, kart) * havuz.size()));
+      int miktar = 4 + (int) (Deterministik.hash01(tohum, "trenAdet", urun.id(), sefer, kart) * 9);
+      // Kontenjan indirimi TEK IMZA modunda iner (B.7): partneri hic olmayan
+      // vadi de, partneri 7 gundur gorunmeyen vadi de ayni rahatlamayi alir.
+      // Eski kosul (!ciftMi) terk edilmis partneri olan oyuncuyu cift
+      // kontenjanla yalniz birakiyordu.
+      if (vadi.tekImzaModu()) {
         miktar = Math.max(2, (int) Math.round(miktar * m.tekKisilikKontenjanOrani()));
       }
       double siparisCarpani = m.carpanMin()
-          + Deterministik.hash01("trenCarpan", urun.id(), sefer, kart)
+          + Deterministik.hash01(tohum, "trenCarpan", urun.id(), sefer, kart)
             * (m.carpanMax() - m.carpanMin());
       int altin = (int) Math.round(
-          urun.tabanFiyat() * fiyatCarpani(urun.id(), sefer) * miktar * siparisCarpani);
+          urun.tabanFiyat() * fiyatCarpani(tohum, urun.id(), sefer) * miktar * siparisCarpani);
       sonuc.add(new Siparis(kart, urun.id(), miktar, Math.max(1, altin), m.siparisXp()));
     }
     return sonuc;

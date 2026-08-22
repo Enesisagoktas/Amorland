@@ -174,7 +174,11 @@ namespace Amorland.Durum
             DurumDegisti?.Invoke(null);
         }
 
-        public void RediIsle(string clientActionId, string kod, string mesaj)
+        /// <summary>
+        /// <paramref name="sessiz"/>: kuyruk bosaltilirken tek tek toast yerine
+        /// ozet gosterilir — geri sarma yine calisir, yalniz Red olayi susar.
+        /// </summary>
+        public void RediIsle(string clientActionId, string kod, string mesaj, bool sessiz = false)
         {
             if (clientActionId != null && _tahminler.TryGetValue(clientActionId, out Tahmin t))
             {
@@ -184,7 +188,7 @@ namespace Amorland.Durum
                 GeriSarildi?.Invoke(t.KaroAnahtar);
                 DurumDegisti?.Invoke(null);
             }
-            Red?.Invoke(kod, mesaj);
+            if (!sessiz) Red?.Invoke(kod, mesaj);
         }
 
         public void TahminOnaylandi(string clientActionId)
