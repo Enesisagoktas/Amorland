@@ -63,7 +63,9 @@ namespace Amorland.Oynanis
             {
                 _yuruyor = false;
                 Dinlen();
-                HedefeVarildi?.Invoke(Karo);
+                // Yol YOKSA "vardim" ancak hedefe zaten bitisiksek soylenir:
+                // cite dokununca eylemin uzaktan tetiklenmesi bu satirdan cikiyordu.
+                if ((hedef - Karo).sqrMagnitude <= 2) HedefeVarildi?.Invoke(Karo);
                 return;
             }
             SonrakiAdim();
@@ -95,8 +97,23 @@ namespace Amorland.Oynanis
         /// Joystick gibi DIS suruculer karakteri dogrudan tasirken her kare cagirir:
         /// adim animasyonu ve zipirti yol bulucudan bagimsiz oynamaya devam eder.
         /// </summary>
-        public void DisYuruyus()
+        /// <summary>Son DisYuruyus'un kare damgasi: Update'in Dinlen'i ezmesini keser.</summary>
+        private int _disKare = -2;
+
+        public void DisYuruyus(Vector2 yon)
         {
+            _disKare = Time.frameCount;
+            // Tiklama yolundaki flip mantiginin aynisi (bkz. SonrakiAdim):
+            // joystick'te karakter yurudugu yone donmuyordu.
+            if (Mathf.Abs(yon.x) > 0.05f && _sr != null)
+            {
+                bool yeniFlip = yon.x < 0f;
+                if (_sr.flipX != yeniFlip)
+                {
+                    _sr.flipX = yeniFlip;
+                    _sallanmaFazi += Mathf.PI;
+                }
+            }
             _sallanmaFazi += Time.deltaTime * 11f;
             GorselCanlandir();
         }
@@ -196,6 +213,12 @@ namespace Amorland.Oynanis
         {
             if (!_yuruyor)
             {
+                // Joystick surusu aktifken Dinlen/DinlenYumusat fazi her kare
+                // sifirlayip adim animasyonunu donduruyordu (oyuncu bulgusu:
+                // "joystick ile animasyonsuz yuruyor"). <=1 toleransi script
+                // sirasi ne olursa olsun calisir; birakinca BIR KEZ durusa doner.
+                if (Time.frameCount - _disKare <= 1) return;
+                if (_disKare >= 0) { Dinlen(); _disKare = -2; }
                 DinlenYumusat();
                 return;
             }

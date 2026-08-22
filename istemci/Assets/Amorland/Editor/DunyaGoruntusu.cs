@@ -64,6 +64,9 @@ namespace Amorland.EditorAraclari
             Kare(cikti, "04-oyun-vadi-baglam.png", durum, denge, new Vector3(4f, 2f, 0f), 26f);
             // Y-sort kaniti: kuyunun kuzeyindeki karakter govdesi kuyu ARKASINDA.
             Kare(cikti, "06-ysort-kuyu.png", durum, denge, new Vector3(-4f, 1.5f, 0f), 3f);
+            // Cit kose kaniti: tarla bolgesinin guneybati kosesi (oyuncu bulgusu
+            // "citlerin kosesi kose seklinde baglanmamis" dogrulamasi).
+            Kare(cikti, "05-cit-kose.png", durum, denge, new Vector3(-42f, -20f, 0f), 5f);
 
             Debug.Log("[Amorland] " + _uretilen + " dunya karesi uretildi, " + _hatalar.Count
                       + " hata. Klasor: " + cikti);

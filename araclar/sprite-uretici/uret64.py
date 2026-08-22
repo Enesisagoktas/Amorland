@@ -1484,6 +1484,30 @@ class Cizer:
         d.rounded_rectangle([x + 28, y + 22, x + 36, y + 34], 3, fill=ton(ahsap, 1.12) + (255,))
         d.ellipse([x + 27, y + 56, x + 37, y + 61], fill=ton(ahsap, 0.7) + (255,))
 
+    def cit_kose(self, i, dogu, kuzey):
+        """Cit kose karosu: rpg yatay ray bandini (226) dikey citle (85)
+        birlestirir. dogu=True yatay raylar dogu kenarina cikar; kuzey=True
+        dikey raylar kuzey kenarina (PIL-ust = ekran-kuzey). Kose kazigi
+        birlesimi orter — cit_dikey'in kazigiyla ayni dil."""
+        x, y = self.kanvas(i)
+        kaynak = self.karo_kopya(226)
+        if dogu:
+            serit = kaynak.crop((20, 30, 64, 60))
+            hx = 20
+        else:
+            serit = kaynak.crop((0, 30, 44, 60))
+            hx = 0
+        self.im.alpha_composite(serit, (x + hx, y + 30))
+        d = ImageDraw.Draw(self.im)
+        ahsap = ton(self.AHSAP, 0.88)
+        y0, y1 = (0, 59) if kuzey else (34, 63)
+        for rx in (24, 36):
+            d.rectangle([x + rx, y + y0, x + rx + 4, y + y1], fill=ton(ahsap, 0.92) + (255,))
+            d.rectangle([x + rx, y + y0, x + rx + 2, y + y1], fill=ton(ahsap, 1.08) + (255,))
+        d.rounded_rectangle([x + 28, y + 22, x + 36, y + 58], 3, fill=ahsap + (255,))
+        d.rounded_rectangle([x + 28, y + 22, x + 36, y + 34], 3, fill=ton(ahsap, 1.12) + (255,))
+        d.ellipse([x + 27, y + 56, x + 37, y + 61], fill=ton(ahsap, 0.7) + (255,))
+
     def kopru_ray(self, i):
         """Kopru + ray birlesimi: kalas doseme uzerinde celik raylar.
         Denetim: tren koprusunde ray cizgisi kayboluyordu."""
@@ -1586,6 +1610,11 @@ def main():
     c.agac_koyu(83, 181, guc=0.8)   # kucuk yesil cali koyu
     c.sandik(84)
     c.cit_dikey(85)
+    # Cit koseleri (91-94): GB/GD/KB/KD — VadiHaritasi.CitCevir komsuluga gore secer.
+    c.cit_kose(91, dogu=True, kuzey=True)
+    c.cit_kose(92, dogu=False, kuzey=True)
+    c.cit_kose(93, dogu=True, kuzey=False)
+    c.cit_kose(94, dogu=False, kuzey=False)
     c.kopru_ray(86)
     # Satir 1: ekinler (genc 12-15, olgun 16-19)
     c.bugday(12, olgun=False)

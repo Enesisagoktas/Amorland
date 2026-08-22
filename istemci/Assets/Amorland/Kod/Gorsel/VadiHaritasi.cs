@@ -728,8 +728,12 @@ namespace Amorland.Gorsel
             {
                 for (int py = a.yMin + 3; py + 4 <= a.yMax - 3; py += 7)
                 {
-                    int urun = _r.Next(urunSayisi);
-                    bool olgun = _r.Next(100) < 60;
+                    // Dekor parseller URUNSUZ (oyuncu bulgusu: "bu tarlalar
+                    // niye ekili, neden oraya ekemiyorum") — ekili gorsel gercek
+                    // parselle piksel-ayni oldugu icin yaniltiyordu. Cekimler
+                    // korunur ki Tohum'a bagli sonraki dekor yerlesimi kaymasin.
+                    _r.Next(urunSayisi);
+                    _r.Next(100);
                     for (int x = px; x < px + 6; x++)
                     {
                         for (int y = py; y < py + 4; y++)
@@ -739,7 +743,6 @@ namespace Amorland.Gorsel
                             if (!Icerde(x, y) || _su[x, y] || _suYakin[x, y] || _toprak[x, y]) continue;
                             _surulu[x, y] = true;
                             Koy(_zemin, x, y, Ek(Karo64.Surulu));
-                            Dekor(x, y, Ek(olgun ? Karo64.UrunOlgun[urun] : Karo64.UrunGenc[urun]));
                         }
                     }
                 }
@@ -986,47 +989,58 @@ namespace Amorland.Gorsel
                 Koy(_nesneUst, bacaX, bacaY + 1, Ek(Karo64.DumanKucuk));
         }
 
-        /// <summary>Cit: dikdortgenin cevresi, guney ortasinda kapi boslugu.</summary>
+        /// <summary>
+        /// Cit: dikdortgenin cevresi, guney ortasinda kapi boslugu.
+        ///
+        /// ⚠ Once hucre KUMESI cikarilir, sonra her hucre KOMSULUGUNA gore karo
+        /// alir: koseler kose karosuyla (91-94) baglanir (oyuncu bulgusu:
+        /// "citlerin kosesi kose seklinde baglanmamis"), kapi/bosluk yanindaki
+        /// uclar dogru uc karosuyla biter. Cit ENGELDIR ve dekoru ezer; yalniz
+        /// su ve bina/nesne dolu hucrelerine cit konmaz.
+        /// </summary>
         private void CitCevir(RectInt a)
         {
             int kapi = a.xMin + a.width / 2;
-            // ⚠ Cit ENGELDIR (oyuncu bulgusu: "citlerin uzerinden geciliyor").
-            // Kapi boslugu ve cit konulamayan hucreler gecilir kalir.
+            var hucre = new HashSet<Vector2Int>();
             for (int x = a.xMin; x < a.xMax; x++)
             {
-                if (Mathf.Abs(x - kapi) > 1 && Musait(x, a.yMin))
-                {
-                    Dekor(x, a.yMin, Rpg(x == a.xMin ? Karo64.CitSolBas
-                                        : (x == a.xMax - 1 ? Karo64.CitSagBas
-                                        : Karo64.Sec(Karo64.CitOrta, _r))));
-                    _engel[x, a.yMin] = true;
-                }
-                if (Musait(x, a.yMax - 1))
-                {
-                    Dekor(x, a.yMax - 1, Rpg(x == a.xMin ? Karo64.CitSolBas
-                                            : (x == a.xMax - 1 ? Karo64.CitSagBas
-                                            : Karo64.Sec(Karo64.CitOrta, _r))));
-                    _engel[x, a.yMax - 1] = true;
-                }
+                if (Mathf.Abs(x - kapi) > 1 && CitOlur(x, a.yMin))
+                    hucre.Add(new Vector2Int(x, a.yMin));
+                if (CitOlur(x, a.yMax - 1))
+                    hucre.Add(new Vector2Int(x, a.yMax - 1));
             }
-            // Dikey kenarlar cift rayli dikey cit karosuyla. ⚠ Musait degil
-            // Icerde kontrolu: cicek/ot dekoru hucreyi 'dolu' yapinca cit
-            // atlaniyor ve kenarda bosluklar kaliyordu (denetim bulgusu) —
-            // cit dekoru ezer.
             for (int y = a.yMin + 1; y < a.yMax - 1; y++)
             {
-                if (Icerde(a.xMin, y) && !_su[a.xMin, y] && !_engel[a.xMin, y])
-                {
-                    Dekor(a.xMin, y, Ek(Karo64.CitDikeyKaro));
-                    _engel[a.xMin, y] = true;
-                }
-                if (Icerde(a.xMax - 1, y) && !_su[a.xMax - 1, y] && !_engel[a.xMax - 1, y])
-                {
-                    Dekor(a.xMax - 1, y, Ek(Karo64.CitDikeyKaro));
-                    _engel[a.xMax - 1, y] = true;
-                }
+                if (CitOlur(a.xMin, y)) hucre.Add(new Vector2Int(a.xMin, y));
+                if (CitOlur(a.xMax - 1, y)) hucre.Add(new Vector2Int(a.xMax - 1, y));
+            }
+
+            foreach (var h in hucre)
+            {
+                bool kuzey = hucre.Contains(h + Vector2Int.up);
+                bool guney = hucre.Contains(h + Vector2Int.down);
+                bool dogu = hucre.Contains(h + Vector2Int.right);
+                bool bati = hucre.Contains(h + Vector2Int.left);
+
+                Karo64Kimlik karo =
+                      dogu && kuzey && !bati && !guney ? Ek(Karo64.CitKoseGB)
+                    : bati && kuzey && !dogu && !guney ? Ek(Karo64.CitKoseGD)
+                    : dogu && guney && !bati && !kuzey ? Ek(Karo64.CitKoseKB)
+                    : bati && guney && !dogu && !kuzey ? Ek(Karo64.CitKoseKD)
+                    : kuzey || guney ? Ek(Karo64.CitDikeyKaro)
+                    : dogu && !bati ? Rpg(Karo64.CitSolBas)
+                    : bati && !dogu ? Rpg(Karo64.CitSagBas)
+                    : dogu && bati ? Rpg(Karo64.Sec(Karo64.CitOrta, _r))
+                    : Rpg(_r.Next(2) == 0 ? Karo64.CitTek : Karo64.CitTek2);
+
+                Dekor(h.x, h.y, karo);
+                _engel[h.x, h.y] = true;
             }
         }
+
+        /// <summary>Cit konabilir mi: dekoru ezer, su ve dolu (bina/nesne) hucreye konmaz.</summary>
+        private bool CitOlur(int x, int y) =>
+            Icerde(x, y) && !_su[x, y] && !_dolu[x, y] && !_engel[x, y];
 
         // ------------------------------------------------------------------ serpme
 

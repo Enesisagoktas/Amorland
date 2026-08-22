@@ -53,7 +53,7 @@ namespace Amorland.Girdi
             Vector2Int gercekHedef = hedef;
             if (!Gecilebilir(hedef.x, hedef.y))
             {
-                gercekHedef = EnYakinGecilebilir(hedef);
+                gercekHedef = EnYakinGecilebilir(hedef, baslangic);
                 if (gercekHedef == baslangic) return new List<Vector2Int>();
             }
 
@@ -66,6 +66,12 @@ namespace Amorland.Girdi
             };
             var kapali = new HashSet<long>();
             int adim = 0;
+
+            // Hedefe ULASILAMAZSA (kapali cit alani gibi) bos donmek karakteri
+            // cakili birakiyordu; gidilebilen EN YAKIN dugum izlenir ve oraya
+            // yurunur — "oyun beni dinlemiyor" hissi biter.
+            Vector2Int enYakinDugum = baslangic;
+            float enYakinSezgi = Sezgi(baslangic, gercekHedef);
 
             while (acik.Count > 0 && adim++ < maksAdim)
             {
@@ -81,6 +87,13 @@ namespace Amorland.Girdi
                 kapali.Add(simdikiAnahtar);
 
                 if (simdiki == gercekHedef) return YoluTopla(gelinen, simdiki);
+
+                float sezgi = Sezgi(simdiki, gercekHedef);
+                if (sezgi < enYakinSezgi)
+                {
+                    enYakinSezgi = sezgi;
+                    enYakinDugum = simdiki;
+                }
 
                 for (int k = 0; k < KomsuX.Length; k++)
                 {
@@ -111,7 +124,9 @@ namespace Amorland.Girdi
                     if (!acik.Contains(komsu)) acik.Add(komsu);
                 }
             }
-            return new List<Vector2Int>();
+            return enYakinDugum == baslangic
+                ? new List<Vector2Int>()
+                : YoluTopla(gelinen, enYakinDugum);
         }
 
         private static float Sezgi(Vector2Int a, Vector2Int b)
@@ -136,10 +151,18 @@ namespace Amorland.Girdi
             return yol;
         }
 
-        private Vector2Int EnYakinGecilebilir(Vector2Int hedef)
+        /// <summary>
+        /// Engelli hedefi en yakin gecilebilir hucreye yansitir. Halkadaki
+        /// adaylar arasindan OYUNCUYA en yakin olan secilir: sabit tarama
+        /// sirasi (eski hali) hep guneybatiyi seciyordu ve kuzeyden dokunulan
+        /// citte karakter citin OBUR yuzune dolaniyordu (oyuncu bulgusu).
+        /// </summary>
+        private Vector2Int EnYakinGecilebilir(Vector2Int hedef, Vector2Int baslangic)
         {
             for (int r = 1; r <= 4; r++)
             {
+                Vector2Int enIyi = hedef;
+                float enIyiSkor = float.MaxValue;
                 for (int dx = -r; dx <= r; dx++)
                 {
                     for (int dy = -r; dy <= r; dy++)
@@ -147,9 +170,19 @@ namespace Amorland.Girdi
                         if (Mathf.Abs(dx) != r && Mathf.Abs(dy) != r) continue;
                         int nx = hedef.x + dx;
                         int ny = hedef.y + dy;
-                        if (Gecilebilir(nx, ny)) return new Vector2Int(nx, ny);
+                        if (!Gecilebilir(nx, ny)) continue;
+                        var aday = new Vector2Int(nx, ny);
+                        // Once oyuncuya yakinlik (kendi yuzundeki hucre),
+                        // esitlikte hedefe yakinlik.
+                        float skor = Sezgi(aday, baslangic) * 16f + Sezgi(aday, hedef);
+                        if (skor < enIyiSkor)
+                        {
+                            enIyiSkor = skor;
+                            enIyi = aday;
+                        }
                     }
                 }
+                if (enIyiSkor < float.MaxValue) return enIyi;
             }
             return hedef;
         }

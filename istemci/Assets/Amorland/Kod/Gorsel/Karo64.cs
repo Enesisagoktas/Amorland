@@ -276,6 +276,17 @@ namespace Amorland.Gorsel
         public const int SandikKontrast = 84;
         /// <summary>Cift rayli dikey cit karosu.</summary>
         public const int CitDikeyKaro = 85;
+
+        /// <summary>
+        /// Cit kose karolari: yatay rpg rayini dikey citle birlestirir (oyuncu
+        /// bulgusu: "citlerin kosesi kose seklinde baglanmamis"). Adlandirma cit
+        /// dikdortgeninin kosesine gore: GB = guneybati kosesi (raylar doguya +
+        /// kuzeye cikar) vb.
+        /// </summary>
+        public const int CitKoseGB = 91;
+        public const int CitKoseGD = 92;
+        public const int CitKoseKB = 93;
+        public const int CitKoseKD = 94;
         /// <summary>Kopru dosemesi + celik ray birlesimi.</summary>
         public const int KopruRay = 86;
         /// <summary>Ikinci tezgah cesidi.</summary>

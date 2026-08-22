@@ -1044,7 +1044,9 @@ namespace Amorland
             // ⚠ Carpisma karo bazli ve KAYDIRMALI: hedef hucre kapaliysa once
             // yalniz X, sonra yalniz Y denenir — karakter engellere yapismaz.
             float hiz = 1f / Mathf.Max(0.01f, _denge.YurumeKaroSn);
-            _karakter.Dur();
+            // Dur her kare cagrilinca animasyon fazi surekli sifirlaniyordu;
+            // yalniz gercek bir tiklama yuruyusunu keserken gerekli.
+            if (_karakter.Yuruyor) _karakter.Dur();
             Vector2 adim = _joystick.Yon * (hiz * Time.deltaTime);
             Vector2 simdiki = _karakter.transform.position;
             Vector2 aday = simdiki + adim;
@@ -1057,7 +1059,7 @@ namespace Amorland
                 else return;
             }
             _karakter.transform.position = new Vector3(aday.x, aday.y, 0f);
-            _karakter.DisYuruyus();
+            _karakter.DisYuruyus(_joystick.Yon);
         }
 
         private bool KaroGecer(Vector2 konum) =>
