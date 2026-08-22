@@ -174,8 +174,15 @@ namespace Amorland.Oynanis
         private Vector2Int _bekleyenHedef;
         private bool _hedefBekliyor;
 
+        /// <summary>
+        /// ZORUNLU ogretici kilidi (oyuncu istegi): aktif gorevin hedefi disindaki
+        /// dunya dokunuslari islenmez. Reddin sebebini filtre sahibi (Oyun) soyler.
+        /// </summary>
+        public Func<Vector2Int, bool> DokunusFiltresi;
+
         private void DokunmaHedefi(Vector2Int karo)
         {
+            if (DokunusFiltresi != null && !DokunusFiltresi(karo)) return;
             EylemIptal();
             // Partnerin parseli GORUNUR ama dokunulamaz (B.7). Sessizce hicbir sey
             // yapmamak "oyun beni dinlemiyor" hissi verir; sebebi soylenir.

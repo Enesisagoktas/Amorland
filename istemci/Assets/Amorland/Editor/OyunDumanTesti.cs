@@ -37,6 +37,10 @@ namespace Amorland.EditorAraclari
         private const string CiktiAnahtari = "amorland.dumanCikti";
         private const string EskiOturumAnahtari = "amorland.dumanEskiOturum";
         private const string YenilemeAnahtari = "amorland.yenileme";
+        private const string EskiOgreticiAnahtari = "amorland.dumanEskiOgretici";
+        private const string OgreticiAnahtari = "amorland.ogretici.bitti";
+        private const string EskiMektupAnahtari = "amorland.dumanEskiMektup";
+        private const string MektupAnahtari = "amorland.mektup.okundu";
 
         // ------------------------------------------------------------- giris
 
@@ -51,6 +55,13 @@ namespace Amorland.EditorAraclari
                 string yenileme = MisafirHesapAc();
                 SessionState.SetString(EskiOturumAnahtari, PlayerPrefs.GetString(YenilemeAnahtari, ""));
                 PlayerPrefs.SetString(YenilemeAnahtari, yenileme);
+                // Test GERCEK yeni-oyuncu deneyimini oynar: zorunlu ogretici ve
+                // acilis mektubu acik olmali. Kullanicinin degerleri saklanir,
+                // Bitir'de geri konur.
+                SessionState.SetInt(EskiOgreticiAnahtari, PlayerPrefs.GetInt(OgreticiAnahtari, 0));
+                SessionState.SetInt(EskiMektupAnahtari, PlayerPrefs.GetInt(MektupAnahtari, 0));
+                PlayerPrefs.DeleteKey(OgreticiAnahtari);
+                PlayerPrefs.DeleteKey(MektupAnahtari);
                 PlayerPrefs.Save();
             }
             catch (Exception e)
@@ -165,10 +176,11 @@ namespace Amorland.EditorAraclari
                 case 4: AdimEkOnayi(); break;
                 case 5: AdimSula(); break;
                 case 6: AdimSulaOnayi(); break;
-                case 7: AdimTopla(); break;
-                case 8: AdimToplaOnayi(); break;
-                case 9: AdimKuyu(); break;
-                case 10: AdimKovaOnayi(); break;
+                // Zorunlu ogretici sirasi: kuyu, toplamadan ONCE gelir.
+                case 7: AdimKuyu(); break;
+                case 8: AdimKovaOnayi(); break;
+                case 9: AdimTopla(); break;
+                case 10: AdimToplaOnayi(); break;
                 case 11: AdimHasatBekle(); break;
                 case 12: AdimHasatOnayi(); break;
                 case 13: AdimSeviye2(); break;
@@ -246,8 +258,12 @@ namespace Amorland.EditorAraclari
 
         private static void AdimEk()
         {
+            // Once ZORUNLU ogretici kilidini yokla: gorev disi karoya dokunus
+            // ISLENMEMELI. Islenseydi tohum (1,1)'e ekilir, (0,0) bos kalir ve
+            // ekim onayi adimi zaman asimiyla duserdi — kilit boylece olculur.
+            Dokun(new Vector2Int(1, 1));
             Dokun(new Vector2Int(0, 0));
-            AdimGec("(0,0) karosuna ekim dokunusu");
+            AdimGec("(1,1) kilit yoklamasi + (0,0) karosuna ekim dokunusu");
         }
 
         private static void AdimEkOnayi()
@@ -500,6 +516,8 @@ namespace Amorland.EditorAraclari
 
             // Kullanicinin gercek oturumu geri konur.
             PlayerPrefs.SetString(YenilemeAnahtari, SessionState.GetString(EskiOturumAnahtari, ""));
+            PlayerPrefs.SetInt(OgreticiAnahtari, SessionState.GetInt(EskiOgreticiAnahtari, 0));
+            PlayerPrefs.SetInt(MektupAnahtari, SessionState.GetInt(EskiMektupAnahtari, 0));
             PlayerPrefs.Save();
 
             string cikti = SessionState.GetString(CiktiAnahtari, Path.GetTempPath());

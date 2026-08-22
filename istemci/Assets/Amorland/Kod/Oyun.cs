@@ -416,6 +416,18 @@ namespace Amorland
             _ses.OrtamBaslat(SesEtiketi.OrtamTarla);
 
             _ogretici = gameObject.AddComponent<OgreticiAkisi>();
+            // ⚠ Abonelikler Kur'dan ONCE: Kur ilk adimi hemen gosterir ve zorla
+            // yurutme o anda tetiklenir — sonra baglansa ilk adim kacardi.
+            _etkilesim.DokunusFiltresi = karo =>
+            {
+                if (_ogretici.DokunusUygun(karo)) return true;
+                _bildirimler.Goster("Önce görevi tamamla: " + _ogretici.AktifMetin, uyari: true);
+                _ogretici.Vurgula();
+                Haptik.Haptik.Calistir(Haptik.Haptik.Desen.CokHafif);
+                return false;
+            };
+            _ogretici.HedefeYurut += hedef => _karakter.Yuru(YurunebilirYakin(hedef));
+            _ogretici.DepoyaGit += () => BolgeyeGit("depo");
             _ogretici.Kur(_durum, _denge, _ustKanvas.transform, _hud, _efekt);
 
             // Hikayenin kapisi: ilk giriste Saffet'in mektubu (B.1). Bir kez
@@ -751,6 +763,27 @@ namespace Amorland
             }
             _efekt.UcanYazi((Vector2)kok.position + new Vector2(0f, 1.35f), yazi, Palet.KapsulAltin);
             if (!benim) _ses.Cal(SesEtiketi.UiOnay);
+        }
+
+        /// <summary>
+        /// Hedef karo gecilemezse (kuyu govdesi gibi) 4 komsudan yurunebilir olani
+        /// secilir — zorla yurutme hedefin YANINA goturur, ustune degil.
+        /// </summary>
+        private Vector2Int YurunebilirYakin(Vector2Int hedef)
+        {
+            bool Uygun(Vector2Int k) => _vadi.Gecilebilir(
+                k.x + VadiHaritasi.OyunCapaX, k.y + VadiHaritasi.OyunCapaY);
+            if (Uygun(hedef)) return hedef;
+            var komsular = new[]
+            {
+                new Vector2Int(hedef.x, hedef.y - 1), new Vector2Int(hedef.x - 1, hedef.y),
+                new Vector2Int(hedef.x + 1, hedef.y), new Vector2Int(hedef.x, hedef.y + 1),
+            };
+            foreach (var k in komsular)
+            {
+                if (Uygun(k)) return k;
+            }
+            return hedef;
         }
 
         private void BolgeyeGit(string bolgeId)

@@ -47,6 +47,77 @@ namespace Amorland.Ogretici
 
             /// <summary>Dunyada gosterilecek hedef (ziplayan altin ok); yoksa null.</summary>
             public Vector2? Hedef;
+
+            /// <summary>
+            /// ZORUNLU mod (oyuncu istegi): bu adimda hangi dunya dokunusuna izin
+            /// var. null = adim dunya dokunusu istemiyorsa Serbest karar verir.
+            /// </summary>
+            public Func<DunyaDurumu, Vector2Int, bool> DokunusIzni;
+
+            /// <summary>Dinamik ok hedefi (dal gibi); null ise sabit Hedef kullanilir.</summary>
+            public Func<DunyaDurumu, Vector2?> OkHedefi;
+
+            /// <summary>Adim basinda oyuncu depoya tasinir (bolge gecisi).</summary>
+            public bool DepoyaGotur;
+
+            /// <summary>true = dunya dokunuslari serbesttir (son adim: serbest oyun).</summary>
+            public bool Serbest;
+        }
+
+        /// <summary>Adim basinda karakter hedefe ZORLA yurutulur (dunya karosu).</summary>
+        public event Action<Vector2Int> HedefeYurut;
+
+        /// <summary>Depo adimi basinda oyuncu depoya tasinir.</summary>
+        public event Action DepoyaGit;
+
+        /// <summary>Aktif adimin yonergesi — kilit reddinde oyuncuya tekrar soylenir.</summary>
+        public string AktifMetin =>
+            _adim >= 0 && _adim < _adimlar.Count ? _adimlar[_adim].Metin : "";
+
+        /// <summary>
+        /// ZORUNLU ogretici kilidi: aktif adimin hedefi disindaki dunya dokunusu
+        /// islenmez. Ogretici bittiyse ya da adim serbestse her dokunus gecer.
+        /// </summary>
+        public bool DokunusUygun(Vector2Int karo)
+        {
+            if (_adim < 0 || _adim >= _adimlar.Count) return true;
+            var a = _adimlar[_adim];
+            if (a.Serbest) return true;
+            if (a.DokunusIzni != null) return a.DokunusIzni(_durum, karo);
+            // Dunya dokunusu istemeyen adim (depo paneli): dunya kilitli.
+            return !a.DepoyaGotur;
+        }
+
+        /// <summary>Kilit reddinde serit nefes alir — oyuncunun gozu yonergeye doner.</summary>
+        public void Vurgula()
+        {
+            if (_adim < 0 || !_serit.gameObject.activeSelf) return;
+            StopAllCoroutines();
+            StartCoroutine(SeritPulse());
+        }
+
+        /// <summary>Ilk hazir yabani dugum (dal onceligi) — ok ve yurutme hedefi.</summary>
+        private Vector2Int? HazirYabani()
+        {
+            Vector2Int? aday = null;
+            foreach (var d in _durum.Dugumler.Values)
+            {
+                if (!"yabani".Equals(d.Sinif) || !d.Hazir(_durum.SunucuZamani)) continue;
+                var k = new Vector2Int(d.X, d.Y);
+                if ((d.Tur ?? "").Contains("dal")) return k;
+                if (aday == null) aday = k;
+            }
+            return aday;
+        }
+
+        private bool HazirYabaniMi(Vector2Int karo)
+        {
+            foreach (var d in _durum.Dugumler.Values)
+            {
+                if (d.X == karo.x && d.Y == karo.y)
+                    return "yabani".Equals(d.Sinif) && d.Hazir(_durum.SunucuZamani);
+            }
+            return false;
         }
 
         private readonly List<Adim> _adimlar = new List<Adim>();
@@ -129,13 +200,15 @@ namespace Amorland.Ogretici
             {
                 Metin = "Altın okun gösterdiği boş karoya dokun — karakterin yürür ve tohum eker.",
                 Kosul = d => d.IsaretVar("ilk:ilk_ekim"),
-                Hedef = new Vector2(0f, 0f)
+                Hedef = new Vector2(0f, 0f),
+                DokunusIzni = (d, k) => k == new Vector2Int(0, 0)
             });
             _adimlar.Add(new Adim
             {
                 Metin = "Ektiğin karoya BİR DAHA dokun — sular. Islak toprak koyulaşır.",
                 Kosul = d => d.IsaretVar("ilk:ilk_sulama"),
-                Hedef = new Vector2(0f, 0f)
+                Hedef = new Vector2(0f, 0f),
+                DokunusIzni = (d, k) => k == new Vector2Int(0, 0)
             });
             _adimlar.Add(new Adim
             {
@@ -149,7 +222,11 @@ namespace Amorland.Ogretici
                 Kosul = d => d.IsaretVar("ilk:ilk_hasat")
                              || (d.Ben != null && (d.Ben.KovaKapasite <= 0
                                  || d.Ben.KovaKalan >= d.Ben.KovaKapasite)),
-                Hedef = new Vector2(TarlaGorunumu.KuyuKonumu.x, TarlaGorunumu.KuyuKonumu.y)
+                Hedef = new Vector2(TarlaGorunumu.KuyuKonumu.x, TarlaGorunumu.KuyuKonumu.y),
+                // Kuyu 2 karo boyunda tek parca: cevresine 1 karo tolerans.
+                DokunusIzni = (d, k) =>
+                    Mathf.Abs(k.x - (int)TarlaGorunumu.KuyuKonumu.x) <= 1
+                    && Mathf.Abs(k.y - (int)TarlaGorunumu.KuyuKonumu.y) <= 1
             });
             _adimlar.Add(new Adim
             {
@@ -162,24 +239,36 @@ namespace Amorland.Ogretici
                 Kosul = d => d.IsaretVar("ilk:ilk_toplama")
                              || d.EnvanterAdet("odun") > 0
                              || d.Depo.ContainsKey("odun"),
-                Hedef = new Vector2(-2f, 1f)
+                Hedef = new Vector2(-2f, 1f),
+                // HERHANGI hazir yabani kabul: tek dala kilitlemek, o dal
+                // toplanmissa oyuncuyu acmaza sokardi. Hic hazir dugum yoksa
+                // kilit uygulanmaz (30 dk yenilenme emniyeti).
+                DokunusIzni = (d, k) => HazirYabani() == null || HazirYabaniMi(k),
+                OkHedefi = d =>
+                {
+                    var h = HazirYabani();
+                    return h.HasValue ? new Vector2(h.Value.x, h.Value.y) : (Vector2?)null;
+                }
             });
             _adimlar.Add(new Adim
             {
                 Metin = "Buğday 5 dakikada büyür; PARLAYINCA dokun — hasat.",
                 Kosul = d => d.IsaretVar("ilk:ilk_hasat"),
-                Hedef = new Vector2(0f, 0f)
+                Hedef = new Vector2(0f, 0f),
+                DokunusIzni = (d, k) => k == new Vector2Int(0, 0)
             });
             _adimlar.Add(new Adim
             {
-                Metin = "Hasadı depoya taşı: Çanta > Depoya boşalt.",
-                Kosul = d => d.IsaretVar("ilk:ilk_depoya_bosaltma")
+                Metin = "Hasadı depoya taşı: açılan panelde 'Çantayı depoya boşalt'a bas.",
+                Kosul = d => d.IsaretVar("ilk:ilk_depoya_bosaltma"),
+                DepoyaGotur = true
             });
             // ⚠ Kilit tasi (B.18 ~10:00): ogreticinin GERCEK hedefi bu satir.
             _adimlar.Add(new Adim
             {
                 Metin = "Bu vadide hiçbir iş tek başına görülmez. Sv 3'te eşin için sol üst kapsüle dokun.",
-                Kosul = d => d.Ben != null && d.Ben.Seviye >= 3
+                Kosul = d => d.Ben != null && d.Ben.Seviye >= 3,
+                Serbest = true   // ogretici gorevleri bitti: dunya artik oyuncunun
             });
         }
 
@@ -206,9 +295,22 @@ namespace Amorland.Ogretici
 
         private void AdimGoster()
         {
+            var a = _adimlar[_adim];
             _serit.gameObject.SetActive(true);
-            _yazi.text = (_adim + 1) + "/" + _adimlar.Count + "  ·  " + _adimlar[_adim].Metin;
-            if (_efekt != null) _efekt.HedefOku(_adimlar[_adim].Hedef);
+            _yazi.text = (_adim + 1) + "/" + _adimlar.Count + "  ·  " + a.Metin;
+
+            Vector2? ok = a.OkHedefi != null ? (a.OkHedefi(_durum) ?? a.Hedef) : a.Hedef;
+            if (_efekt != null) _efekt.HedefOku(ok);
+
+            // ZORLA GONDERME (oyuncu istegi): adim baslar baslamaz karakter
+            // hedefe kendisi yurur — oyuncu yalnizca dokunusu yapar. Depo adimi
+            // oyuncuyu bolgeye tasir; oyun acilisinda yarim kalan adim neyse
+            // oyuncu dogrudan oraya goturulur.
+            if (a.DepoyaGotur) DepoyaGit?.Invoke();
+            else if (ok.HasValue)
+                HedefeYurut?.Invoke(new Vector2Int(
+                    Mathf.RoundToInt(ok.Value.x), Mathf.RoundToInt(ok.Value.y)));
+
             StopAllCoroutines();
             StartCoroutine(SeritPulse());
         }
