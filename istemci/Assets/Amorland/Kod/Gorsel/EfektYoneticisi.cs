@@ -164,6 +164,7 @@ namespace Amorland.Gorsel
         /// </summary>
         public void HedefOku(Vector2? dunya)
         {
+            _hedefDunya = dunya;
             if (dunya == null)
             {
                 if (_hedefOku != null) _hedefOku.gameObject.SetActive(false);
@@ -180,6 +181,63 @@ namespace Amorland.Gorsel
             }
             _hedefOku.gameObject.SetActive(true);
             _hedefOkSalinimi.Taban = new Vector3(dunya.Value.x, dunya.Value.y + 1.05f, 0f);
+        }
+
+        // ------------------------------------------------------------------ kenar oku
+
+        private Vector2? _hedefDunya;
+        private RectTransform _kenarOk;
+
+        /// <summary>
+        /// Hedef EKRAN DISINDA kalinca kenarda yon gosteren altin ok (oyuncu
+        /// bulgusu: "sari isaret haritanin neresinde kaliyor, ekranda gostersin").
+        /// Dunya oku kadraja girince kenar oku kendiliginden gizlenir.
+        /// </summary>
+        private void Update()
+        {
+            if (_hedefDunya == null || _kamera == null)
+            {
+                if (_kenarOk != null) _kenarOk.gameObject.SetActive(false);
+                return;
+            }
+            Vector3 vp = _kamera.WorldToViewportPoint(
+                new Vector3(_hedefDunya.Value.x, _hedefDunya.Value.y, 0f));
+            bool icerde = vp.x > 0.02f && vp.x < 0.98f && vp.y > 0.02f && vp.y < 0.98f;
+            if (icerde)
+            {
+                if (_kenarOk != null) _kenarOk.gameObject.SetActive(false);
+                return;
+            }
+
+            if (_kenarOk == null)
+            {
+                var go = new GameObject("HedefKenarOku");
+                go.transform.SetParent(_hudKok, false);
+                var img = go.AddComponent<UnityEngine.UI.Image>();
+                img.sprite = OkSprite();
+                img.raycastTarget = false;
+                _kenarOk = (RectTransform)go.transform;
+                _kenarOk.sizeDelta = new Vector2(46f, 46f);
+            }
+            _kenarOk.gameObject.SetActive(true);
+
+            // Kenara kenetle: ust HUD seridi ve alt cubuk icin dikeyde daha
+            // genis pay birakilir.
+            float cx = Mathf.Clamp(vp.x, 0.05f, 0.95f);
+            float cy = Mathf.Clamp(vp.y, 0.12f, 0.86f);
+            _kenarOk.anchorMin = new Vector2(cx, cy);
+            _kenarOk.anchorMax = new Vector2(cx, cy);
+            _kenarOk.anchoredPosition = Vector2.zero;
+
+            // Sprite ASAGI isaret eder (dunya oku hedefin ustunde durur);
+            // hedef yonune cevirmek icin +90.
+            Vector2 yon = new Vector2(vp.x - 0.5f, vp.y - 0.5f);
+            float aci = Mathf.Atan2(yon.y, yon.x) * Mathf.Rad2Deg;
+            _kenarOk.localRotation = Quaternion.Euler(0f, 0f, aci + 90f);
+
+            // Nabiz: dunya okuyla ayni dil — dikkat cagirir ama bagirmaz.
+            float olcek = 1f + 0.12f * Mathf.Sin(Time.unscaledTime * 5f);
+            _kenarOk.localScale = new Vector3(olcek, olcek, 1f);
         }
 
         private static Sprite OkSprite()
