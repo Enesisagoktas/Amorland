@@ -2,7 +2,7 @@
 
 Çiftler için 2.5D mobil çiftlik oyunu. Unity istemci + Spring Boot/PostgreSQL sunucu.
 
-**Tek doğruluk kaynağı:** [AMORLAND-YAPIM-PROMPTU.md](AMORLAND-YAPIM-PROMPTU.md)
+**Tek doğruluk kaynağı:** [AMORLAND-TASARIM.md](AMORLAND-TASARIM.md)
 
 ---
 
@@ -84,9 +84,8 @@ dokuman/      Teslim raporu, kurulum, faz planı
 
 ---
 
-## Çalışma kuralları
+## Proje kuralları
 
-- Yanıtlar Türkçe, sade ve kısa
 - **A.6:** bir sayıyı veya kuralı değiştirdiğinde etkisini **ölç**, tahmin etme
 - **B.26:** 26 yasak — `python araclar/butunluk-denetimi.py` bunları denetler
 - **A.4:** Perde 1 bitmeden Perde 3'e tek satır içerik üretme

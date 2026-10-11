@@ -1,38 +1,32 @@
-# AMORLAND — Yapım Promptu
+# AMORLAND — Tasarım ve Yapım Belgesi
 
-> **Bu dosya kendi kendine yeter.** Oyunun tasarımı, sunucu protokolü ve tüm denge sayıları içinde. Başka hiçbir şeye ihtiyacın yok.
+> Oyunun tasarımı, sunucu protokolü ve tüm denge sayıları bu belgededir.
 > Sürüm 1.0 · 2026-08-20
 
 ---
 
-# BÖLÜM A — Görev ve çalışma kuralları
+# BÖLÜM A — Kapsam ve çalışma kuralları
 
-## A.1 Rolün
+## A.1 Proje
 
-Sen bu projenin tek geliştirici ortağısın. **Amorland**, çiftler için tasarlanmış üstten bakışlı 2.5D mobil çiftlik oyunu. Android + iOS, ücretsiz, Unity istemci + Spring Boot sunucu.
+Amorland, çiftler için tasarlanmış üstten bakışlı 2.5D mobil çiftlik oyunu. Android + iOS, ücretsiz, Unity istemci + Spring Boot sunucu.
 
-Tasarım **bitmiştir.** Bölüm B, C ve D'deki kararlar simülasyonla doğrulanmış ve dış incelemeden geçmiştir. Görevin tasarımı yeniden tartışmak değil, **inşa etmek.**
+Tasarım bitmiştir. Bölüm B, C ve D'deki kararlar simülasyonla doğrulanmış ve dış incelemeden geçmiştir. Amaç tasarımı yeniden tartışmak değil, inşa etmektir.
 
-## A.2 Geliştirici profili — buna göre konuş
+## A.2 Kısıtlar
 
-- **Güçlü:** Java, Spring Boot, PostgreSQL, Redis, Docker, Caddy. Daha önce WebSocket tabanlı tur bazlı bir multiplayer oyun yaptı.
-- **Orta:** C# biliyor.
-- **Yeni:** Unity'de deneyimsiz.
-- **Yalnız çalışıyor.** Sanatçı yok, ses tasarımcısı yok, test ekibi yok. Asset bütçesi **0 TL**.
-- **Donanım:** RTX 3050 Laptop (4 GB VRAM), 15.6 GB RAM, i7-12700H. Yerel AI 3D üretimi bu makinede çalışmaz.
+Tek kişilik ekip: sanatçı, ses tasarımcısı ve test ekibi yok. Asset bütçesi 0 TL.
 
-**Nasıl yanıt ver:** Türkçe, sade, kısa. Sunucu tarafında derine gir, Unity tarafında adım adım anlat. **Git komutlarını uygularken ne yaptığını kısaca açıkla.**
+## A.3 ⚠️ Kapsam — dürüst tahmin
 
-## A.3 ⚠️ Tek promptta bitmez — dürüst kapsam
+Bu 20 seviye, 7 bölge, 26 ekran, çok oyunculu, sunucu + iki platform demek. Tek kişilik **6-18 aylık** bir iş. Tek oturumda bitirilemez.
 
-Bu 20 seviye, 7 bölge, 26 ekran, çok oyunculu, sunucu + iki platform demek. Tek kişilik **6-18 aylık** bir iş. Bunu tek oturumda bitirmeyi deneme, ve bittiğini söyleme.
-
-| Katman | Sen | Not |
+| Katman | Durum | Not |
 |---|---|---|
 | Sunucu (Spring Boot, Postgres, WS, auth, oyun mantığı) | ✅ tamamı | Geliştiricinin de alanı, en hızlı ilerleyen yer |
 | Unity C# kodu (oynanış, ağ, UI mantığı, durum) | ✅ tamamı | |
-| Unity Editor işi (sahne, prefab, inspector, animator, canvas) | ⚠️ kısmen | Editörde tıklayamazsın. Editor scripting API ile programatik kurabilirsin ama kırılgan. **Bu geliştiricinin işi.** |
-| Asset | ⚠️ işlevsel | Üreteç script'i yazarsın. Sonuç temiz low-poly olur, sevimli olmaz. |
+| Unity Editor işi (sahne, prefab, inspector, animator, canvas) | ⚠️ kısmen | Editörde tıklanamaz. Editor scripting API ile programatik kurulabilir ama kırılgan. **Bu geliştiricinin işi.** |
+| Asset | ⚠️ işlevsel | Üreteç script'i yazılır. Sonuç temiz low-poly olur, sevimli olmaz. |
 | His ayarı (yürüyüş hızı, dokunma hedefi, sıkıcılık) | ❌ | Oynanarak bulunur |
 | Cihaz testi, mağaza gönderimi, iOS/Mac derlemesi | ❌ | |
 
@@ -1293,7 +1287,7 @@ Partner çevrimiçiyse her `ONAY` ona da `DEGISIM { revision, degisim }` olarak 
 
 ## C.4. Çevrimdışı sınırı — "zarif kopuş"
 
-⚠️ Master prompt'ta bu tanımsızdı ve içeride çelişki vardı: bir yerde "eylemler yerel kuyruğa alınır" (yani çevrimdışı oynanır), başka yerde "bağlantı gerektiği baştan söylenir" (yani oynanmaz).
+⚠️ Önceki taslakta bu tanımsızdı ve içeride çelişki vardı: bir yerde "eylemler yerel kuyruğa alınır" (yani çevrimdışı oynanır), başka yerde "bağlantı gerektiği baştan söylenir" (yani oynanmaz).
 
 **Karar: sınırlı çevrimdışı, ilkeli bir sınırla.**
 
@@ -1334,7 +1328,7 @@ Bağlantı dönünce kuyruk **sırayla** gönderilir. Herhangi biri reddedilirse
 
 ## C.6. Reklam ödül atomikliği
 
-⚠️ Master prompt oyun eylemleri için idempotency zorunlu kılmıştı ama reklam ödülü için hiçbir şey söylemiyordu. Bu bir tutarsızlıktı.
+⚠️ Önceki taslak oyun eylemleri için idempotency zorunlu kılmıştı ama reklam ödülü için hiçbir şey söylemiyordu. Bu bir tutarsızlıktı.
 
 **İstemci ödülü asla kendisi vermez.** Akış:
 
